@@ -253,6 +253,39 @@ Create `resources/blocks/<slug>/` and 6 files inside + the Blade view. Templates
 'paddingXMobile'     => (bool) ($attributes['paddingXMobile']    ?? true),
 ```
 
+### Anchor support (every block)
+
+Every block **must** support the Gutenberg HTML anchor so editors can link to
+it (`#my-section`). It's free and consistent — wire it on every block, no need
+to ask.
+
+1. **`block.json`** — add `"supports": { "anchor": true }`. This surfaces the
+   "HTML anchor" field in the block's *Advanced* panel and registers the
+   `anchor` attribute automatically (don't declare `anchor` in `attributes`).
+2. **`block.jsx`** — nothing to do. `useBlockProps()` already applies the
+   anchor `id` in the editor preview.
+3. **`block.php`** — pass `'anchor' => sanitize_html_class($attributes['anchor'] ?? '')`
+   to the view (server-rendered blocks don't auto-emit the id on the front end).
+4. **Blade** — render the id **on the `<section>` wrapper, and only there**:
+   `<section @if ($anchor) id="{{ $anchor }}" @endif class="<slug>">`.
+
+**Dynamic ids go on an inner element — never the section.** When a block needs
+its own unique id at render time (e.g. a Swiper instance: `id="swiper-{$block_id}"`
+targeted by `block.js`), putting it on the `<section>` would collide with — and
+overwrite — the editor's anchor id. Always emit dynamic ids on a nested `<div>`
+so the section's `id` stays reserved for the anchor:
+
+```blade
+<section @if ($anchor) id="{{ $anchor }}" @endif class="<slug>">
+    <div id="swiper-{{ $uid }}" class="<slug>__carousel swiper">
+        {{-- slides --}}
+    </div>
+</section>
+```
+
+(Generate `$uid` in `block.php` — e.g. `wp_unique_id('swiper-')` — and pass it
+to the view; never reuse the anchor for it.)
+
 ---
 
 ## Phase 3 — Wire up
@@ -276,6 +309,7 @@ End with a summary table listing every file created/modified.
 
 ## Behavior Rules
 
+- **Anchor support on every block** — `supports.anchor: true`, id emitted on the `<section>` wrapper only; dynamic/unique ids (Swiper, etc.) go on an inner `<div>` so they never collide with the anchor (see "Anchor support").
 - **Use `view()`** (global Acorn helper), not `\Roots\view()`.
 - **Sanitization**: `absint()` for unsigned numerics, `(bool)` for booleans, `sanitize_text_field()` for plain strings, `wp_kses_post()` only for trusted HTML.
 - **Don't reformat existing files** — keep diffs minimal.
@@ -335,6 +369,9 @@ All block-file templates below use these — substitute throughout:
     "description": "<one-line description>",
     "textdomain": "sage",
     "render": "file:./block.php",
+    "supports": {
+        "anchor": true
+    },
     "attributes": {
         "isPreview": {
             "type": "boolean",
@@ -371,6 +408,9 @@ $attributes = $attributes ?? [];
 echo view('blocks.<slug>', [
     // Per-attribute sanitization (see Phase 2 table).
     // 'heading' => sanitize_text_field($attributes['heading'] ?? ''),
+
+    // Gutenberg HTML anchor → id on the section wrapper (see "Anchor support").
+    'anchor' => sanitize_html_class($attributes['anchor'] ?? ''),
 
     // Always include the global padding attrs.
     'paddingVertDesktop' => absint($attributes['paddingVertDesktop'] ?? 112),
@@ -518,7 +558,10 @@ registerBlockType(metadata, {
 
 ```blade
 {{-- View-only. Data prepared in block.php. --}}
-<section class="<slug>">
+<section @if ($anchor) id="{{ $anchor }}" @endif class="<slug>">
+    {{-- The Gutenberg anchor id ALWAYS lives on this <section> wrapper.
+         Any dynamic/unique id the block needs (e.g. a Swiper instance id)
+         goes on an INNER element, never here — see "Anchor support". --}}
     {{-- Render with the data passed from block.php. Example:
         @if ($heading)
             <h2 class="<slug>__heading">{{ $heading }}</h2>

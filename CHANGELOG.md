@@ -2,6 +2,29 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-06-01
+
+### Added
+- **`skills/create-block/SKILL.md` › Anchor support (every block).** Every
+  scaffolded block now wires Gutenberg's HTML anchor support by default:
+  - `block.json` template gains `"supports": { "anchor": true }` (registers
+    the `anchor` attribute automatically — not declared under `attributes`).
+  - `block.php` template passes
+    `'anchor' => sanitize_html_class($attributes['anchor'] ?? '')` to the
+    view, since server-rendered blocks don't auto-emit the id on the front
+    end.
+  - Blade template renders the id **only on the `<section>` wrapper**
+    (`<section @if ($anchor) id="{{ $anchor }}" @endif class="<slug>">`).
+  - `block.jsx` needs nothing — `useBlockProps()` already applies the anchor
+    id in the editor preview.
+  - New "Anchor support" subsection in Phase 2 + a matching Behavior Rule
+    documenting the **dynamic-id rule**: any unique id a block needs at render
+    time (e.g. a Swiper instance id targeted by `block.js`) goes on an inner
+    `<div>` (generated via `wp_unique_id(...)`), never on the `<section>` —
+    otherwise it would collide with and overwrite the editor's anchor id.
+    Reason: editors must be able to deep-link to any section (`#my-section`),
+    and reusing the section id for instance-level identifiers breaks that.
+
 ## 2026-05-24
 
 ### Added
