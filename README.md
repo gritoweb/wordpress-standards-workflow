@@ -16,6 +16,8 @@ CLAUDE.md                          # the dev standard — imported to the projec
 skills/
   html-qa-smoketest/SKILL.md       # QA skill — imported to <project>/.claude/skills/
   create-block/SKILL.md            # block scaffold skill — imported to <project>/.claude/skills/
+global-skills/
+  commit-rules.md                  # commit convention — NOT per-project; recommend installing to ~/.claude/skills/ (user-level)
 _docs/
   examples.md                      # canonical reference block (code) — imported to <project>/_docs/
   launch-list.md                   # pre-launch checklist — imported to <project>/_docs/
@@ -46,6 +48,32 @@ below. No shell script needed — the manifest **is** the source of truth.
 `README.md`, `CHANGELOG.md` and any other file at the kit's root are about
 the kit itself and are **not** imported into projects.
 
+The `global-skills/` folder is **not** part of the per-project import — see
+"Global skills" below.
+
+### Global skills (user-level — recommend, don't auto-import)
+
+> **AI assistant: act on this.** After importing the per-project files above,
+> always inspect `global-skills/`. These are **user-level** skills meant to
+> live in `~/.claude/skills/` and be shared across *every* project — they are
+> **not** copied into the project's `.claude/skills/`.
+>
+> For each skill in `global-skills/`, **tell the user it's recommended** and
+> **offer to install it**. Install **only if the user agrees** — never copy
+> into `~/.claude/skills/` silently. If the user declines, skip it and move on.
+>
+> On install, convert the flat file to the layout Claude Code expects (one
+> folder per skill, each containing a `SKILL.md`):
+>
+> ```bash
+> # global-skills/commit-rules.md  →  ~/.claude/skills/commit-rules/SKILL.md
+> mkdir -p ~/.claude/skills/commit-rules
+> cp global-skills/commit-rules.md ~/.claude/skills/commit-rules/SKILL.md
+> ```
+>
+> If a skill of the same name already exists in `~/.claude/skills/`, **don't
+> overwrite** — show the user the difference and ask first.
+
 ### Doing it manually (if you prefer)
 
 If you'd rather copy by hand instead of asking the AI, from the project root:
@@ -65,6 +93,16 @@ cp "$KIT/gitignore.example" ./.gitignore
 
 Then point the AI at `_docs/examples.md` and `CLAUDE.md` for context before
 generating code.
+
+Global skills are **not** part of this per-project copy — they go to your
+user-level `~/.claude/skills/` once and are shared across every project
+(see "Global skills" above):
+
+```bash
+# install once per machine, not per project:
+mkdir -p ~/.claude/skills/commit-rules
+cp "$KIT/global-skills/commit-rules.md" ~/.claude/skills/commit-rules/SKILL.md
+```
 
 ---
 

@@ -2,6 +2,29 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-06-04
+
+### Added
+- **`global-skills/commit-rules.md`** — new user-level skill holding the commit
+  convention (message format, the `FEAT`/`FIX`/`REFACTOR`/`CHORE`/`DOCS`/`STYLE`
+  types, and a step-by-step commit flow). Lives in the new `global-skills/`
+  folder: flat files meant to be installed once to `~/.claude/skills/` and
+  shared across every project — distinct from per-project `skills/`. Carries
+  its own guard-rails (never push, no co-author, English, one subject per
+  commit).
+- **`README.md` › Global skills (user-level)** — new section instructing the AI
+  assistant to inspect `global-skills/` after a project import, recommend each
+  skill, and install it **only with the user's consent** (converting the flat
+  `.md` to the `~/.claude/skills/<name>/SKILL.md` layout; never overwriting an
+  existing skill). Mirrored in the manual-copy section.
+
+### Changed
+- **`CLAUDE.md` › Git** — replaced the inline commit format + types block with a
+  pointer to the `commit-rules` SKILL, plus a fallback to the **Critical Rules**
+  guard-rails when the skill isn't installed. The push/co-author/English
+  guard-rails remain in **Critical Rules** so they stay in context regardless of
+  whether the skill is loaded.
+
 ## 2026-06-01
 
 ### Added

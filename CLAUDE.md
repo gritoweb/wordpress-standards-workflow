@@ -33,13 +33,7 @@
 
 ## Git
 
-```
-[FEAT]: add testimonials block
-[FIX]: fix mobile menu on Safari
-[CHORE]: update theme dependencies
-```
-
-Types: `feat` `fix` `refactor` `chore` `docs` `style` — one subject per commit.
+To write a commit, use the `commit-rules` SKILL (message format, types, flow). If it isn't installed, follow the guard-rails in **Critical Rules**: one subject per commit, English, never push without permission, no co-author.
 
 ---
 
