@@ -1,0 +1,6 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Local WIP scratch notes (not part of the kit)
+_WIP-*.md
