@@ -102,7 +102,7 @@ Every theme starts with **three foundation files** in `resources/styles/`. Build
 
 - Never reuse generic class names (`.card`, `.box`, `.wrapper`) across blocks.
 - Global CSS variables / design tokens live in `variables.css` (see **Theme CSS foundation** above) — never redefine tokens per block.
-- **Class order is automated** — `prettier-plugin-tailwindcss` sorts Tailwind classes (Blade markup + `@apply`) into the canonical order. Never hand-sort; a pre-commit hook enforces it (see README › "Code formatting"). Format-on-save is optional convenience.
+- **Class order is automated** — `prettier-plugin-tailwindcss` sorts non-Blade files and `@shufo/prettier-plugin-blade` (`sortTailwindcssClasses`) sorts Blade; a pre-commit hook enforces it (see README › "Code formatting"). Never hand-sort.
 - **Hand-written CSS** (rare — `variables.css`, complex `@apply` bodies): one declaration per line, lowercase short hex (`#fff`), unitless zero (`0`), leading zero (`0.5rem`).
 
 ---

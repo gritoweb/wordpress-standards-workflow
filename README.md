@@ -23,6 +23,7 @@ _docs/
   launch-list.md                   # pre-launch checklist — imported to <project>/_docs/
 gitignore.example                  # base .gitignore template — imported as <project>/.gitignore (only if missing)
 prettier.config.example.js         # Prettier + Tailwind/Blade class sorting — copied to <theme>/prettier.config.js
+install-git-hooks.example.mjs      # pre-commit hook installer — copied to <theme>/scripts/install-git-hooks.mjs
 CHANGELOG.md                       # what changed in the standards
 ```
 
@@ -45,7 +46,8 @@ below. No shell script needed — the manifest **is** the source of truth.
 | `_docs/examples.md` | `./_docs/examples.md` | Reference patterns the AI uses for grounding |
 | `_docs/launch-list.md` | `./_docs/launch-list.md` | Pre-launch checklist for go-live |
 | `gitignore.example` | `./.gitignore` | **Only if** the project has no `.gitignore` yet — never overwrite |
-| `prettier.config.example.js` | `<theme>/prettier.config.js` | Theme root (next to `package.json`); then wire the pre-commit hook — see "Code formatting" |
+| `prettier.config.example.js` | `<theme>/prettier.config.js` | Theme root; then add the `prepare` + `lint-staged` keys and copy the hook installer — see "Code formatting" |
+| `install-git-hooks.example.mjs` | `<theme>/scripts/install-git-hooks.mjs` | Pre-commit installer; wired via the theme's `prepare` script |
 
 `README.md`, `CHANGELOG.md` and any other file at the kit's root are about
 the kit itself and are **not** imported into projects.
@@ -110,42 +112,49 @@ cp "$KIT/global-skills/commit-rules.md" ~/.claude/skills/commit-rules/SKILL.md
 
 ## Code formatting (enforced for every dev)
 
-CSS/Tailwind class order is **not** a thing devs do by hand — it's automated and
-enforced at the repo level so everyone writes the same way regardless of editor.
-`prettier-plugin-tailwindcss` sorts Tailwind classes into the canonical order in
-**both** Blade markup and `@apply` bodies; a pre-commit hook reformats staged
-files so nothing unsorted lands in a commit.
+Tailwind class order isn't done by hand — it's automated and enforced at the
+repo level. `prettier-plugin-tailwindcss` sorts classes in non-Blade files
+(CSS `@apply`, JS/JSX); for `.blade.php`, `@shufo/prettier-plugin-blade` does
+the sorting via its `sortTailwindcssClasses` option (the tailwindcss plugin
+can't wrap the Blade parser). A pre-commit hook runs `lint-staged` so nothing
+unsorted lands in a commit.
+
+This works in **any layout** — whether the theme is the git root (standalone
+theme repo) or a subdirectory of a larger repo (Pantheon / full-site). We do
+**not** use the `husky` package: a tiny `prepare` script installs a native git
+hook at the actual git root and points `core.hooksPath` at it, resolving the
+root at runtime. (Running `npx husky init` inside a theme subdirectory is the
+common trap — husky resolves `core.hooksPath` relative to the git root, so the
+hook silently never fires.)
 
 Set up once per theme (host, not inside Lando):
 
 ```bash
 cd wp-content/themes/sage
 
-# 1. formatter + plugins + git hooks
-npm i -D prettier prettier-plugin-tailwindcss @shufo/prettier-plugin-blade husky lint-staged
+# 1. formatter + plugins + lint-staged (NO husky)
+npm i -D prettier prettier-plugin-tailwindcss @shufo/prettier-plugin-blade lint-staged
 
-# 2. copy the kit's Prettier config
+# 2. copy the kit's Prettier config + the hook installer
 cp "$KIT/prettier.config.example.js" ./prettier.config.js
-
-# 3. enable husky (adds a "prepare" script so it auto-installs on every npm install)
-npx husky init
-echo "npx lint-staged" > .husky/pre-commit
+mkdir -p scripts
+cp "$KIT/install-git-hooks.example.mjs" ./scripts/install-git-hooks.mjs
 ```
 
 Then add to the theme's `package.json`:
 
 ```json
 {
-  "lint-staged": {
-    "*.{css,blade.php,js,jsx}": "prettier --write"
-  }
+  "scripts": { "prepare": "node ./scripts/install-git-hooks.mjs" },
+  "lint-staged": { "*.{css,blade.php,js,jsx}": "prettier --write" }
 }
 ```
 
-Now every `git commit` reformats the staged Blade/CSS/JS, and because `husky`
-installs via the `prepare` script, any dev who clones the repo and runs
-`npm install` gets the same hook automatically — no per-machine config. Editor
-format-on-save (Prettier as the default formatter) is optional convenience on top.
+Run `npm install` once to fire `prepare` and install the hook. Because it runs
+on `prepare`, any dev who clones and runs `npm install` gets the hook
+automatically — Pantheon clone or local `git init`, no per-machine step.
+The generated `.githooks/` is auto-managed; add `/.githooks/` to the repo
+`.gitignore` (it's regenerated on every install).
 
 ---
 

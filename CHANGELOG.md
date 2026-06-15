@@ -19,7 +19,15 @@ Notable changes to the GritoWeb WordPress standards.
   tagline, starter names), plus a note that theme author/screenshot are verified
   via the launch list, not the smoke test.
 
+### Fixed
+- Blade Tailwind class sorting: enable `@shufo/prettier-plugin-blade`'s
+  `sortTailwindcssClasses` (the tailwindcss plugin can't wrap the Blade parser).
+
 ### Changed
+- Replace `husky init` with a git-root-aware `prepare` hook installer
+  (`install-git-hooks.example.mjs`) so the pre-commit hook works when the theme
+  is a subdirectory (Pantheon / full-site repos), not just a standalone theme
+  repo. Drop the `husky` dependency.
 - **Changelog policy** — entries are now for *notable, release-level* changes
   tied to a version bump, not a line per file/commit. The `commit-rules` skill
   decides when an entry is warranted and asks before adding one. Trimmed the
