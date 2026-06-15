@@ -2,9 +2,47 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-06-15
+
+### Added
+- **`CLAUDE.md` › CSS › Theme CSS foundation** — documents the three foundation
+  files every theme starts with: `variables.css` (design tokens via Tailwind v4
+  `@theme`, so tokens become utilities), `base.css` (unclassed defaults for HTML
+  primitives in `@layer base`), and `typography.css` (semantic type classes like
+  `.heading-1` in `@layer components`). Includes the base-vs-typography distinction.
+- **`_docs/launch-list.md` › Theme identity** — new section: `Theme Name`,
+  `Author`, `Author URI` and `screenshot.png` must be defined and non-generic
+  before delivery (never ship as Sage/Roots). Author identity is left to the dev;
+  the rule only blocks undefined/default values.
+- **`skills/html-qa-smoketest/SKILL.md`** — new check `SEO-6` flags generic
+  WordPress/Sage branding leaking into rendered HTML (meta `generator`, default
+  tagline, starter names), plus a note that theme author/screenshot are verified
+  via the launch list, not the smoke test.
+
+### Changed
+- **Changelog policy** — entries are now for *notable, release-level* changes
+  tied to a version bump, not a line per file/commit. The `commit-rules` skill
+  decides when an entry is warranted and asks before adding one. Trimmed the
+  `CLAUDE.md` rules to a principle, moved the procedure into the skill, and
+  softened the matching PR Checklist items.
+
 ## 2026-06-04
 
 ### Added
+- **`prettier.config.example.js`** — new kit artifact: a Prettier config wiring
+  `prettier-plugin-tailwindcss` + `@shufo/prettier-plugin-blade` so Tailwind
+  class order is sorted automatically in **both** Blade markup and `@apply`
+  bodies (tailwind plugin listed last, Blade parser override for `*.blade.php`).
+- **`README.md` › Code formatting (enforced for every dev)** — new section: copy
+  the Prettier config into the theme, then enforce it repo-wide with a
+  `husky` + `lint-staged` pre-commit hook that reformats staged Blade/CSS/JS.
+  Because husky installs via the `prepare` script, every dev who clones the repo
+  gets the same hook on `npm install` — no per-machine config. Added a matching
+  import-manifest row and "What's here" entry.
+- **`CLAUDE.md` › CSS** — two rules: class order is automated (never hand-sort;
+  pre-commit enforces it), and a minimal idiomatic guide for the rare
+  hand-written CSS (one declaration per line, lowercase short hex, unitless zero,
+  leading zero).
 - **`global-skills/commit-rules.md`** — new user-level skill holding the commit
   convention (message format, the `FEAT`/`FIX`/`REFACTOR`/`CHORE`/`DOCS`/`STYLE`
   types, and a step-by-step commit flow). Lives in the new `global-skills/`

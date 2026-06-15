@@ -22,6 +22,7 @@ _docs/
   examples.md                      # canonical reference block (code) — imported to <project>/_docs/
   launch-list.md                   # pre-launch checklist — imported to <project>/_docs/
 gitignore.example                  # base .gitignore template — imported as <project>/.gitignore (only if missing)
+prettier.config.example.js         # Prettier + Tailwind/Blade class sorting — copied to <theme>/prettier.config.js
 CHANGELOG.md                       # what changed in the standards
 ```
 
@@ -44,6 +45,7 @@ below. No shell script needed — the manifest **is** the source of truth.
 | `_docs/examples.md` | `./_docs/examples.md` | Reference patterns the AI uses for grounding |
 | `_docs/launch-list.md` | `./_docs/launch-list.md` | Pre-launch checklist for go-live |
 | `gitignore.example` | `./.gitignore` | **Only if** the project has no `.gitignore` yet — never overwrite |
+| `prettier.config.example.js` | `<theme>/prettier.config.js` | Theme root (next to `package.json`); then wire the pre-commit hook — see "Code formatting" |
 
 `README.md`, `CHANGELOG.md` and any other file at the kit's root are about
 the kit itself and are **not** imported into projects.
@@ -103,6 +105,47 @@ user-level `~/.claude/skills/` once and are shared across every project
 mkdir -p ~/.claude/skills/commit-rules
 cp "$KIT/global-skills/commit-rules.md" ~/.claude/skills/commit-rules/SKILL.md
 ```
+
+---
+
+## Code formatting (enforced for every dev)
+
+CSS/Tailwind class order is **not** a thing devs do by hand — it's automated and
+enforced at the repo level so everyone writes the same way regardless of editor.
+`prettier-plugin-tailwindcss` sorts Tailwind classes into the canonical order in
+**both** Blade markup and `@apply` bodies; a pre-commit hook reformats staged
+files so nothing unsorted lands in a commit.
+
+Set up once per theme (host, not inside Lando):
+
+```bash
+cd wp-content/themes/sage
+
+# 1. formatter + plugins + git hooks
+npm i -D prettier prettier-plugin-tailwindcss @shufo/prettier-plugin-blade husky lint-staged
+
+# 2. copy the kit's Prettier config
+cp "$KIT/prettier.config.example.js" ./prettier.config.js
+
+# 3. enable husky (adds a "prepare" script so it auto-installs on every npm install)
+npx husky init
+echo "npx lint-staged" > .husky/pre-commit
+```
+
+Then add to the theme's `package.json`:
+
+```json
+{
+  "lint-staged": {
+    "*.{css,blade.php,js,jsx}": "prettier --write"
+  }
+}
+```
+
+Now every `git commit` reformats the staged Blade/CSS/JS, and because `husky`
+installs via the `prepare` script, any dev who clones the repo and runs
+`npm install` gets the same hook automatically — no per-machine config. Editor
+format-on-save (Prettier as the default formatter) is optional convenience on top.
 
 ---
 

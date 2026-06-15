@@ -59,20 +59,54 @@ team standard. **Never pushes.** **Never adds a co-author.**
 
 ---
 
+## Changelog
+
+The `CHANGELOG.md` of a theme/plugin we own is for **notable,
+release-level changes** — not a line per file or per commit. Don't dump
+the git log into it.
+
+**Before committing, ask the user whether this commit should update the
+changelog.** Use judgment on what to suggest:
+
+- **Likely worth an entry:** a new feature/block, a user-visible fix, a
+  breaking change, anything that warrants a SemVer version bump.
+- **Likely _not_ worth an entry:** internal refactors, tooling/config
+  chores, docs, formatting/style — anything that doesn't bump the version.
+
+State your read ("this looks like a `FIX` users would notice — add a
+changelog entry?") rather than asking a blank question. If the user says
+yes:
+
+1. Append under the current `## [version] - YYYY-MM-DD` section (create
+   it on a version bump), in the right `Added` / `Changed` / `Fixed` /
+   `Removed` subsection. Follow [Keep a Changelog](https://keepachangelog.com).
+2. On a version bump, also bump the version in the theme's `style.css`
+   header / plugin's main PHP header (SemVer: MAJOR / MINOR / PATCH).
+3. Stage the `CHANGELOG.md` (and version file) with the rest of the commit.
+
+Only applies to themes/plugins **we own** — never touch core or
+third-party changelogs.
+
+---
+
 ## Execution flow
 
 1. **Inspect** — run `git status` and `git diff` (staged + unstaged) to
    see what changed. Read enough to understand the *why*, not just the *what*.
 2. **Scope check** — if the changes cover more than one logical subject,
    stop and ask the user whether to split them. Don't bundle unrelated work.
-3. **Stage** — stage the relevant files (`git add`). Don't blindly
+3. **Changelog check** — decide whether the change is notable enough for
+   a `CHANGELOG.md` entry (see **Changelog** above) and ask the user
+   before adding one.
+4. **Stage** — stage the relevant files (`git add`), including
+   `CHANGELOG.md` / version file if the user opted in. Don't blindly
    `git add -A` if there are unrelated changes in the tree.
-4. **Compose** — pick the single best `TYPE` and write the subject.
+5. **Compose** — pick the single best `TYPE` and write the subject.
    Add a short body only if the change needs a *why* that the subject
    can't carry.
-5. **Commit** — `git commit`. Never `--amend` an existing commit unless
+6. **Commit** — `git commit`. Never `--amend` an existing commit unless
    the user explicitly asks.
-6. **Confirm** — report the commit hash and subject. Do **not** push.
+7. **Confirm** — report the commit hash and subject. Do **not** push.
 
 ---
 

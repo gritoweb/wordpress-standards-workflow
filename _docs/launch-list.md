@@ -89,6 +89,16 @@ project's `_docs/` folder and tick items as you go.
 - [ ] ⚠️ Run an accessibility audit (axe DevTools / Lighthouse a11y / WAVE) — catches missing `alt` attributes, low contrast, broken tab order
 - [ ] ⚠️ Run an HTML validator (W3C validator) — catches unclosed tags, duplicate attributes, malformed markup
 
+## 🎨 Theme identity (`style.css` header + screenshot)
+
+> Never ship a theme that still identifies as Sage / Roots or anything generic.
+
+- [ ] 🚫 `Theme Name` in `style.css` is the project/brand name — **not** `Sage` or a leftover starter name
+- [ ] 🚫 `Author` in `style.css` is defined — never blank or a default (`Roots`, `Sage`). Who the author is is up to you; just don't ship it undefined/generic
+- [ ] 🚫 `Author URI` in `style.css` is defined and points to a real URL — **not** `https://roots.io/` or empty
+- [ ] 🚫 `screenshot.png` replaced with a real screenshot of the built site (1200×900 px, shown in `Appearance → Themes`) — not the default Sage/placeholder image
+- [ ] ⚠️ `Description`, `Version` and `Text Domain` in `style.css` reflect the real project (not the Sage defaults)
+
 ## 🚀 Sage / Pantheon pre-deploy
 
 - [ ] 🚫 `composer install --no-dev` ran for production (no dev dependencies shipped)

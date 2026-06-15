@@ -92,8 +92,11 @@ h1 (unique per page)
 | SEO-3 | Open Graph: `og:title`, `og:description`, `og:image` | ⚠️ Attention |
 | SEO-4 | `<link rel="canonical">` for pages with multiple URLs | ⚠️ Attention |
 | SEO-5 | No more than one `<h1>` (duplicates HEAD-1, reinforce here) | ❌ Critical |
+| SEO-6 | No generic/leftover branding in the rendered output: default `<meta name="generator" content="WordPress …">`, the `Just another WordPress site` tagline, or `Sage`/`Roots`/starter names leaking into `<title>`, body classes, or comments | ⚠️ Attention |
 
 > **Note:** Check SEO only when the context is a full page, not isolated blocks/components.
+
+> **Theme identity:** Author, Author URI and the theme screenshot live in the `style.css` header and `Appearance → Themes` — they don't appear in rendered HTML, so they're **out of scope here**. Verify them via the **Launch Checklist** (`_docs/launch-list.md` › "Theme identity") before delivery.
 
 
 ### 🧹 Code Quality
