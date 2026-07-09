@@ -523,6 +523,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/html-qa-smoketest/` | `./.claude/skills/html-qa-smoketest/` | Copy whole folder; ask before overwriting |
 | `skills/css-standards/` | `./.claude/skills/css-standards/` | Copy whole folder; ask before overwriting |
 | `skills/blade-standards/` | `./.claude/skills/blade-standards/` | Copy whole folder; ask before overwriting |
+| `skills/project-init/` | `./.claude/skills/project-init/` | Copy whole folder; ask before overwriting |
 | `_docs/examples.md` | `./_docs/examples.md` | Ask before overwriting if present |
 | `_docs/launch-list.md` | `./_docs/launch-list.md` | Ask before overwriting if present |
 | `gitignore.example` | `./.gitignore` | **Only if `.gitignore` doesn't exist yet** — never overwrite an existing one |
