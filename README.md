@@ -16,6 +16,9 @@ CLAUDE.md                          # the dev standard — imported to the projec
 skills/
   html-qa-smoketest/SKILL.md       # QA skill — imported to <project>/.claude/skills/
   create-block/SKILL.md            # block scaffold skill — imported to <project>/.claude/skills/
+  css-standards/SKILL.md           # CSS/Tailwind standards skill — imported to <project>/.claude/skills/
+  blade-standards/SKILL.md         # Blade/PHP standards skill — imported to <project>/.claude/skills/
+  project-init/SKILL.md            # kit-import skill — imported to <project>/.claude/skills/
 global-skills/
   commit-rules.md                  # commit convention — NOT per-project; recommend installing to ~/.claude/skills/ (user-level)
 _docs/
@@ -33,8 +36,14 @@ After WordPress is up (see workflow below), tell Claude (or any AI assistant):
 
 > *"Access this repo: `<URL of this repo>` and import the kit into this project."*
 
-The AI should fetch the repo and place every file according to the manifest
-below. No shell script needed — the manifest **is** the source of truth.
+If the AI assistant supports Claude Code skills, it should use the
+**`project-init`** skill (`skills/project-init/SKILL.md`) to drive the
+import — it copies every file per the manifest below and then walks
+through the remaining manual steps (Lando, Sage scaffold, npm install).
+
+If skills aren't supported, the AI should fetch the repo and place every
+file according to the manifest below by hand. No shell script needed —
+the manifest **is** the source of truth either way.
 
 ### Import manifest
 
@@ -43,6 +52,9 @@ below. No shell script needed — the manifest **is** the source of truth.
 | `CLAUDE.md` | `./CLAUDE.md` | Must be at the project root — Claude auto-loads it from there |
 | `skills/html-qa-smoketest/` | `./.claude/skills/html-qa-smoketest/` | Copy the whole folder |
 | `skills/create-block/` | `./.claude/skills/create-block/` | Copy the whole folder |
+| `skills/css-standards/` | `./.claude/skills/css-standards/` | Copy the whole folder |
+| `skills/blade-standards/` | `./.claude/skills/blade-standards/` | Copy the whole folder |
+| `skills/project-init/` | `./.claude/skills/project-init/` | Copy the whole folder — or use it to drive this very import (see below) |
 | `_docs/examples.md` | `./_docs/examples.md` | Reference patterns the AI uses for grounding |
 | `_docs/launch-list.md` | `./_docs/launch-list.md` | Pre-launch checklist for go-live |
 | `gitignore.example` | `./.gitignore` | **Only if** the project has no `.gitignore` yet — never overwrite |
