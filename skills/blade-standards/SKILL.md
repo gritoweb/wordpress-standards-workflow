@@ -56,7 +56,7 @@ wp_enqueue_script('swiper');
 ```
 
 This is the rule `create-block`'s Phase 0 "global-enqueue smell" check
-(#0.13) warns about — a `wp_enqueue_script(`/`wp_enqueue_style(` call
+(#0.14) warns about — a `wp_enqueue_script(`/`wp_enqueue_style(` call
 found outside `resources/blocks/*/block.php` (excluding the theme's own
 `app`/`editor` handles) is the smell this section forbids.
 

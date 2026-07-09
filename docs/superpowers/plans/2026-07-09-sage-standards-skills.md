@@ -209,7 +209,7 @@ EOF
 **Interfaces:**
 - Produces: a skill file referenced by `CLAUDE.md`'s `PHP / Blade` section
   (Task 3) via `.claude/skills/blade-standards/SKILL.md`, and referenced
-  by `skills/create-block/SKILL.md` check #0.13 (Task 4). Also copied by
+  by `skills/create-block/SKILL.md` check #0.14 (Task 4). Also copied by
   `project-init` (Task 5).
 
 - [ ] **Step 1: Write the file**
@@ -273,7 +273,7 @@ wp_enqueue_script('swiper');
 ```
 
 This is the rule `create-block`'s Phase 0 "global-enqueue smell" check
-(#0.13) warns about — a `wp_enqueue_script(`/`wp_enqueue_style(` call
+(#0.14) warns about — a `wp_enqueue_script(`/`wp_enqueue_style(` call
 found outside `resources/blocks/*/block.php` (excluding the theme's own
 `app`/`editor` handles) is the smell this section forbids.
 
@@ -398,18 +398,18 @@ EOF
 - Consumes: `skills/blade-standards/SKILL.md` (Task 2) — the "Scripts &
   Styles" section is the canonical text this check now points to.
 
-- [ ] **Step 1: Edit check #0.13's row**
+- [ ] **Step 1: Edit check #0.14's row**
 
 Find this row in the "Compatibility warnings (do NOT auto-fix)" table:
 
 ```markdown
-| 0.13 | **Global-enqueue smell.** Scan `app/**.php` + `functions.php` for `wp_enqueue_script(`/`wp_enqueue_style(` *outside* `resources/blocks/*/block.php`. Theme handles (`app`, `editor`) are fine; vendor-lib-looking handles (`swiper`, `gsap`, …) loaded globally are a smell — warn with file:line, recommend the canonical pattern (register in `setup.php`, enqueue in `block.php`). |
+| 0.14 | **Global-enqueue smell.** Scan `app/**.php` + `functions.php` for `wp_enqueue_script(`/`wp_enqueue_style(` *outside* `resources/blocks/*/block.php`. Theme handles (`app`, `editor`) are fine; vendor-lib-looking handles (`swiper`, `gsap`, …) loaded globally are a smell — warn with file:line, recommend the canonical pattern (register in `setup.php`, enqueue in `block.php`). |
 ```
 
 Replace it with:
 
 ```markdown
-| 0.13 | **Global-enqueue smell.** Scan `app/**.php` + `functions.php` for `wp_enqueue_script(`/`wp_enqueue_style(` *outside* `resources/blocks/*/block.php`. Theme handles (`app`, `editor`) are fine; vendor-lib-looking handles (`swiper`, `gsap`, …) loaded globally are a smell — warn with file:line, recommend the canonical pattern from `.claude/skills/blade-standards/SKILL.md` (register in `setup.php`, enqueue in `block.php`). |
+| 0.14 | **Global-enqueue smell.** Scan `app/**.php` + `functions.php` for `wp_enqueue_script(`/`wp_enqueue_style(` *outside* `resources/blocks/*/block.php`. Theme handles (`app`, `editor`) are fine; vendor-lib-looking handles (`swiper`, `gsap`, …) loaded globally are a smell — warn with file:line, recommend the canonical pattern from `.claude/skills/blade-standards/SKILL.md` (register in `setup.php`, enqueue in `block.php`). |
 ```
 
 - [ ] **Step 2: Verify the edit**
