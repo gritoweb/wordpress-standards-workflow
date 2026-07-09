@@ -4,3 +4,6 @@ Thumbs.db
 
 # Local WIP scratch notes (not part of the kit)
 _WIP-*.md
+
+# subagent-driven-development scratch (progress ledger, review packages)
+.superpowers/
