@@ -17,6 +17,7 @@ skills/
   html-qa-smoketest/SKILL.md       # QA skill — imported to <project>/.claude/skills/
   create-block/SKILL.md            # block scaffold skill — imported to <project>/.claude/skills/
   css-standards/SKILL.md           # CSS/Tailwind standards skill — imported to <project>/.claude/skills/
+  css-foundation-wizard/SKILL.md   # interactive CSS foundation setup skill — imported to <project>/.claude/skills/
   blade-standards/SKILL.md         # Blade/PHP standards skill — imported to <project>/.claude/skills/
   project-init/SKILL.md            # kit-import skill — imported to <project>/.claude/skills/
 global-skills/
@@ -53,6 +54,7 @@ the manifest **is** the source of truth either way.
 | `skills/html-qa-smoketest/` | `./.claude/skills/html-qa-smoketest/` | Copy the whole folder |
 | `skills/create-block/` | `./.claude/skills/create-block/` | Copy the whole folder |
 | `skills/css-standards/` | `./.claude/skills/css-standards/` | Copy the whole folder |
+| `skills/css-foundation-wizard/` | `./.claude/skills/css-foundation-wizard/` | Copy the whole folder |
 | `skills/blade-standards/` | `./.claude/skills/blade-standards/` | Copy the whole folder |
 | `skills/project-init/` | `./.claude/skills/project-init/` | Copy the whole folder — or use it to drive this very import (see below) |
 | `_docs/examples.md` | `./_docs/examples.md` | Reference patterns the AI uses for grounding |

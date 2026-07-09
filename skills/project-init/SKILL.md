@@ -70,6 +70,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/create-block/` | `./.claude/skills/create-block/` | Copy whole folder; ask before overwriting |
 | `skills/html-qa-smoketest/` | `./.claude/skills/html-qa-smoketest/` | Copy whole folder; ask before overwriting |
 | `skills/css-standards/` | `./.claude/skills/css-standards/` | Copy whole folder; ask before overwriting |
+| `skills/css-foundation-wizard/` | `./.claude/skills/css-foundation-wizard/` | Copy whole folder; ask before overwriting |
 | `skills/blade-standards/` | `./.claude/skills/blade-standards/` | Copy whole folder; ask before overwriting |
 | `skills/project-init/` | `./.claude/skills/project-init/` | Copy whole folder; ask before overwriting |
 | `_docs/examples.md` | `./_docs/examples.md` | Ask before overwriting if present |

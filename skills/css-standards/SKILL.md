@@ -18,63 +18,29 @@ reusable/semantic patterns.
 
 ## Theme CSS foundation (start here)
 
-Every theme starts with **three foundation files** in `resources/styles/`.
-Build these before any block styles — they're the base every component
-inherits from. (Reference implementation: `gritoweb-site/.../styles/`.)
+Every theme starts with **four foundation files** in `resources/styles/`
+— `variables.css` (design tokens), `base.css` (unclassed tag defaults),
+`typography.css` (semantic text classes), `global.css` (site-wide
+structural classes like `.app`/`.container`). Build these before any
+block styles — they're the base every component inherits from.
 
-Before writing any CSS in a project, check whether
-`resources/styles/variables.css`, `resources/styles/base.css`, and
-`resources/styles/typography.css` exist. If a project is missing them,
-walk the dev through creating each one using the shapes below — there is
-no fixed file template to copy (palette, fonts and type scale are
-project-specific), only the structure to follow.
+Before writing any CSS in a project, check whether all four files exist.
+If any is missing, **use the `css-foundation-wizard` skill**
+(`.claude/skills/css-foundation-wizard/SKILL.md`) to generate them
+interactively from the dev's style guide — don't hand-walk the dev
+through creating them inline; the wizard owns that flow (tokens in
+`@theme {}`/`:root`, base rules in `@layer base`, typography/global
+classes in `@layer components`, plus wiring the four `@import`s into
+`resources/css/app.css` in order).
 
-1. **`variables.css` — design tokens.** Declare colors, fonts, type scale,
-   weights and shadows. Use Tailwind v4's `@theme {}` whenever the token
-   should also become a utility — e.g. `--color-blue` auto-generates
-   `text-blue` / `bg-blue` / `border-blue`, and `--text-h1` (with its
-   paired `--text-h1--line-height` / `--letter-spacing` / `--font-weight`)
-   becomes the `text-h1` utility. Tokens that aren't meant to be utilities
-   can live in a plain `:root`.
-
-   ```css
-   @theme {
-     --color-ink: #282828;
-     --font-display: "Lato", system-ui, sans-serif;
-     --text-h1: 3.5rem;
-     --text-h1--line-height: 1.05;
-     --text-h1--font-weight: 900;
-   }
-   ```
-
-2. **`base.css` — primitives.** Element-level defaults in `@layer base`,
-   pulling from the tokens. **Every tag must look right with no class** —
-   `body`, `p`, `h1`–`h6`, `small`, `code/pre`, `hr`, `img/svg/video`. This
-   is the unclassed baseline of the whole site.
-
-   ```css
-   @layer base {
-     body { font-family: var(--font-body); color: var(--color-ink); }
-     h1 { font-size: var(--text-h1); line-height: var(--text-h1--line-height); }
-   }
-   ```
-
-3. **`typography.css` — type classes.** Reusable typography classes in
-   `@layer components`. Instead of stacking utilities on an element
-   (`<h1 class="mb-0 text-h1 font-display …">`), define one semantic
-   class (`.heading-1`, `.body-text`, `.font-eyebrow`) and put the styling
-   there; markup stays `<h1 class="heading-1">`.
-
-   ```css
-   @layer components {
-     .heading-1 { font-family: var(--font-display); font-size: var(--text-h1); line-height: var(--text-h1--line-height); }
-   }
-   ```
-
-   **`base.css` vs `typography.css`:** `base.css` is how a tag looks *by
-   default, unclassed*. `typography.css` applies a type treatment to *any*
-   element regardless of tag — give a `<div>` an h1 look, or a hero
-   `.heading-display` that's larger than any `<h*>`.
+**`base.css` vs `typography.css`:** `base.css` is how a tag looks *by
+default, unclassed*. `typography.css` applies a type treatment to *any*
+element regardless of tag — give a `<div>` an h1 look, or a hero
+`.heading-display` that's larger than any `<h*>`. **`global.css`** is
+narrower still: only site-wide structural/layout classes (`.app`,
+`.container`, `.section-wrap`) — never block-level classes (those live
+in each block's own `.css` file, see **Block styles** below) and never
+button/badge/state-variant classes.
 
 ---
 
