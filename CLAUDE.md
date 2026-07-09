@@ -45,105 +45,19 @@ To create a new block, use the `create-block` SKILL. If it doesn't exist in the 
 
 ## CSS
 
-Tailwind utilities for one-off styles; `@apply` in a dedicated class for reusable/semantic patterns.
-
-### Theme CSS foundation (start here)
-
-Every theme starts with **three foundation files** in `resources/styles/`. Build these before any block styles — they're the base every component inherits from. (Reference implementation: `gritoweb-site/.../styles/`.)
-
-1. **`variables.css` — design tokens.** Declare colors, fonts, type scale, weights and shadows. Use Tailwind v4's `@theme {}` whenever the token should also become a utility — e.g. `--color-blue` auto-generates `text-blue` / `bg-blue` / `border-blue`, and `--text-h1` (with its paired `--text-h1--line-height` / `--letter-spacing` / `--font-weight`) becomes the `text-h1` utility. Tokens that aren't meant to be utilities can live in a plain `:root`.
-
-   ```css
-   @theme {
-     --color-ink: #282828;
-     --font-display: "Lato", system-ui, sans-serif;
-     --text-h1: 3.5rem;
-     --text-h1--line-height: 1.05;
-     --text-h1--font-weight: 900;
-   }
-   ```
-
-2. **`base.css` — primitives.** Element-level defaults in `@layer base`, pulling from the tokens. **Every tag must look right with no class** — `body`, `p`, `h1`–`h6`, `small`, `code/pre`, `hr`, `img/svg/video`. This is the unclassed baseline of the whole site.
-
-   ```css
-   @layer base {
-     body { font-family: var(--font-body); color: var(--color-ink); }
-     h1 { font-size: var(--text-h1); line-height: var(--text-h1--line-height); }
-   }
-   ```
-
-3. **`typography.css` — type classes.** Reusable typography classes in `@layer components`. Instead of stacking utilities on an element (`<h1 class="mb-0 text-h1 font-display …">`), define one semantic class (`.heading-1`, `.body-text`, `.font-eyebrow`) and put the styling there; markup stays `<h1 class="heading-1">`.
-
-   ```css
-   @layer components {
-     .heading-1 { font-family: var(--font-display); font-size: var(--text-h1); line-height: var(--text-h1--line-height); }
-   }
-   ```
-
-   **`base.css` vs `typography.css`:** `base.css` is how a tag looks *by default, unclassed*. `typography.css` applies a type treatment to *any* element regardless of tag — give a `<div>` an h1 look, or a hero `.heading-display` that's larger than any `<h*>`.
-
-### Block styles
-
-- Stick to Tailwind's default scale (`rem` for fonts, spacing). Arbitrary values only when strictly needed.
-- Every block has a **unique root class** named after the block (`.hero`, `.testimonials`) — scopes all its styles.
-- Nest selectors under the root. BEM (`__element--modifier`) only for complex blocks with many nested states.
-
-```css
-/* Simple block — clean classes */
-.hero { ... }
-.hero .title { ... }
-.hero .subtitle { ... }
-
-/* Complex block — BEM */
-.accordion__item { ... }
-.accordion__item--active { ... }
-.accordion__trigger { ... }
-```
-
-- Never reuse generic class names (`.card`, `.box`, `.wrapper`) across blocks.
-- Global CSS variables / design tokens live in `variables.css` (see **Theme CSS foundation** above) — never redefine tokens per block.
-- **Class order is automated** — `prettier-plugin-tailwindcss` sorts non-Blade files and `@shufo/prettier-plugin-blade` (`sortTailwindcssClasses`) sorts Blade; a pre-commit hook enforces it (see README › "Code formatting"). Never hand-sort.
-- **Hand-written CSS** (rare — `variables.css`, complex `@apply` bodies): one declaration per line, lowercase short hex (`#fff`), unitless zero (`0`), leading zero (`0.5rem`).
+Tailwind utilities for one-off styles; `@apply` in a dedicated class for
+reusable/semantic patterns. Full rules (design tokens, base/typography
+foundation, block class naming, hand-written CSS formatting) live in
+`.claude/skills/css-standards/SKILL.md`.
 
 ---
 
 ## PHP / Blade
 
-**Blade is view-only.** No business logic, queries, or data fetching. Only render-control logic (conditionals, loops over already-prepared data).
-
-- `wp_get_attachment_image($id, 'large')` — always include the size argument (enables native `srcset`); never omit it.
-- Avoid nested `WP_Query` inside loops.
-
-**Sanitize input, escape output:**
-
-```php
-// Input (saving data)
-sanitize_text_field($_POST['name']);
-sanitize_email($_POST['email']);
-wp_kses_post($_POST['content']);  // safe HTML
-absint($_POST['count']);
-
-// Output (rendering data)
-esc_html($value);        // plain text
-esc_attr($value);        // HTML attributes
-esc_url($url);           // URLs
-wp_kses_post($content);  // trusted HTML
-```
-
----
-
-## Scripts & Styles
-
-Third-party scripts/styles: **register globally** in `app/setup.php` (on `init`), then **enqueue per-block** inside that block's `block.php` render. Never enqueue vendor libs globally.
-
-```php
-add_action('init', function () {
-    wp_register_script('swiper', 'https://cdn.example.com/swiper.min.js', [], '11.0', true);
-});
-
-// Inside the block render callback
-wp_enqueue_script('swiper');
-```
+Blade is view-only; sanitize input, escape output. Full rules (view-only
+boundary, attachment image sizing, query patterns, sanitize/escape table,
+vendor script registration vs. enqueue) live in
+`.claude/skills/blade-standards/SKILL.md`.
 
 ---
 
