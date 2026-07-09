@@ -159,7 +159,7 @@ project-specific), only the structure to follow.
 - **Class order is automated** — `prettier-plugin-tailwindcss` sorts
   non-Blade files and `@shufo/prettier-plugin-blade`
   (`sortTailwindcssClasses`) sorts Blade; a pre-commit hook enforces it
-  (see the project's README › "Code formatting"). Never hand-sort.
+  (see README › "Code formatting"). Never hand-sort.
 - **Hand-written CSS** (rare — `variables.css`, complex `@apply` bodies):
   one declaration per line, lowercase short hex (`#fff`), unitless zero
   (`0`), leading zero (`0.5rem`).
