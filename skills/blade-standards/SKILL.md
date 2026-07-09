@@ -62,6 +62,28 @@ found outside `resources/blocks/*/block.php` (excluding the theme's own
 
 ---
 
+## Padding and image position
+
+Every block resolves its padding attributes via `@paddingClasses(...)`
+(a Blade directive backed by `App\Blocks\BlockPadding::resolve()`) and
+any `imagePosition` attribute via `App\Blocks\BlockImagePosition::objectClass()`
+(or `::cssValue()` for an inline style) — never hardcode a padding/position
+class or leave the attribute unapplied in the Blade view.
+
+```blade
+<section class="hero @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop)">
+    <img
+        src="{{ $imageUrl }}"
+        class="absolute inset-0 h-full w-full object-cover {{ \App\Blocks\BlockImagePosition::objectClass($imagePosition) }}"
+    >
+</section>
+```
+
+See `create-block`'s Phase 0 checks #0.15/#0.16 for how these classes and
+the directive get bootstrapped into a theme.
+
+---
+
 ## When NOT to use
 
 - Editing PHP that has nothing to do with rendering a view (e.g. a CLI

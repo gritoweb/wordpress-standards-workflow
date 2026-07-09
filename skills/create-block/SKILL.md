@@ -65,7 +65,9 @@ Run every check below; show the dev a status table before doing anything else.
 | 0.9 | `resources/css/app.css` has `@source "../blocks/**/*.{php,jsx}";` |
 | 0.10 | `package.json` `devDependencies` has `react@^18` AND `react-dom@^18`. **React pinned to ^18, not ^19** — React 19 breaks Gutenberg (element-symbol mismatch with WP's React 18). |
 | 0.11 | `app/Blocks/BlockCategories.php` exists. Template at `<skill>/templates/BlockCategories.php`. **First-run only**: ask `"Vou criar uma categoria pros seus blocos. Quer chamar de 'Custom Blocks' (default) ou outro nome?"`, copy template, edit `TITLE` and `SLUG` (lowercase + hyphens) if dev picked a different name. The actual `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). Subsequent runs: grep `const SLUG = '...'` from the existing file. |
-| 0.12 | `resources/blocks/components/backend/` contains the 7 canonical shared components: `ImageUploadWithHover.jsx`, `LinkPicker.jsx`, `RemoveButton.jsx`, `TabSelector.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`. If missing: copy from `<skill>/templates/components/backend/*`. |
+| 0.12 | `resources/blocks/components/backend/` contains the 8 canonical shared components: `ImageUploadWithHover.jsx`, `LinkPicker.jsx`, `RemoveButton.jsx`, `TabSelector.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. If missing: copy from `<skill>/templates/components/backend/*`. |
+| 0.15 | `app/Blocks/BlockPadding.php` and `app/Blocks/BlockImagePosition.php` exist. Templates at `<skill>/templates/BlockPadding.php` and `<skill>/templates/BlockImagePosition.php`. |
+| 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers a `paddingClasses` Blade directive expanding to `\App\Blocks\BlockPadding::resolve(...)` (see `.claude/skills/blade-standards/SKILL.md`). |
 
 ### Compatibility warnings (do NOT auto-fix)
 
@@ -76,7 +78,7 @@ Run every check below; show the dev a status table before doing anything else.
 
 ### Bootstrap UX
 
-If any check 0.1–0.12 (incl. 0.6.1) fails:
+If any check 0.1–0.16 (incl. 0.6.1) fails:
 
 1. Show the dev a status table of failed checks.
 2. Split fixes into **(A) Creations** (new files/folders) and **(B) Modifications** (edits to `functions.php`, `vite.config.js`, `editor.js`, `app.css`). `package.json` is not edited — tell the dev to run `npm install --save-dev react@^18.0.0 react-dom@^18.0.0` themselves.
@@ -93,6 +95,7 @@ Phase 0 must be re-runnable. Before each create/modify, Read the target and chec
 | `vite.config.js` | `function discoverBlockAssets` + `...discoverBlockAssets()` inside `laravel({ input: [...] })` | **Skip** | apply documented edit | **Bail** |
 | `resources/js/editor.js` | `import.meta.glob('../blocks/*/block.jsx'` | **Skip** | apply documented edit | **Bail** |
 | `resources/css/app.css` | `@source "../blocks/**` | **Skip** | apply documented edit | **Bail** |
+| `app/Providers/ThemeServiceProvider.php` (Group B) | `boot()` calls `parent::boot()` and registers a `Blade::directive('paddingClasses', ...)` | **Skip** | `boot()` exists but lacks the directive — insert the `Blade::directive(...)` call | **Bail** — provider doesn't match Sage's stock shape (custom providers are common; ask the dev to wire it manually) |
 
 **Bailing > guessing.** Each bail message must name (a) the file, (b) expected shape, (c) what was found, (d) the manual fix the dev would apply.
 
@@ -331,6 +334,8 @@ End with a summary table listing every file created/modified.
 <skill>/templates/
 ├── BlockManager.php                → copied to app/Blocks/BlockManager.php (check 0.1)
 ├── BlockCategories.php             → copied to app/Blocks/BlockCategories.php (check 0.11)
+├── BlockPadding.php                → copied to app/Blocks/BlockPadding.php (check 0.15)
+├── BlockImagePosition.php          → copied to app/Blocks/BlockImagePosition.php (check 0.15)
 ├── blocks.php                      → copied to app/blocks.php (check 0.6)
 ├── preview.svg                     → copied per block (with __BLOCK_TITLE__ substituted)
 └── components/backend/             → copied to resources/blocks/components/backend/ (check 0.12)
@@ -340,7 +345,8 @@ End with a summary table listing every file created/modified.
     ├── TabSelector.jsx
     ├── PaddingControls.jsx
     ├── padding-presets.js
-    └── ImagePositionControl.jsx
+    ├── ImagePositionControl.jsx
+    └── IconPicker.jsx
 ```
 
 `preview.svg` uses `__BLOCK_TITLE__` as its only placeholder. Every generated `block.jsx` imports `PaddingControls`; image / link / array blocks add the matching imports as needed.
@@ -585,6 +591,35 @@ Copy from `<skill>/templates/BlockCategories.php`. Edit `TITLE` and `SLUG` if th
 #### `app/blocks.php`
 
 Copy from `<skill>/templates/blocks.php`.
+
+#### `app/Blocks/BlockPadding.php` and `app/Blocks/BlockImagePosition.php`
+
+Copy from `<skill>/templates/BlockPadding.php` and
+`<skill>/templates/BlockImagePosition.php`. Both resolve an attribute
+value (padding numbers/booleans, or an `imagePosition` string) to a
+literal Tailwind class string, so Tailwind's build-time scanner picks the
+classes up — never interpolate a class dynamically.
+
+#### `app/Providers/ThemeServiceProvider.php` — register the `paddingClasses` directive
+
+Add to the existing `boot()` method (this file is scaffolded by Sage
+itself — don't create it, edit it):
+
+```diff
+ public function boot()
+ {
+     parent::boot();
++
++    Blade::directive('paddingClasses', function (string $expression) {
++        return "<?php echo \App\Blocks\BlockPadding::resolve($expression); ?>";
++    });
+ }
+```
+
+Requires `use Illuminate\Support\Facades\Blade;` at the top of the file
+(add it if missing). If `boot()` doesn't exist or the file doesn't match
+Sage's stock provider shape, **bail out** — ask the dev to wire it
+manually.
 
 #### `functions.php` — add `'blocks'` to the collect array
 
