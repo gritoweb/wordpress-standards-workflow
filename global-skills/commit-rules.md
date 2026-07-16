@@ -37,6 +37,12 @@ team standard. **Never pushes.** **Never adds a co-author.**
 - `TYPE` is uppercase, subject in lowercase imperative ("add", "fix",
   "update" — not "added"/"adds").
 - Keep the subject under ~72 chars. No trailing period.
+- **Subject only, no body, by default.** Don't add a body unless the
+  *why* is genuinely non-obvious from the subject + diff and the user
+  would need it later (e.g. a non-obvious workaround, a breaking
+  change's migration note). When a body is warranted, keep it to a
+  single short line — never a multi-paragraph explanation or a bullet
+  list recapping every file touched.
 
 ### Types
 
@@ -102,8 +108,8 @@ third-party changelogs.
    `CHANGELOG.md` / version file if the user opted in. Don't blindly
    `git add -A` if there are unrelated changes in the tree.
 5. **Compose** — pick the single best `TYPE` and write the subject.
-   Add a short body only if the change needs a *why* that the subject
-   can't carry.
+   Default to subject-only; add a one-line body only if the change
+   needs a *why* the subject genuinely can't carry.
 6. **Commit** — `git commit`. Never `--amend` an existing commit unless
    the user explicitly asks.
 7. **Confirm** — report the commit hash and subject. Do **not** push.
