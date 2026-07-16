@@ -159,6 +159,25 @@ placeholder + accidental-newline behavior than RichText.
 
 1. **Image pair**: any image-like mention generates **two attributes** — `<name>Id` (number) + `<name>Url` (string). Render via `ImageUploadWithHover`. WordPress's media library returns both pieces in one call; storing the URL alongside the ID avoids hitting `wp_get_attachment_url()` at render time. If the wording mentions "background" or "bg", add a third attribute `<name>Position` (string, default `"center"`) and render `<ImagePositionControl />` alongside.
 
+   **Always show a suggested dimension hint** next to the field label (e.g.
+   `Background Image — recommended 1920×1080px`), so the editor knows what
+   to upload before the image looks stretched/pixelated on the front end.
+   Pick the suggested size from context — don't ask unless genuinely
+   ambiguous:
+
+   | Image role (from wording / block context) | Suggested dimensions |
+   |---|---|
+   | hero / background / cover (full-width section bg) | 1920×1080px |
+   | card / thumbnail / feature image | 800×600px |
+   | avatar / author / testimonial photo | 200×200px |
+   | logo / partner / brand mark | 300×150px |
+   | icon (raster, not Dashicon) | 64×64px |
+   | gallery / carousel slide | 1200×800px |
+   | unclear | 1200×800px (safe general default) |
+
+   Also pass the same hint text as `ImageUploadWithHover`'s `placeholder`
+   prop so it shows before an image is selected.
+
 2. **Button pair**: "button" / "CTA" alone (without "link") generates **two attributes** — `<name>Text` (string) + `<name>Link` (Gutenberg `LinkControl` object: `{url, opensInNewTab}`). Render the text as a **plain input** (button labels are short, no inline formatting) and the link via `LinkPicker`, side-by-side in a `flex gap-3` row.
 
 3. **Array recursion**: when the dev says "list of X with title, image, and description", recurse the inference for each sub-field (`title` → string, `image` → pair, `description` → string). The final shape is one array attribute whose items are objects with typed sub-fields. Sanitize per-sub-field in `block.php`'s `array_map(...)`.
@@ -244,7 +263,7 @@ Create `resources/blocks/<slug>/` and 6 files inside + the Blade view. Templates
 | `number` | `{"type":"number","default":0}` | `absint($attributes['<name>'] ?? 0)` (unsigned) — use `(int)` only if negatives are valid | `<TextControl type="number" ... />` or `<NumberControl ... />` |
 | `boolean` | `{"type":"boolean","default":false}` | `(bool) ($attributes['<name>'] ?? false)` | `<ToggleControl ... />` |
 | `array` | `{"type":"array","default":[]}` | `array_map(...)` with per-item sanitization | **Tabs repeater**: `<TabSelector items={items} activeItem={activeIdx} setActiveItem={setActiveIdx} addItem={addItem} itemLabelPrefix="Slide" />` at top + `useState(0)` for active index + edit form below scoped to `items[activeIdx]`. Place `<RemoveButton onClick={() => removeItem(activeIdx)} />` in a `<div className="flex justify-end">` at the **top of the active item's panel** (right-aligned, before the fields) — gated by `items.length > 1` so the last item can't be removed |
-| image (id + url) | `{"<name>Id":{"type":"number","default":0},"<name>Url":{"type":"string","default":""}}` | `absint($attributes['<name>Id'] ?? 0)` + `esc_url_raw($attributes['<name>Url'] ?? '')` | `<MediaUploadCheck><ImageUploadWithHover imageId={...Id} imageUrl={...Url} MediaUpload={MediaUpload} onSelect={(media) => setAttributes({ <name>Id: media.id, <name>Url: media.url })} onRemove={() => setAttributes({ <name>Id: 0, <name>Url: '' })} /></MediaUploadCheck>` |
+| image (id + url) | `{"<name>Id":{"type":"number","default":0},"<name>Url":{"type":"string","default":""}}` | `absint($attributes['<name>Id'] ?? 0)` + `esc_url_raw($attributes['<name>Url'] ?? '')` | Label row shows `<name> — recommended <W>×<H>px` (see dimension table above); `<MediaUploadCheck><ImageUploadWithHover imageId={...Id} imageUrl={...Url} MediaUpload={MediaUpload} placeholder="Click to select an image (recommended <W>×<H>px)" onSelect={(media) => setAttributes({ <name>Id: media.id, <name>Url: media.url })} onRemove={() => setAttributes({ <name>Id: 0, <name>Url: '' })} /></MediaUploadCheck>` |
 | link (Gutenberg `LinkControl` object) | `{"type":"object","default":{"url":"","opensInNewTab":false}}` | `esc_url($attributes['<name>']['url'] ?? '')` + `(bool) ($attributes['<name>']['opensInNewTab'] ?? false)` | `<LinkPicker label="..." value={attributes.<name>} onChange={(value) => setAttributes({ <name>: value })} />`. Blade emits `target="_blank"` only when the flag is true; **don't hardcode `rel="noopener"`** — WP's `wp_targeted_link_rel()` filter (priority 15 on `the_content`) adds it automatically |
 
 **Always include the 4 global padding attrs** in `block.php`'s `view(...)` data array, even if the block doesn't use them visually — they're injected by `BlockManager::globalAttributes()` and should be available to Blade:
@@ -492,6 +511,24 @@ registerBlockType(metadata, {
                                     className="w-full border-0 outline-none m-0 p-0 bg-transparent text-base text-gray-900 placeholder:text-gray-400"
                                 />
                             </div>
+                        </div>
+
+                            Image → ImageUploadWithHover with a dimension hint in the label:
+                        <div>
+                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
+                                {__('Background Image', 'sage')}
+                                <span className="normal-case font-normal text-gray-400"> — {__('recommended 1920×1080px', 'sage')}</span>
+                            </label>
+                            <MediaUploadCheck>
+                                <ImageUploadWithHover
+                                    imageId={attributes.bgImageId}
+                                    imageUrl={attributes.bgImageUrl}
+                                    MediaUpload={MediaUpload}
+                                    placeholder={__('Click to select an image (recommended 1920×1080px)', 'sage')}
+                                    onSelect={(media) => setAttributes({ bgImageId: media.id, bgImageUrl: media.url })}
+                                    onRemove={() => setAttributes({ bgImageId: 0, bgImageUrl: '' })}
+                                />
+                            </MediaUploadCheck>
                         </div>
 
                             Description / long copy → RichText:
