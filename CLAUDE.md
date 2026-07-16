@@ -31,6 +31,16 @@
 
 ---
 
+## WordPress Settings
+
+- **Disable WordPress comments entirely** — turn off commenting for all post
+  types (Settings → Discussion, plus `default_comment_status` /
+  `default_ping_status` for post types we register), and close comments/pings
+  on existing content. Remove/hide related admin UI and widgets rather than
+  leaving an unused, unmoderated attack surface.
+
+---
+
 ## Git
 
 To write a commit, use the `commit-rules` SKILL (message format, types, flow). If it isn't installed, follow the guard-rails in **Critical Rules**: one subject per commit, English, never push without permission, no co-author.
