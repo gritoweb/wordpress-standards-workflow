@@ -5,7 +5,7 @@ description: >
   base.css, typography.css, global.css — from a free-text style guide
   description. Use this skill when starting a new theme's CSS foundation,
   or whenever a project is missing any of
-  resources/styles/{variables,base,typography,global}.css. Runs a
+  resources/css/{variables,base,typography,global}.css. Runs a
   4-step wizard (variables → base → typography → global, each step
   depending on tokens from the previous one), then wires the generated
   files into resources/css/app.css.
@@ -67,7 +67,7 @@ never placeholders.
      weight) — offer sensible defaults for anything the dev didn't
      specify (e.g. a standard modular scale) and let them override.
    - Shadows, if the style guide mentions elevation/depth.
-4. Generate `resources/styles/variables.css`:
+4. Generate `resources/css/variables.css`:
    - Tokens meant to also become a Tailwind utility go in `@theme {}` —
      e.g. `--color-ink` auto-generates `text-ink`/`bg-ink`/`border-ink`;
      `--text-h1` (with its paired `--text-h1--line-height` /
@@ -220,10 +220,10 @@ layers can reference earlier tokens/base styles, so order matters):
 
 ```css
 @import "tailwindcss";
-@import "./styles/variables.css";
-@import "./styles/base.css";
-@import "./styles/typography.css";
-@import "./styles/global.css";
+@import "./variables.css";
+@import "./base.css";
+@import "./typography.css";
+@import "./global.css";
 ```
 
 If the imports are missing or out of order, show the dev the diff and

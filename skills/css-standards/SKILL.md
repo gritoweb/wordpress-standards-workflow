@@ -18,7 +18,7 @@ reusable/semantic patterns.
 
 ## Theme CSS foundation (start here)
 
-Every theme starts with **four foundation files** in `resources/styles/`
+Every theme starts with **four foundation files** in `resources/css/`
 — `variables.css` (design tokens), `base.css` (unclassed tag defaults),
 `typography.css` (semantic text classes), `global.css` (site-wide
 structural classes like `.app`/`.container`). Build these before any
