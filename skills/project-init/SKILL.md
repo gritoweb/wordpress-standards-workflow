@@ -83,6 +83,12 @@ never silently overwrite (same "bail > guessing" principle as
 (ask the dev if there's more than one theme, or if the repo layout is
 non-standard).
 
+> **`.gitignore` — two separate actions.** Copy `gitignore.example` **only if
+> the project has none** (Pantheon clones already ship one — leave it). Either
+> way, **append `/.githooks/`** to whatever `.gitignore` the project ends up
+> with: the hook installer regenerates that folder on every install and it must
+> not be tracked. Append the single line; never rewrite the file.
+
 After copying, show a summary table of what was created vs. skipped
 (already existed, dev declined).
 
@@ -115,16 +121,29 @@ Phase 0 answer. Do not run any of these commands.
 2. `lando init --source pantheon` — paste the machine token, pick the
    site.
 3. `lando start` then `lando pull` (DB + uploads).
-4. Scaffold Sage:
+4. Scaffold Sage, **naming the theme after the project — not `sage`** (every
+   `<theme>` below is that name; shipping a theme still called `sage` is a
+   launch blocker):
    ```bash
    cd wp-content/themes
-   composer create-project roots/sage sage
-   cd sage && composer install
+   composer create-project roots/sage <theme>
+   cd <theme> && composer install
    ```
-5. `lando wp theme activate sage`.
+   Then set `vite.config.js` `base:` to `/wp-content/themes/<theme>/public/build/`
+   (Sage's stock Bedrock path 404s every asset otherwise), and claim the theme's
+   identity in `style.css` — `Theme Name`, `Author`, `Text Domain`, and **reset
+   `Version` to `1.0.0`**; match `package.json`'s `name`. (Re-verified by the
+   launch list at go-live.)
+5. `lando wp theme activate <theme>`.
 6. Review and commit the copied kit files through the normal git flow —
    **never push without the project owner's permission**.
 7. Build theme assets (Step below).
+8. **Make the theme deployable** — this upstream has no build step, so
+   `vendor/` and `public/build/` must be committed or the deployed site
+   white-screens (`wp_die` on the missing autoloader). Edit Sage's own
+   `wp-content/themes/<theme>/.gitignore` to drop `/vendor` and `/public/*`,
+   keep `/node_modules`, then commit the built output. Full rationale: README
+   › **Deploying to Pantheon**.
 
 ### Scenario B — Local only
 
@@ -132,8 +151,9 @@ Phase 0 answer. Do not run any of these commands.
 2. Adjust `.lando.yml` if needed (e.g. `php: "8.3"`), then `lando start`.
 3. `lando wp core download`, configure `wp-config.php`, complete the
    install (language, admin user).
-4. Scaffold Sage (same commands as Scenario A step 4).
-5. `lando wp theme activate sage`.
+4. Scaffold Sage (same commands as Scenario A step 4 — name it `<theme>`,
+   not `sage`).
+5. `lando wp theme activate <theme>`.
 6. Optionally `git init` + an initial commit — local only, never push
    without permission.
 7. Build theme assets (Step below).
@@ -141,11 +161,15 @@ Phase 0 answer. Do not run any of these commands.
 ### Theme assets (both scenarios)
 
 ```bash
-cd wp-content/themes/sage
+cd wp-content/themes/<theme>
 npm install       # also installs the pre-commit hook via the `prepare` script
 npm run dev       # development (HMR) — or:
 npm run build     # production build
 ```
+
+> npm or pnpm is the dev's call — just stay consistent within a project. Sage
+> scaffolds a `pnpm-lock.yaml`; if you use npm, don't end up committing both
+> lockfiles. The `prepare` hook fires on either.
 
 ---
 

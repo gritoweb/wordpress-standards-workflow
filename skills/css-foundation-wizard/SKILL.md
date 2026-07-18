@@ -214,24 +214,24 @@ never placeholders.
 
 ## Wiring — `resources/css/app.css`
 
-After all four files are written, check `resources/css/app.css` for
-`@import` statements pointing at them, **in this exact order** (later
-layers can reference earlier tokens/base styles, so order matters):
+After all four files are written, add these four `@import`s to
+`resources/css/app.css`, **below whatever Sage already ships at the top of the
+file** (its `@import "tailwindcss" …` line and any `@source` directives — leave
+those exactly as they are). Keep the four in this order among themselves — later
+layers reference earlier tokens/base styles:
 
 ```css
-@import "tailwindcss";
+/* ↓ append below Sage's stock lines — don't touch what's above */
 @import "./variables.css";
 @import "./base.css";
 @import "./typography.css";
 @import "./global.css";
 ```
 
-If the imports are missing or out of order, show the dev the diff and
-ask for confirmation before editing — same confirm-before-editing
-pattern `create-block` uses for `vite.config.js`/`editor.js`/`app.css`.
-Don't guess at unrelated existing content in `app.css` (e.g. `@source`
-directives from `create-block`'s bootstrap) — only touch the four
-`@import` lines.
+If they're missing or out of order, show the dev the diff and ask for
+confirmation before editing — same confirm-before-editing pattern
+`create-block` uses for `vite.config.js`/`editor.js`/`app.css`. Only touch these
+four lines; never rewrite or reorder the stock top of the file.
 
 ---
 

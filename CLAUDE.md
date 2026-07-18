@@ -7,7 +7,7 @@
 ## ⚠️ Critical Rules
 
 - **Never `git push` without permission**.
-- **Never write to production / a remote environment without explicit permission.** Read-only commands (Terminus, remote `wp-cli`) are free; writes (`lando push`, `terminus` deploy/clone/wipe, remote `wp db`/`search-replace`/import) and `lando pull` need explicit ask.
+- **Never write to production / a remote environment without explicit permission.** Read-only commands (Terminus, remote `wp-cli`) are free; writes (`lando push`, `terminus` deploy/clone/wipe, remote `wp db`/`search-replace`/import) need explicit ask.
 - **Never modify WordPress core or third-party plugin files** — only plugins we own. If unsure whether a plugin is ours, **stop and ask** (changes get wiped on the next update).
 - **Keep a `CHANGELOG.md`** in every theme/plugin we own — but only for *notable, release-level* changes, never a line per file or per commit ([Keep a Changelog](https://keepachangelog.com) format: `## [version] - YYYY-MM-DD` header, `Added` / `Changed` / `Fixed` / `Removed` subsections). The `commit-rules` SKILL decides when an entry is warranted, asks before adding one, and handles the format.
 - **Version the theme and every plugin we own** using SemVer (`MAJOR.MINOR.PATCH`): MAJOR = breaking, MINOR = backwards-compatible feature, PATCH = fix. Version lives in the theme's `style.css` header and the plugin's main PHP file header. A version bump is what triggers a `CHANGELOG.md` entry — internal refactors, chores, docs and formatting that don't bump the version need no entry.

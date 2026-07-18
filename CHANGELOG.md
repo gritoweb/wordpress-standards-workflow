@@ -2,6 +2,80 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-07-18
+
+Hardening pass driven by the first real-world import (a Pantheon + Lando + Sage
+11.2.1 project). Each item below is a gap a dev following the kit literally would
+hit.
+
+### Fixed
+- **Pantheon deploy no longer white-screens.** `gitignore.example` stopped
+  ignoring the theme's `vendor/` and `public/build/`. On the plain Pantheon
+  upstream the kit targets (WP core committed, no build step) the platform serves
+  exactly what's pushed, so those must be committed — otherwise Sage's
+  `functions.php` `wp_die()`s on the missing autoloader and there's no compiled
+  CSS/JS. New README section **"Deploying to Pantheon"** documents the theme
+  `.gitignore` edit and the Integrated Composer + Build Tools alternative.
+- **`ImageUploadWithHover` i18n.** `placeholder` and `buttonText` were passed
+  through `__()` a second time (`__(__())`) and, being `__()` on a variable,
+  weren't extractable by `make-pot` — no placeholder text was translatable. Props
+  now hold already-localized strings; the defaults carry the `__()`.
+- **`css-foundation-wizard` wiring example** no longer opens with a bare
+  `@import "tailwindcss";` (which read as "replace Sage's stock line"). It shows
+  only the four foundation `@import`s, appended below Sage's stock
+  `@import`/`@source` lines, with an explicit "don't touch what's above".
+
+### Changed
+- **PHP requirement raised 8.2 → 8.3+** in the README prerequisites and
+  troubleshooting (Sage 11.2.1 declares `>=8.3`; latest stable recommended).
+- **Theme name no longer hardcoded as `sage`.** The scaffold step states the
+  convention (name the theme after the project) and every downstream path uses
+  `<theme>`; ties to the launch-list Theme-identity blocker.
+- **Scaffold step hardened** — set Vite's `base:` to the real theme path (Sage's
+  stock Bedrock path 404s every asset) and claim the theme identity in `style.css`
+  (`Theme Name`/`Author`/`Text Domain`, `Version` → `1.0.0`) + `package.json`
+  `name`.
+- **npm/pnpm is the dev's call** — the README/`project-init` now say to stay
+  consistent per project (Sage ships a `pnpm-lock.yaml`; don't commit both
+  lockfiles) instead of prescribing npm.
+
+### Added
+- **`project-init`** — explicit step to append `/.githooks/` to the project's
+  existing `.gitignore`, covering Pantheon projects where `gitignore.example` is
+  skipped (they always already have a `.gitignore`).
+
+### Removed
+- **The Critical Rule gating `lando pull`.** It only affects the local
+  environment, so the dev decides. The workflow steps that use it (the initial
+  DB/uploads pull) stay.
+
+## 2026-07-16
+
+### Added
+- **`skills/create-block/SKILL.md`** — image fields suggest recommended upload
+  dimensions (per-role table) in the field label and the picker placeholder, so
+  editors upload correctly-sized media.
+- **`CLAUDE.md` › WordPress Settings** — new rule to disable WordPress comments
+  entirely (all post types, admin UI, existing content) rather than leaving an
+  unused, unmoderated attack surface.
+
+### Changed
+- **`global-skills/commit-rules.md`** — default commit messages to subject-only;
+  add a one-line body only when the *why* isn't obvious from subject + diff.
+
+### Fixed
+- **`css-foundation-wizard` / `css-standards`** — foundation files live in
+  `resources/css/`, not `resources/styles/`, so the `@import`s resolve and the
+  path stops colliding with Sage's stock `@styles` → `resources/css` alias.
+
+## 2026-07-09
+
+### Added
+- **`skills/css-foundation-wizard/SKILL.md`** — new skill: an interactive 4-step
+  wizard (variables → base → typography → global, each depending on the previous)
+  that writes a theme's CSS foundation from a free-text style guide and wires the
+  files into `resources/css/app.css`.
+
 ## 2026-06-15
 
 ### Added

@@ -144,7 +144,7 @@ hook silently never fires.)
 Set up once per theme (host, not inside Lando):
 
 ```bash
-cd wp-content/themes/sage
+cd wp-content/themes/<theme>
 
 # 1. formatter + plugins + lint-staged (NO husky)
 npm i -D prettier prettier-plugin-tailwindcss @shufo/prettier-plugin-blade lint-staged
@@ -182,7 +182,8 @@ WordPress comes up differs. Both start from a **brand-new, empty** site.
 Composer and Node run on the **host**; Lando only serves WordPress.
 
 - Docker + [Lando](https://lando.dev/)
-- PHP 8.2+ and Composer (Sage 11 scaffold)
+- PHP **8.3+** and Composer (Sage 11 requires 8.3; run the latest stable
+  release where you can)
 - Node + npm (theme asset build)
 - Git
 - Scenario A only: a Pantheon account and a personal **machine token**
@@ -194,17 +195,34 @@ Composer and Node run on the **host**; Lando only serves WordPress.
 2. Create the project folder locally and `cd` into it.
 3. `lando init --source pantheon` — paste the machine token (hidden), pick the site.
 4. `lando start` then `lando pull` (DB + uploads; `lando start` clones code only).
-5. Scaffold Sage into the theme dir:
+5. Scaffold Sage into the theme dir, **naming the theme after the project —
+   not `sage`**. Every `<theme>` placeholder below is that name (e.g.
+   `acme-2026`); shipping a theme still called `sage` is a launch blocker
+   (see `_docs/launch-list.md` › Theme identity).
    ```bash
    cd wp-content/themes
-   composer create-project roots/sage sage
-   cd sage && composer install        # boots Acorn
+   composer create-project roots/sage <theme>
+   cd <theme> && composer install     # boots Acorn
    ```
-6. Activate the theme: `lando wp theme activate sage`.
+   Then fix Vite's `base:` — Sage ships a Bedrock path (`/app/themes/sage/…`)
+   that 404s every built asset on a standard WP layout:
+   ```js
+   // vite.config.js
+   base: '/wp-content/themes/<theme>/public/build/',
+   ```
+   And claim the theme's identity in `style.css` — set `Theme Name`, `Author`,
+   `Text Domain`, and **reset `Version` to `1.0.0`** (your theme's real start;
+   `11.2.1` is Sage's). Match `package.json`'s `name`. The launch list
+   re-verifies this at go-live.
+6. Activate the theme: `lando wp theme activate <theme>`.
 7. Copy the standards in (see "How to use it" above) — the Pantheon clone is
    already a git repo: review and commit through the normal flow,
    **never push without the project owner's permission**.
 8. Build theme assets (see "Theme assets").
+9. Make the theme deployable — see **Deploying to Pantheon** below. On this
+   upstream the build output has to be committed, and Sage's own `.gitignore`
+   fights that by default. Do this before the first push or the deploy
+   white-screens.
 
 ### Scenario B — Local only (no Pantheon)
 
@@ -213,8 +231,8 @@ Composer and Node run on the **host**; Lando only serves WordPress.
 3. Adjust `.lando.yml` (e.g. `php: "8.3"`), then `lando start`.
 4. `lando wp core download`, configure `wp-config.php` (host `database`,
    credentials per recipe), open the install URL, set language + admin user.
-5. Scaffold Sage (same as Scenario A, step 5).
-6. Activate: `lando wp theme activate sage`.
+5. Scaffold Sage (same as Scenario A, step 5 — name it `<theme>`, not `sage`).
+6. Activate: `lando wp theme activate <theme>`.
 7. Copy the standards in. Optionally `git init` + an initial commit
    (local only — never push without permission).
 8. Build theme assets.
@@ -224,17 +242,66 @@ Composer and Node run on the **host**; Lando only serves WordPress.
 Sage 11 uses **Vite**. Composer/Node on the host, WordPress in Lando.
 
 ```bash
-cd wp-content/themes/sage
+cd wp-content/themes/<theme>
 npm install
 npm run dev      # development (HMR)   — or:
 npm run build    # production build
 ```
+
+> **npm or pnpm — the dev's call, but stay consistent per project.** Sage
+> scaffolds a `pnpm-lock.yaml`; if you go with npm, don't end up committing both
+> lockfiles. The examples use `npm`; swap in `pnpm` freely — the `prepare` hook
+> fires on either.
 
 > **Lando + Vite gotcha:** the Vite dev server runs on the host while the site
 > is served from the Lando container, so HMR can fail to connect until the dev
 > server origin is reachable from the browser. If HMR misbehaves, use
 > `npm run build` and reload, or align the Vite dev server URL with the Lando
 > app URL in the theme's Vite config. Record the working setting per project.
+
+---
+
+## Deploying to Pantheon (Scenario A)
+
+**The build output must be committed.** This kit targets the plain Pantheon
+WordPress upstream — WordPress core is committed to git and there is **no build
+step** (no root `composer.json`, no `build_step: true` in `pantheon.upstream.yml`,
+no CI). Pantheon serves **exactly what you push**; nothing runs `composer install`
+or `pnpm build` on deploy.
+
+So the theme's `vendor/` and `public/build/` have to be in git. If they aren't,
+the deployed site white-screens on every request:
+
+- Sage's `functions.php` calls `wp_die()` when `vendor/autoload.php` is missing.
+- With no `public/build/`, there's no compiled CSS or JS even if it did boot.
+
+Sage scaffolds its **own** `wp-content/themes/<theme>/.gitignore` that ignores
+both. After scaffolding, edit that file down to only the true local artifacts:
+
+```diff
+# wp-content/themes/<theme>/.gitignore
+  /node_modules
+- /vendor
+- /public/*
+- !/public/.gitkeep
+  .env
+  npm-debug.log
+```
+
+Then `pnpm build` (or `npm run build`) and commit `vendor/` + `public/build/`
+alongside the source. The kit's root `gitignore.example` is already set up for
+this — it does **not** ignore those two paths.
+
+> **Alternative — Integrated Composer + Build Tools.** Pantheon can instead run
+> the build for you: `build_step: true` in `pantheon.upstream.yml` makes the
+> platform run `composer install` on deploy, and a
+> [Build Tools](https://docs.pantheon.io/guides/build-tools) CI pipeline runs
+> the front-end (`pnpm build`). That's a heavier, differently-structured repo
+> (root `composer.json`, WordPress in a `web/` subdir, core managed as a
+> dependency) and is **not** what this kit sets up. If a project goes that route,
+> invert the rule above — ignore `vendor/` and `public/build/`, and let the
+> platform rebuild them. Note IC alone only covers Composer/PHP deps; the Vite
+> front-end build still needs Build Tools or a committed `public/build/`.
 
 ---
 
@@ -246,10 +313,10 @@ old gists, is the source of truth. To change a standard: open a PR, add a
 
 ## Troubleshooting
 
-- **`composer create-project` fails** — PHP must be 8.2+ on the host
-  (`php -v`); Sage 11 requires it.
+- **`composer create-project` fails** — PHP must be **8.3+** on the host
+  (`php -v`); Sage 11 requires it. Prefer the latest stable release.
 - **Theme not activating** — Lando must be running; run
-  `lando wp theme activate sage` after `lando start`.
+  `lando wp theme activate <theme>` after `lando start`.
 - **HMR not connecting** — see the Lando + Vite gotcha; `npm run build` is the
   reliable fallback.
 - **Reset a Lando env** — `lando destroy -y && lando start` (local data lost;

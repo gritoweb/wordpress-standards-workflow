@@ -29,10 +29,17 @@ wp-content/blogs.dir/
 wp-config-local.php
 
 # --- Sage 11 theme (wp-content/themes/<theme>/) ---
-# Track theme source; ignore build artifacts and dependencies.
+# On the plain Pantheon upstream this kit targets (WP core committed, no
+# build_step) the platform serves exactly what's pushed — nothing runs
+# `composer install` or `pnpm build` on deploy. So the theme's compiled deps
+# MUST be committed, or the deployed site white-screens: Sage's functions.php
+# wp_die()s without vendor/autoload.php, and a missing public/build/ means no
+# CSS/JS. That's why vendor/ and public/build/ are NOT ignored here.
+# Sage ships its own wp-content/themes/<theme>/.gitignore that DOES ignore both
+# — drop those two lines from it after scaffolding (see README › Deploying to
+# Pantheon). If you instead adopt Integrated Composer + Build Tools, invert
+# this (ignore them; the platform rebuilds on deploy) — again, see the README.
 wp-content/themes/*/node_modules/
-wp-content/themes/*/vendor/
-wp-content/themes/*/public/build/
 wp-content/themes/*/public/hot
 wp-content/themes/*/dist/
 wp-content/themes/*/.env

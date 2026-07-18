@@ -16,8 +16,8 @@ export const ImageUploadWithHover = ({
   onRemove,
   MediaUpload,
   height = '380px',
-  placeholder = 'Click to select an image',
-  buttonText = 'Change Image',
+  placeholder = __('Click to select an image', 'sage'),
+  buttonText = __('Change Image', 'sage'),
   buttonStyle = 'px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700',
   placeholderBg = 'border-2 border-dashed border-gray-300 rounded hover:border-gray-400 transition-colors',
   placeholderBgColor = 'bg-gray-200',
@@ -66,7 +66,7 @@ export const ImageUploadWithHover = ({
                 style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, visibility: 'hidden', transition: 'all 0.3s ease', zIndex: 10 }}
               >
                 <Button variant="primary" className={buttonStyle} onClick={(e) => { e.stopPropagation(); open(); }}>
-                  {__(buttonText, 'sage')}
+                  {buttonText}
                 </Button>
               </div>
               {onRemove && (
@@ -94,7 +94,7 @@ export const ImageUploadWithHover = ({
             <div className={`flex items-center justify-center w-full h-full ${widthContainer} ${placeholderBg} ${placeholderBgColor}`} style={{ height }}>
               <div className="text-center">
                 <div className="mb-2 text-2xl text-gray-400">+</div>
-                <p className="mb-2 text-sm text-gray-600">{__(placeholder, 'sage')}</p>
+                <p className="mb-2 text-sm text-gray-600">{placeholder}</p>
                 <Button variant="primary" className="px-3 py-1 text-xs text-white bg-blue-600 rounded hover:bg-blue-700">
                   {__('Add Image', 'sage')}
                 </Button>
