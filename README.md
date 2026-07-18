@@ -28,6 +28,8 @@ _docs/
 gitignore.example                  # base .gitignore template — imported as <project>/.gitignore (only if missing)
 prettier.config.example.js         # Prettier + Tailwind/Blade class sorting — copied to <theme>/prettier.config.js
 install-git-hooks.example.mjs      # pre-commit hook installer — copied to <theme>/scripts/install-git-hooks.mjs
+mu-plugins/
+  acorn-pantheon-storage.php       # Pantheon blocker: relocates Acorn storage — copied to <project>/wp-content/mu-plugins/
 CHANGELOG.md                       # what changed in the standards
 ```
 
@@ -62,6 +64,7 @@ the manifest **is** the source of truth either way.
 | `gitignore.example` | `./.gitignore` | **Only if** the project has no `.gitignore` yet — never overwrite |
 | `prettier.config.example.js` | `<theme>/prettier.config.js` | Theme root; then add the `prepare` + `lint-staged` keys and copy the hook installer — see "Code formatting" |
 | `install-git-hooks.example.mjs` | `<theme>/scripts/install-git-hooks.mjs` | Pre-commit installer; wired via the theme's `prepare` script |
+| `mu-plugins/acorn-pantheon-storage.php` | `wp-content/mu-plugins/acorn-pantheon-storage.php` | **Pantheon: required, copy as-is.** Relocates Acorn's storage off the read-only filesystem — commit it in the **first commits** or Test/Live white-screen. See "Deploying to Pantheon" |
 
 `README.md`, `CHANGELOG.md` and any other file at the kit's root are about
 the kit itself and are **not** imported into projects.
@@ -291,6 +294,20 @@ both. After scaffolding, edit that file down to only the true local artifacts:
 Then `pnpm build` (or `npm run build`) and commit `vendor/` + `public/build/`
 alongside the source. The kit's root `gitignore.example` is already set up for
 this — it does **not** ignore those two paths.
+
+**Relocate Acorn's storage — also a blocker.** By default Acorn compiles Blade
+views into `wp-content/cache/acorn`, but on Pantheon Test/Live the code
+filesystem is read-only (only `wp-content/uploads` is writable), so every request
+`wp_die`s there. The kit ships a drop-in mu-plugin that points Acorn's storage at
+`wp-content/uploads/acorn` (writable on every environment) **before** the theme
+boots Acorn — no theme edit. Copy it in, and commit it in the **first commits**:
+
+```bash
+cp "$KIT/mu-plugins/acorn-pantheon-storage.php" wp-content/mu-plugins/
+```
+
+The compiled views land under `wp-content/uploads/` (git-ignored, regenerated at
+runtime) — only the mu-plugin file itself is committed.
 
 > **Alternative — Integrated Composer + Build Tools.** Pantheon can instead run
 > the build for you: `build_step: true` in `pantheon.upstream.yml` makes the

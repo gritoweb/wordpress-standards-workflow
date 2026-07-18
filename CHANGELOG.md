@@ -40,9 +40,14 @@ hit.
   lockfiles) instead of prescribing npm.
 
 ### Added
-- **`project-init`** — explicit step to append `/.githooks/` to the project's
-  existing `.gitignore`, covering Pantheon projects where `gitignore.example` is
-  skipped (they always already have a `.gitignore`).
+- **`mu-plugins/acorn-pantheon-storage.php`** — new kit artifact and Pantheon
+  blocker. Acorn compiles Blade views into `wp-content/cache/acorn` by default,
+  which is read-only on Pantheon Test/Live — so every request `wp_die`s. This
+  drop-in mu-plugin defines `ACORN_STORAGE_PATH` = `wp-content/uploads/acorn`
+  (writable everywhere) and creates the tree before the theme boots Acorn, with
+  no theme edit. Added to the import manifest and the `project-init` deploy step;
+  must land in a project's first commits. Verified end-to-end on a live Pantheon
+  site.
 
 ### Removed
 - **The Critical Rule gating `lando pull`.** It only affects the local

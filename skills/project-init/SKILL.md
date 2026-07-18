@@ -78,6 +78,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `gitignore.example` | `./.gitignore` | **Only if `.gitignore` doesn't exist yet** — never overwrite an existing one |
 | `prettier.config.example.js` | `<theme>/prettier.config.js` | Ask before overwriting if present |
 | `install-git-hooks.example.mjs` | `<theme>/scripts/install-git-hooks.mjs` | Ask before overwriting if present |
+| `mu-plugins/acorn-pantheon-storage.php` | `wp-content/mu-plugins/acorn-pantheon-storage.php` | **Pantheon: required, copy as-is.** Relocates Acorn storage off the read-only filesystem; must be in the first commits |
 
 `<theme>` = the Sage theme root, typically `wp-content/themes/<name>`
 (ask the dev if there's more than one theme, or if the repo layout is
@@ -142,8 +143,11 @@ Phase 0 answer. Do not run any of these commands.
    `vendor/` and `public/build/` must be committed or the deployed site
    white-screens (`wp_die` on the missing autoloader). Edit Sage's own
    `wp-content/themes/<theme>/.gitignore` to drop `/vendor` and `/public/*`,
-   keep `/node_modules`, then commit the built output. Full rationale: README
-   › **Deploying to Pantheon**.
+   keep `/node_modules`, then commit the built output. Also copy
+   `mu-plugins/acorn-pantheon-storage.php` to `wp-content/mu-plugins/` — without
+   it Acorn tries to compile views into the read-only `wp-content/cache` and
+   white-screens on Test/Live. Both must land in the **first commits**. Full
+   rationale: README › **Deploying to Pantheon**.
 
 ### Scenario B — Local only
 
