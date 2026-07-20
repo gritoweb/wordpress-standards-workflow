@@ -9,8 +9,9 @@ description: >
   theme has the block infrastructure (BlockManager, folders, Vite config,
   editor.js glob, React 18 deps, Tailwind `@source`), bootstraps any missing
   pieces with explicit dev confirmation, then generates the block folder
-  (`block.json`/`block.php`/`block.jsx`/`block.js`/`block.css`), the Blade
-  view, and wires the block into `BlockManager`.
+  (`block.json`/`block.php`/`block.jsx`/`preview.svg`, plus `block.js`/`block.css`
+  only when the block needs them), the Blade view, and wires the block into
+  `BlockManager`.
 ---
 
 # create-block — Sage 11 Gutenberg block scaffolder
@@ -39,7 +40,7 @@ that themselves.
 
 1. **Phase 0** — Verify infra; bootstrap missing pieces (with dev consent).
 2. **Phase 1** — Collect block requirements.
-3. **Phase 2** — Generate the 6 block files + Blade view.
+3. **Phase 2** — Generate the block files (always: `block.json`/`block.php`/`block.jsx`/`preview.svg` + Blade view; `block.js`/`block.css` only when needed).
 4. **Phase 3** — Register the block in `BlockManager`.
 5. **Phase 4** — Hand off with next-step instructions.
 
@@ -60,8 +61,7 @@ Run every check below; show the dev a status table before doing anything else.
 | 0.5 | `resources/css/vendor/` exists |
 | 0.6 | `app/blocks.php` is the **central block-bootstrap file** — must (a) exist, (b) contain top-level `BlockCategories::register();`, (c) contain `add_action('init', function () { (new BlockManager())->register(); });`, (d) be loaded by `functions.php`'s `collect([...])` array (see 0.6.1). Template at `<skill>/templates/blocks.php`. |
 | 0.6.1 | `functions.php`'s `collect([...])` array includes `'blocks'`. Without it, `app/blocks.php` never loads. If `functions.php` doesn't use the `collect([...])` pattern at all, **bail out** — needs manual wiring. |
-| 0.7 | `vite.config.js` declares `discoverBlockAssets()` AND spreads `...discoverBlockAssets()` into the `laravel({ input: [...] })` call |
-| 0.8 | `resources/js/editor.js` calls `import.meta.glob('../blocks/*/block.jsx', { eager: true });` |
+| 0.8 | `resources/js/editor.js` calls `import.meta.glob('../blocks/*/block.jsx', { eager: true });` (Vite compiles the **editor** JSX only — front-end `block.js`/`block.css` are served from source via `file:`, see "Block asset loading") |
 | 0.9 | `resources/css/app.css` has `@source "../blocks/**/*.{php,jsx}";` |
 | 0.10 | `package.json` `devDependencies` has `react@^18` AND `react-dom@^18`. **React pinned to ^18, not ^19** — React 19 breaks Gutenberg (element-symbol mismatch with WP's React 18). |
 | 0.11 | `app/Blocks/BlockCategories.php` exists. Template at `<skill>/templates/BlockCategories.php`. **First-run only**: ask `"Vou criar uma categoria pros seus blocos. Quer chamar de 'Custom Blocks' (default) ou outro nome?"`, copy template, edit `TITLE` and `SLUG` (lowercase + hyphens) if dev picked a different name. The actual `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). Subsequent runs: grep `const SLUG = '...'` from the existing file. |
@@ -81,7 +81,7 @@ Run every check below; show the dev a status table before doing anything else.
 If any check 0.1–0.16 (incl. 0.6.1) fails:
 
 1. Show the dev a status table of failed checks.
-2. Split fixes into **(A) Creations** (new files/folders) and **(B) Modifications** (edits to `functions.php`, `vite.config.js`, `editor.js`, `app.css`). `package.json` is not edited — tell the dev to run `npm install --save-dev react@^18.0.0 react-dom@^18.0.0` themselves.
+2. Split fixes into **(A) Creations** (new files/folders) and **(B) Modifications** (edits to `functions.php`, `editor.js`, `app.css`). `package.json` is not edited — tell the dev to run `npm install --save-dev react@^18.0.0 react-dom@^18.0.0` themselves.
 3. Confirm A and B separately. For B, show inline diffs (affected hunks only). Stop if the dev declines either.
 
 ### Idempotency (per-file divergence heuristic)
@@ -92,7 +92,6 @@ Phase 0 must be re-runnable. Before each create/modify, Read the target and chec
 |---|---|---|---|---|
 | `app/blocks.php` (Group A) | Has both `BlockCategories::register()` and `add_action('init', ...)` referencing `BlockManager` | **Skip** | **Bail** — name the missing piece | **Bail** — content unrecognized; ask dev to move/rename |
 | `functions.php` (Group B) | `collect([...])->each(...)` array includes `'blocks'` | **Skip** | Edit the array (insert `'blocks'`); preserve formatting | **Bail** — pattern not found / dynamic array |
-| `vite.config.js` | `function discoverBlockAssets` + `...discoverBlockAssets()` inside `laravel({ input: [...] })` | **Skip** | apply documented edit | **Bail** |
 | `resources/js/editor.js` | `import.meta.glob('../blocks/*/block.jsx'` | **Skip** | apply documented edit | **Bail** |
 | `resources/css/app.css` | `@source "../blocks/**` | **Skip** | apply documented edit | **Bail** |
 | `app/Providers/ThemeServiceProvider.php` (Group B) | `boot()` calls `parent::boot()` and registers a `Blade::directive('paddingClasses', ...)` | **Skip** | `boot()` exists but lacks the directive — insert the `Blade::directive(...)` call | **Bail** — provider doesn't match Sage's stock shape (custom providers are common; ask the dev to wire it manually) |
@@ -240,19 +239,52 @@ Read `$namespace` from `app/Blocks/BlockManager.php` (via `getNamespace()`). Use
 
 ## Phase 2 — Generate the block files
 
-Create `resources/blocks/<slug>/` and 6 files inside + the Blade view. Templates at the bottom of this doc. Substitute `<slug>`, `<Title>`, `<category>`, `<icon>`, `<namespace>` with Phase 1 values.
+Create `resources/blocks/<slug>/` plus the Blade view. Templates at the bottom of this doc. Substitute `<slug>`, `<Title>`, `<category>`, `<icon>`, `<namespace>` with Phase 1 values.
 
-**Files:**
+**Files — always:**
 
 1. `resources/blocks/<slug>/block.json`
 2. `resources/blocks/<slug>/block.php`
 3. `resources/blocks/<slug>/block.jsx`
-4. `resources/blocks/<slug>/block.js`
-5. `resources/blocks/<slug>/block.css`
-6. `resources/blocks/<slug>/preview.svg`
-7. `resources/views/blocks/<slug>.blade.php`
+4. `resources/blocks/<slug>/preview.svg`
+5. `resources/views/blocks/<slug>.blade.php`
+
+**Files — only when needed** (see the Tailwind-first rule in **Behavior Rules**):
+
+- `resources/blocks/<slug>/block.js` — only if the block has real front-end behavior. When present, add `"viewScript": "file:./block.js"` to block.json.
+- `resources/blocks/<slug>/block.css` — only for reusable/semantic CSS or third-party lib overrides (never one-off layout — that's Tailwind in the Blade). When present, add `"viewStyle": "file:./block.css"` to block.json.
 
 **`preview.svg`** — static image Gutenberg shows on the right-side panel when the dev hovers the block card in the `+` inserter. Generate from `<skill>/templates/preview.svg` by replacing `__BLOCK_TITLE__` with the block's `<Title>`. block.json gets an `isPreview` attribute + an `example` field; block.jsx short-circuits at the top of `edit()` to return only the SVG when `isPreview === true` (see template). Dev can swap for a real `.webp`/`.png` later — wiring stays.
+
+### Block asset loading (the canonical rule)
+
+Two kinds of asset, two mechanisms — never mix them:
+
+1. **The block's own front-end CSS/JS** (`block.css` / `block.js`) — **each
+   optional** (see the Tailwind-first rule): declared in `block.json` via
+   **`file:./block.css`** (`viewStyle`) and **`file:./block.js`** (`viewScript`).
+   WordPress enqueues them **conditionally** — only on pages where the block
+   renders — and dedupes automatically. Served **straight from source**, not
+   Vite-built, so:
+   - `block.css` exists only for reusable/semantic CSS or lib overrides; it's
+     **plain CSS** (no `@apply`/`@reference`). One-off layout goes in the Blade
+     as Tailwind utilities, not here.
+   - `block.js` exists only when the block has behavior; it's **plain vanilla**
+     (no `import`), gated on `DOMContentLoaded`.
+   - Never register these in `setup.php`. `block.json` is the whole wiring.
+
+2. **Third-party vendor libs** (Swiper, GSAP, …): **`wp_register_script` /
+   `wp_register_style` in `app/setup.php`** (declare only — nothing loads), then
+   **`wp_enqueue_script` / `wp_enqueue_style` in the block's `block.php`** (only
+   the blocks that use it; WP dedupes by handle so N blocks share one copy).
+   Vendor bundles are committed under `resources/{js,css}/vendor/` and referenced
+   with `get_theme_file_uri(...)` — not a CDN. The block's `block.js` consumes
+   the lib via its global (e.g. `window.Swiper`), which is guaranteed available
+   because classic vendor scripts execute before the block's `DOMContentLoaded`
+   handler.
+
+The editor's `block.jsx` is the **only** block file Vite compiles (via the
+`editor.js` glob). Vite never touches front-end `block.js`/`block.css`.
 
 **Per-attribute generation rules:**
 
@@ -331,6 +363,8 @@ End with a summary table listing every file created/modified.
 
 ## Behavior Rules
 
+- **Tailwind-first; `block.css` / `block.js` are optional** — put one-off styling (padding, flex, sizing, positioning) as Tailwind utilities in the **Blade markup**. Generate `block.css` + wire `viewStyle` **only** when the block needs genuinely reusable/semantic CSS or a third-party lib override (e.g. re-coloring Swiper's bullets) — never for one-off layout. Likewise generate `block.js` + wire `viewScript` **only** when the block has real front-end behavior. A purely presentational block ships neither file and neither `view*` field.
+- **Comments follow `CLAUDE.md` in every emitted file** — comment the *why*, never the *what*. Ship **no** boilerplate "what" comments (`{{-- View-only --}}`, `// gets the title`) and **no** leftover commented-out example code. The inline `//` / `{{-- --}}` guidance and commented-out snippets in the templates below are **scaffolding for you** — replace them with real code or delete them; they must not survive verbatim into the generated block. Keep only genuine, non-obvious "why" notes (e.g. the anchor-id rationale).
 - **Anchor support on every block** — `supports.anchor: true`, id emitted on the `<section>` wrapper only; dynamic/unique ids (Swiper, etc.) go on an inner `<div>` so they never collide with the anchor (see "Anchor support").
 - **Use `view()`** (global Acorn helper), not `\Roots\view()`.
 - **Sanitization**: `absint()` for unsigned numerics, `(bool)` for booleans, `sanitize_text_field()` for plain strings, `wp_kses_post()` only for trusted HTML.
@@ -384,6 +418,10 @@ All block-file templates below use these — substitute throughout:
 
 #### `resources/blocks/<slug>/block.json`
 
+Include `"viewScript"` only when a `block.js` exists, and `"viewStyle"` only
+when a `block.css` exists (both optional — see the Tailwind-first rule). A
+presentational block omits both lines.
+
 ```json
 {
     "apiVersion": 3,
@@ -394,6 +432,8 @@ All block-file templates below use these — substitute throughout:
     "description": "<one-line description>",
     "textdomain": "sage",
     "render": "file:./block.php",
+    "viewScript": "file:./block.js",
+    "viewStyle": "file:./block.css",
     "supports": {
         "anchor": true
     },
@@ -423,8 +463,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// If a vendor lib was declared, enqueue here (registered in app/setup.php).
-// Otherwise omit these two lines.
+// The block's own block.css/block.js are auto-enqueued by WordPress via
+// block.json's file: fields — nothing to do here for those.
+// Only third-party vendor libs get enqueued here (registered in app/setup.php):
 // wp_enqueue_script('<handle>');
 // wp_enqueue_style('<handle>');
 
@@ -582,30 +623,45 @@ registerBlockType(metadata, {
 
 #### `resources/blocks/<slug>/block.js`
 
+Plain vanilla — **no `import`**. Consume vendor libs via their global (e.g.
+`window.Swiper`); gate init on `DOMContentLoaded` so vendor scripts have run.
+
 ```js
-// No frontend behavior yet.
-// If the block uses a vendor lib (e.g. Swiper), init it here on DOMContentLoaded.
+// No frontend behavior yet. Example when a vendor lib is used:
+// document.addEventListener('DOMContentLoaded', () => {
+//   document.querySelectorAll('.<slug>').forEach((el) => {
+//     if (typeof window.Swiper !== 'undefined') new window.Swiper(el, { /* ... */ });
+//   });
+// });
 ```
 
-#### `resources/blocks/<slug>/block.css`
+#### `resources/blocks/<slug>/block.css` — optional
+
+Create this file **only** for reusable/semantic CSS or third-party lib
+overrides. One-off layout (padding, flex, sizing) belongs in the Blade as
+Tailwind utilities — not here. If the block has none of that, don't create the
+file and don't add `viewStyle` to block.json.
+
+When you do create it: plain CSS — **no `@apply` / `@reference`** (it's served
+from source, not Vite-compiled, so Tailwind directives would ship uncompiled and
+break). Use `var(--...)` tokens. Example of a legitimate use — overriding a
+vendor lib's internals, scoped under the block's root class:
 
 ```css
-@reference "../../css/app.css";
-
-.<slug> {
-    @apply py-16;
+.<slug> .swiper-pagination-bullet-active {
+    background-color: var(--color-primary);
 }
 ```
 
 #### `resources/views/blocks/<slug>.blade.php`
 
 ```blade
-{{-- View-only. Data prepared in block.php. --}}
-<section @if ($anchor) id="{{ $anchor }}" @endif class="<slug>">
-    {{-- The Gutenberg anchor id ALWAYS lives on this <section> wrapper.
-         Any dynamic/unique id the block needs (e.g. a Swiper instance id)
-         goes on an INNER element, never here — see "Anchor support". --}}
-    {{-- Render with the data passed from block.php. Example:
+<section @if ($anchor) id="{{ $anchor }}" @endif class="<slug> py-16">
+    {{-- Anchor id stays on this <section>; any dynamic/unique id (e.g. a Swiper
+         instance id) goes on an INNER element so it can't collide — see
+         "Anchor support". This note is guidance: keep it only if the block
+         actually emits a dynamic id, else drop it. --}}
+    {{-- Scaffolding — replace with the real render. Example:
         @if ($heading)
             <h2 class="<slug>__heading">{{ $heading }}</h2>
         @endif
@@ -690,49 +746,13 @@ add_action('init', function () {
 });
 ```
 
-#### `vite.config.js` — additions
+#### `vite.config.js` — no block changes
 
-Add imports:
-
-```js
-import fs from 'fs';
-import path from 'path';
-```
-
-Add this function before `export default defineConfig({...})`:
-
-```js
-function discoverBlockAssets() {
-  const entries = [];
-  const blocksDir = 'resources/blocks';
-  if (!fs.existsSync(blocksDir)) return entries;
-
-  for (const dirent of fs.readdirSync(blocksDir, { withFileTypes: true })) {
-    if (!dirent.isDirectory()) continue;
-    const blockPath = path.join(blocksDir, dirent.name);
-    for (const file of ['block.js', 'block.css']) {
-      const p = path.join(blockPath, file);
-      if (fs.existsSync(p)) entries.push(p);
-    }
-  }
-  return entries;
-}
-```
-
-Spread the discovery into the `laravel({ input: [...] })` plugin call:
-
-```js
-laravel({
-  input: [
-    'resources/css/app.css',
-    'resources/js/app.js',
-    'resources/css/editor.css',
-    'resources/js/editor.js',
-    ...discoverBlockAssets(),  // add this
-  ],
-  // ...
-}),
-```
+Vite is **not** involved in front-end block assets. `block.js`/`block.css` are
+declared in `block.json` via `file:` and served straight from source — see
+"Block asset loading" below. Leave `vite.config.js` as-is (it still builds
+`app.*` and `editor.*`; the editor's `block.jsx` is compiled via the
+`editor.js` glob).
 
 #### `resources/js/editor.js` — add the glob
 

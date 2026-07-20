@@ -2,6 +2,38 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-07-20
+
+Block asset-loading convention reworked after building the first real block
+(a Swiper image carousel on a Pantheon + Sage 11 project).
+
+### Changed
+- **A block's own front-end CSS/JS is now declared in `block.json` via `file:`**
+  (`viewStyle: file:./block.css`, `viewScript: file:./block.js`) and served
+  straight from source — WordPress enqueues them conditionally, only where the
+  block renders. Consequences: `block.css` is **plain CSS** (no
+  `@apply`/`@reference`) and `block.js` is **plain vanilla** (no `import`).
+  Vite now compiles only the editor's `block.jsx`.
+- **`create-block` skill:** dropped the `discoverBlockAssets()` Vite wiring
+  (removed check 0.7, the `vite.config.js` idempotency row, and the
+  vite.config additions section); `block.json`/`block.css`/`block.php`/`block.js`
+  templates updated; new **"Block asset loading"** section documents the two
+  mechanisms (block-owned assets via `file:` vs. third-party vendor libs via
+  `wp_register_*` in `setup.php` + `wp_enqueue_*` in `block.php`).
+- **`CLAUDE.md`:** **Blocks** section gained the canonical asset rule; **CSS**
+  section notes the block-scoped-CSS-is-plain-CSS exception.
+- **`create-block` comment hygiene:** new Behavior Rule — emitted files follow
+  `CLAUDE.md`'s comment standard (why-not-what, no boilerplate "what" comments,
+  no leftover commented-out scaffolding). Blade template's `{{-- View-only --}}`
+  boilerplate removed; template guidance comments relabeled as scaffolding.
+- **`create-block` Tailwind-first / optional block assets:** new Behavior Rule —
+  one-off layout goes in the Blade as Tailwind utilities; `block.css` (+
+  `viewStyle`) is generated **only** for reusable/semantic CSS or lib overrides,
+  and `block.js` (+ `viewScript`) **only** when the block has real behavior. A
+  presentational block ships neither. Files list split into always/optional;
+  `block.css` example changed from a layout rule to a scoped vendor override;
+  Blade template models base spacing via `py-16`.
+
 ## 2026-07-18
 
 Hardening pass driven by the first real-world import (a Pantheon + Lando + Sage

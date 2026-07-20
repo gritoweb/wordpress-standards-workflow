@@ -51,13 +51,31 @@ To write a commit, use the `commit-rules` SKILL (message format, types, flow). I
 
 To create a new block, use the `create-block` SKILL. If it doesn't exist in the project, ask the user to add it before proceeding.
 
+**Block assets — the canonical rule:**
+
+- A block's **own** front-end CSS/JS is declared in `block.json` via
+  `file:./block.css` (`viewStyle`) and `file:./block.js` (`viewScript`).
+  WordPress enqueues them conditionally (only where the block renders) and
+  serves them **from source** — so `block.css` is **plain CSS** (no
+  `@apply`/`@reference`) and `block.js` is **plain vanilla** (no `import`).
+  Vite never touches them; it compiles only the editor's `block.jsx`.
+- **Third-party vendor libs** (Swiper, GSAP, …) are committed under
+  `resources/{js,css}/vendor/`, **registered** in `app/setup.php`
+  (`wp_register_script`/`wp_register_style`), and **enqueued** in the
+  `block.php` of each block that uses them (`wp_enqueue_*`). Never enqueue a
+  vendor lib globally. The block's `block.js` consumes it via its global
+  (e.g. `window.Swiper`).
+
 ---
 
 ## CSS
 
 Tailwind utilities for one-off styles; `@apply` in a dedicated class for
-reusable/semantic patterns. Full rules (design tokens, base/typography
-foundation, block class naming, hand-written CSS formatting) live in
+reusable/semantic patterns. **Exception — block-scoped CSS** (`block.css`) is
+**plain CSS**, never `@apply` (it's served from source, not Vite-compiled — see
+**Blocks**); use `var(--...)` tokens there and keep Tailwind for the block's
+**markup**. Full rules (design tokens, base/typography foundation, block class
+naming, hand-written CSS formatting) live in
 `.claude/skills/css-standards/SKILL.md`.
 
 ---
