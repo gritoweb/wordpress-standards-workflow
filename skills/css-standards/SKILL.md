@@ -79,6 +79,27 @@ button/badge/state-variant classes.
 
 ---
 
+## Interactive element sizing
+
+Buttons, button-like links, tags/badges and similar controls get their size
+from **padding + font size/line-height** — never `height`, `min-height`,
+`width` or `min-width` (nor `h-*`/`w-*` utilities). Copy the Figma padding
+literally; a few px off the Figma height is acceptable. A fixed box breaks
+with zoom, font swaps and longer or translated labels.
+
+Figma kits usually draw fixed heights that include icon boxes — don't
+compensate for a missing icon with `min-height`. Full-width in a specific
+layout (`w-full` on a mobile CTA) is a layout decision made where the
+component is used, not in the component itself.
+
+**Form fields are the exception on width, not on height.** Inputs, textareas
+and selects take `width: 100%` and fill their container — a text input's
+intrinsic width (about 20 characters) is never the intended layout, so the
+form's width is controlled by the container it sits in. Their height still
+comes from padding + font, never `height`/`min-height`.
+
+---
+
 ## When NOT to use
 
 - Editing non-CSS files with no Tailwind classes involved.

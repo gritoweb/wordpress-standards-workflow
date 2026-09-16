@@ -2,6 +2,18 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-16
+
+### Added
+- **`css-standards` › Interactive element sizing.** Buttons, button-like links,
+  tags/badges and similar controls are sized by padding + font
+  size/line-height, never `height`/`min-height`/`width`/`min-width` (or
+  `h-*`/`w-*`). Nothing in the kit said this, and a first button built from a
+  Figma kit pinned `min-height` to match drawn heights that included 24px icon
+  boxes the implementation did not have. Copy the Figma padding literally and
+  accept a few px of difference. Form fields (input, textarea, select) are the
+  one exception on width: they take `width: 100%` and follow their container.
+
 ## 2026-09-15
 
 ### Fixed
