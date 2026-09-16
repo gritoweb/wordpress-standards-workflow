@@ -63,6 +63,7 @@ the manifest **is** the source of truth either way.
 | `_docs/launch-list.md` | `./_docs/launch-list.md` | Pre-launch checklist for go-live |
 | `gitignore.example` | `./.gitignore` | **Only if** the project has no `.gitignore` yet — never overwrite |
 | `prettier.config.example.js` | `<theme>/prettier.config.js` | Theme root; then add the `prepare` + `lint-staged` keys and copy the hook installer — see "Code formatting" |
+| `prettierignore.example` | `<theme>/.prettierignore` | Theme root; keeps the committed `vendor/` and `public/build/` away from the formatter — see "Code formatting" |
 | `install-git-hooks.example.mjs` | `<theme>/scripts/install-git-hooks.mjs` | Pre-commit installer; wired via the theme's `prepare` script |
 | `mu-plugins/acorn-pantheon-storage.php` | `wp-content/mu-plugins/acorn-pantheon-storage.php` | **Pantheon: required, copy as-is.** Relocates Acorn's storage off the read-only filesystem — commit it in the **first commits** or Test/Live white-screen. See "Deploying to Pantheon" |
 
@@ -152,8 +153,9 @@ cd wp-content/themes/<theme>
 # 1. formatter + plugins + lint-staged (NO husky)
 npm i -D prettier prettier-plugin-tailwindcss @shufo/prettier-plugin-blade lint-staged
 
-# 2. copy the kit's Prettier config + the hook installer
+# 2. copy the kit's Prettier config, ignore file + the hook installer
 cp "$KIT/prettier.config.example.js" ./prettier.config.js
+cp "$KIT/prettierignore.example" ./.prettierignore
 mkdir -p scripts
 cp "$KIT/install-git-hooks.example.mjs" ./scripts/install-git-hooks.mjs
 ```
@@ -163,9 +165,31 @@ Then add to the theme's `package.json`:
 ```json
 {
   "scripts": { "prepare": "node ./scripts/install-git-hooks.mjs" },
-  "lint-staged": { "*.{css,blade.php,js,jsx}": "prettier --write" }
+  "lint-staged": {
+    "{app,resources}/**/*.{css,blade.php,js,jsx}": "prettier --write"
+  }
 }
 ```
+
+> **The glob is scoped to `{app,resources}` on purpose — don't widen it to
+> `*.{css,blade.php,js,jsx}`.** On the layout this kit targets, `vendor/` and
+> `public/build/` are committed (no build step on deploy — see **Deploying to
+> Pantheon**), so a bare glob hands Prettier every third-party and build-output
+> file that happens to be staged. On a real first commit that was **119 of 145
+> matched files** — including Laravel's own Blade views under
+> `vendor/illuminate/pagination/` — rewriting code we don't own, against
+> `CLAUDE.md` › Critical Rules. The `.prettierignore` copied above is the second
+> guard and also covers a manual `npx prettier --write .`.
+>
+> Sanity-check it before the first commit, with the theme staged:
+>
+> ```bash
+> git diff --cached --name-only \
+>   | grep -E '\.(css|blade\.php|js|jsx)$' \
+>   | grep -cE '/(vendor|public/build)/'
+> ```
+>
+> Must print `0`.
 
 Run `npm install` once to fire `prepare` and install the hook. Because it runs
 on `prepare`, any dev who clones and runs `npm install` gets the hook

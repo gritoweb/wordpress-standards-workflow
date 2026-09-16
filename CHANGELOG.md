@@ -2,6 +2,28 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-15
+
+### Fixed
+- **`lint-staged` no longer reformats third-party code.** The documented glob
+  was `*.{css,blade.php,js,jsx}`, which is safe on Bedrock (where `vendor/` is
+  never committed) but wrong for the layout this kit actually targets: on the
+  plain Pantheon upstream both `vendor/` and `public/build/` are committed, so
+  the pre-commit hook handed Prettier every third-party and build-output file
+  that was staged. Surfaced on a real first commit, where **119 of 145 matched
+  files** were `vendor/` or `public/build/` — Laravel's own Blade views under
+  `vendor/illuminate/pagination/` among them — which breaks `CLAUDE.md` ›
+  Critical Rules ("never modify third-party files"). The glob is now scoped to
+  `{app,resources}/**/*.{css,blade.php,js,jsx}`.
+
+### Added
+- **`prettierignore.example`** → `<theme>/.prettierignore`, covering `/vendor/`,
+  `/public/` and `/node_modules/`. Second guard behind the narrowed glob, and it
+  also protects a manual `npx prettier --write .`. Added to the import manifest
+  in `README.md` and to `project-init`'s Phase 1 table.
+- **Verification step** in README › Code formatting — a `git diff --cached`
+  one-liner that must print `0` before the first commit.
+
 ## 2026-07-20
 
 Block asset-loading convention reworked after building the first real block

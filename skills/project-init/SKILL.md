@@ -77,6 +77,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `_docs/launch-list.md` | `./_docs/launch-list.md` | Ask before overwriting if present |
 | `gitignore.example` | `./.gitignore` | **Only if `.gitignore` doesn't exist yet** — never overwrite an existing one |
 | `prettier.config.example.js` | `<theme>/prettier.config.js` | Ask before overwriting if present |
+| `prettierignore.example` | `<theme>/.prettierignore` | Ask before overwriting if present. **Required** — without it the committed `vendor/` and `public/build/` reach the formatter |
 | `install-git-hooks.example.mjs` | `<theme>/scripts/install-git-hooks.mjs` | Ask before overwriting if present |
 | `mu-plugins/acorn-pantheon-storage.php` | `wp-content/mu-plugins/acorn-pantheon-storage.php` | **Pantheon: required, copy as-is.** Relocates Acorn storage off the read-only filesystem; must be in the first commits |
 

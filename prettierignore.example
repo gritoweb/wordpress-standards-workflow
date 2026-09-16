@@ -1,0 +1,13 @@
+# Sage 11 theme — Prettier ignore. Copy to the theme root as `.prettierignore`.
+#
+# On the plain Pantheon upstream this kit targets, vendor/ and public/build/ are
+# COMMITTED (there is no build step on deploy). That puts third-party code and
+# minified build output in front of the formatter — Laravel ships its own
+# .blade.php views under vendor/illuminate/pagination/, and reformatting them
+# breaks CLAUDE.md's "never modify third-party files" rule.
+#
+# The `lint-staged` glob is already scoped to {app,resources}; this file is the
+# second guard, and also covers a manual `npx prettier --write .`.
+/vendor/
+/public/
+/node_modules/
