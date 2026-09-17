@@ -16,8 +16,8 @@ export const ImageUploadWithHover = ({
   onRemove,
   MediaUpload,
   height = '380px',
-  placeholder = __('Click to select an image', 'sage'),
-  buttonText = __('Change Image', 'sage'),
+  placeholder = __('Click to select an image', '__TEXT_DOMAIN__'),
+  buttonText = __('Change Image', '__TEXT_DOMAIN__'),
   buttonStyle = 'px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700',
   placeholderBg = 'border-2 border-dashed border-gray-300 rounded hover:border-gray-400 transition-colors',
   placeholderBgColor = 'bg-gray-200',
@@ -78,11 +78,11 @@ export const ImageUploadWithHover = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (window.confirm(__('Are you sure you want to remove this image?', 'sage'))) {
+                      if (window.confirm(__('Are you sure you want to remove this image?', '__TEXT_DOMAIN__'))) {
                         onRemove();
                       }
                     }}
-                    aria-label={__('Remove image', 'sage')}
+                    aria-label={__('Remove image', '__TEXT_DOMAIN__')}
                     style={{ color: '#ffffff', border: 'none', padding: '4px 8px', borderRadius: '4px', background: '#dc2626', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
                   >
                     Remove image
@@ -96,7 +96,7 @@ export const ImageUploadWithHover = ({
                 <div className="mb-2 text-2xl text-gray-400">+</div>
                 <p className="mb-2 text-sm text-gray-600">{placeholder}</p>
                 <Button variant="primary" className="px-3 py-1 text-xs text-white bg-blue-600 rounded hover:bg-blue-700">
-                  {__('Add Image', 'sage')}
+                  {__('Add Image', '__TEXT_DOMAIN__')}
                 </Button>
               </div>
             </div>

@@ -14,7 +14,7 @@ import { __ } from '@wordpress/i18n';
  *   </div>
  */
 export function RemoveButton({
-    label = __('Delete Item', 'sage'),
+    label = __('Delete Item', '__TEXT_DOMAIN__'),
     confirmMessage,
     onClick,
     disabled = false,

@@ -2,6 +2,26 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-17
+
+### Fixed
+- **`create-block` no longer writes `sage` into renamed themes.** The July fix
+  stopped hardcoding the theme *folder* in docs, but the code templates still
+  shipped the `sage` text domain (`block.json` `textdomain`, every `__()` call),
+  `BlockManager::$namespace = 'sage'` and `IconPicker`'s `THEME_SLUG = 'sage'` —
+  which 404s every icon in a theme not named `sage`. Surfaced on a real project
+  whose first block came out with `'sage'` throughout. Now:
+  - Phase 0 reads **Theme identity** first — `Text Domain` from `style.css` and
+    the theme folder name — and bails if either is missing or still `sage`.
+  - Copied templates use placeholders (`__TEXT_DOMAIN__`, `__THEME_SLUG__`,
+    `__BLOCK_NAMESPACE__`, alongside the existing `__BLOCK_TITLE__`) that must
+    be replaced on copy; block templates use `<text-domain>`.
+  - Check 0.1 asks for the block namespace on first bootstrap (suggesting the
+    theme slug), since it's stored in post content and can't change later.
+  - New warning **0.17** flags leftover `sage` identity in themes bootstrapped by
+    older kit versions (warn only — no auto-fix).
+  - `_docs/examples.md` uses `acme` / `acme-2026` instead of `sage`.
+
 ## 2026-09-16
 
 ### Added

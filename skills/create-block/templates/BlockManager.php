@@ -13,15 +13,15 @@ class BlockManager
 
     /**
      * Gutenberg block namespace — the prefix used in each block's `block.json`
-     * `name` field (e.g., "sage/<slug>"). Not used internally by BlockManager;
+     * `name` field (e.g., "acme/<slug>"). Not used internally by BlockManager;
      * exposed via getNamespace() so external tooling (the `create-block` skill)
      * knows what prefix to put in new block.json files.
      *
      * Not the same as:
      *   - PHP namespace `App\` (composer PSR-4 autoload, in composer.json)
-     *   - Text domain `sage` (used by __('...', 'sage') for translations)
+     *   - Text domain (the `Text Domain` header in style.css, used by __() calls)
      */
-    protected string $namespace = 'sage';
+    protected string $namespace = '__BLOCK_NAMESPACE__';
 
     protected function globalAttributes(): array
     {

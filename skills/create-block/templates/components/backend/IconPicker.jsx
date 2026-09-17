@@ -4,8 +4,8 @@ import { SelectControl } from '@wordpress/components';
  * Reusable icon selector with live SVG image preview.
  *
  * Icons ship as static SVGs under the theme's `public/icons/` directory
- * (served as-is, same mechanism Vite uses for other static assets) — adjust
- * `THEME_SLUG` below to the project's actual theme folder name.
+ * (served as-is, same mechanism Vite uses for other static assets). `THEME_SLUG`
+ * is the theme folder name, substituted by the create-block skill on copy.
  *
  * @param {object} props
  * @param {string} props.label - Select control label
@@ -14,7 +14,7 @@ import { SelectControl } from '@wordpress/components';
  * @param {function} props.onChange - Callback triggered on icon change
  * @param {string} [props.iconFolder] - Subfolder inside `public/icons/` this icon set lives in (e.g. 'chakras'); omit for icons directly under `public/icons/`
  */
-const THEME_SLUG = 'sage';
+const THEME_SLUG = '__THEME_SLUG__';
 
 export function IconPicker({
     label,

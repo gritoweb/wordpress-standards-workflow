@@ -162,15 +162,15 @@ class BlockManager
 
     /**
      * Gutenberg block namespace — the prefix used in each block's `block.json`
-     * `name` field (e.g., "sage/<slug>"). Not used internally by BlockManager;
+     * `name` field (e.g., "acme/<slug>"). Not used internally by BlockManager;
      * exposed via getNamespace() so external tooling (the `create-block` skill)
      * knows what prefix to put in new block.json files.
      *
      * Not the same as:
      *   - PHP namespace `App\` (composer PSR-4 autoload, in composer.json)
-     *   - Text domain `sage` (used by __('...', 'sage') for translations)
+     *   - Text domain (the `Text Domain` header in style.css, used by __() calls)
      */
-    protected string $namespace = 'sage';
+    protected string $namespace = 'acme';
 
     /**
      * Global attributes injected into every block at registration time.
@@ -352,13 +352,13 @@ by Vite + `@roots/vite-plugin`. `render` points to the per-block PHP.
 ```json
 {
   "apiVersion": 3,
-  "name": "sage/testimonial-carousel",
+  "name": "acme/testimonial-carousel",
   "title": "Testimonial Carousel",
   "category": "custom-blocks",
   "icon": "format-quote",
   "description": "A Swiper-based testimonials carousel.",
   "keywords": ["testimonial", "quote", "carousel"],
-  "textdomain": "sage",
+  "textdomain": "acme-2026",
   "render": "file:./block.php",
   "attributes": {
     "isPreview": {
@@ -478,7 +478,7 @@ registerBlockType(metadata, {
                 <div {...blockProps}>
                     <img
                         src={previewImage}
-                        alt={__('Testimonial Carousel preview', 'sage')}
+                        alt={__('Testimonial Carousel preview', 'acme-2026')}
                         style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '8px' }}
                     />
                 </div>
@@ -525,7 +525,7 @@ registerBlockType(metadata, {
                                     type="text"
                                     value={heading}
                                     onChange={(e) => setAttributes({ heading: e.target.value })}
-                                    placeholder={__('Section heading…', 'sage')}
+                                    placeholder={__('Section heading…', 'acme-2026')}
                                     className="w-full border-0 outline-none m-0 p-0 bg-transparent text-base text-gray-900 placeholder:text-gray-400"
                                 />
                             </div>
@@ -557,7 +557,7 @@ registerBlockType(metadata, {
                                 activeItem={activeIdx}
                                 setActiveItem={setActiveIdx}
                                 addItem={addItem}
-                                itemLabelPrefix={__('Slide', 'sage')}
+                                itemLabelPrefix={__('Slide', 'acme-2026')}
                             />
 
                             {active && (
@@ -566,7 +566,7 @@ registerBlockType(metadata, {
                                     {safeItems.length > 1 && (
                                         <div className="flex justify-end">
                                             <RemoveButton
-                                                confirmMessage={__('Remove this slide?', 'sage')}
+                                                confirmMessage={__('Remove this slide?', 'acme-2026')}
                                                 onClick={() => removeItem(activeIdx)}
                                             />
                                         </div>
@@ -581,7 +581,7 @@ registerBlockType(metadata, {
                                                 value={active.quote}
                                                 onChange={(value) => updateItem(activeIdx, { quote: value })}
                                                 className="!m-0 min-h-[80px]"
-                                                placeholder={__('Enter testimonial quote…', 'sage')}
+                                                placeholder={__('Enter testimonial quote…', 'acme-2026')}
                                             />
                                         </div>
                                     </div>
@@ -594,7 +594,7 @@ registerBlockType(metadata, {
                                                 type="text"
                                                 value={active.author}
                                                 onChange={(e) => updateItem(activeIdx, { author: e.target.value })}
-                                                placeholder={__('Author name…', 'sage')}
+                                                placeholder={__('Author name…', 'acme-2026')}
                                                 className="w-full border-0 outline-none m-0 p-0 bg-transparent text-base text-gray-900 placeholder:text-gray-400"
                                             />
                                         </div>
@@ -703,7 +703,7 @@ with an **explicit image size** (CLAUDE.md › Performance).
 @unless (empty($items))
     <section
         class="testimonial-carousel @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop)"
-        aria-label="{{ $heading ?: __('Testimonials', 'sage') }}"
+        aria-label="{{ $heading ?: __('Testimonials', 'acme-2026') }}"
     >
         @if ($heading)
             <h2 class="testimonial-carousel__heading">{{ $heading }}</h2>
@@ -734,8 +734,8 @@ with an **explicit image size** (CLAUDE.md › Performance).
                 @endforeach
             </ul>
 
-            <button type="button" class="testimonial-carousel__prev" aria-label="{{ __('Previous', 'sage') }}">‹</button>
-            <button type="button" class="testimonial-carousel__next" aria-label="{{ __('Next', 'sage') }}">›</button>
+            <button type="button" class="testimonial-carousel__prev" aria-label="{{ __('Previous', 'acme-2026') }}">‹</button>
+            <button type="button" class="testimonial-carousel__next" aria-label="{{ __('Next', 'acme-2026') }}">›</button>
         </div>
     </section>
 @endunless
@@ -761,12 +761,12 @@ positioned background image, and validating a repeater field's value
 ```json
 {
     "apiVersion": 3,
-    "name": "sage/vision-accordion",
+    "name": "acme/vision-accordion",
     "title": "Vision Accordion",
     "category": "custom-blocks",
     "icon": "list-view",
     "description": "Two-column layout: heading + accordion (left) and image (right).",
-    "textdomain": "sage",
+    "textdomain": "acme-2026",
     "render": "file:./block.php",
     "supports": {
         "anchor": true
@@ -1236,12 +1236,12 @@ using native `<details>/<summary>` with CSS `group-open` — no
 ```json
 {
     "apiVersion": 3,
-    "name": "sage/image-card-grid",
+    "name": "acme/image-card-grid",
     "title": "Image Card Grid",
     "category": "custom-blocks",
     "icon": "grid-view",
     "description": "Stacked heading + 3 image cards with hover-reveal body.",
-    "textdomain": "sage",
+    "textdomain": "acme-2026",
     "render": "file:./block.php",
     "supports": {
         "anchor": true

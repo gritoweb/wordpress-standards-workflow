@@ -50,11 +50,27 @@ that themselves.
 
 Run every check below; show the dev a status table before doing anything else.
 
+### Theme identity (read before any check)
+
+Templates and generated blocks are theme-specific. Read these two values first
+and substitute them everywhere — **never write a literal `sage`** into a
+project:
+
+| Value | Source | Used as |
+|---|---|---|
+| `<text-domain>` | `Text Domain:` header in the theme's `style.css` | `__TEXT_DOMAIN__` in copied components, `<text-domain>` in block templates |
+| `<theme-slug>` | the theme root's folder name (e.g. `acme-2026` in `wp-content/themes/acme-2026`) | `__THEME_SLUG__` in `IconPicker.jsx` |
+
+If `Text Domain` is missing, or either value is still `sage`, **bail out**: the
+theme's identity hasn't been claimed yet (`project-init` › Phase 3,
+`_docs/launch-list.md` › Theme identity). Anything scaffolded now would bake the
+wrong domain/path into every file.
+
 ### Required infra (skill bootstraps if missing)
 
 | # | Check |
 |---|-------|
-| 0.1 | `app/Blocks/BlockManager.php` exists. Template at `<skill>/templates/BlockManager.php`. |
+| 0.1 | `app/Blocks/BlockManager.php` exists. Template at `<skill>/templates/BlockManager.php`. **First-run only**: ask `"Qual namespace pros blocos? Sugiro '<theme-slug>'. Ele vai no nome de cada bloco salvo no conteúdo, então não dá pra trocar depois sem migrar os posts."`, then replace `__BLOCK_NAMESPACE__` with the answer (lowercase, `[a-z0-9-]`). |
 | 0.2 | `resources/blocks/` exists |
 | 0.3 | `resources/views/blocks/` exists |
 | 0.4 | `resources/js/vendor/` exists |
@@ -65,7 +81,7 @@ Run every check below; show the dev a status table before doing anything else.
 | 0.9 | `resources/css/app.css` has `@source "../blocks/**/*.{php,jsx}";` |
 | 0.10 | `package.json` `devDependencies` has `react@^18` AND `react-dom@^18`. **React pinned to ^18, not ^19** — React 19 breaks Gutenberg (element-symbol mismatch with WP's React 18). |
 | 0.11 | `app/Blocks/BlockCategories.php` exists. Template at `<skill>/templates/BlockCategories.php`. **First-run only**: ask `"Vou criar uma categoria pros seus blocos. Quer chamar de 'Custom Blocks' (default) ou outro nome?"`, copy template, edit `TITLE` and `SLUG` (lowercase + hyphens) if dev picked a different name. The actual `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). Subsequent runs: grep `const SLUG = '...'` from the existing file. |
-| 0.12 | `resources/blocks/components/backend/` contains the 8 canonical shared components: `ImageUploadWithHover.jsx`, `LinkPicker.jsx`, `RemoveButton.jsx`, `TabSelector.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. If missing: copy from `<skill>/templates/components/backend/*`. |
+| 0.12 | `resources/blocks/components/backend/` contains the 8 canonical shared components: `ImageUploadWithHover.jsx`, `LinkPicker.jsx`, `RemoveButton.jsx`, `TabSelector.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. If missing: copy from `<skill>/templates/components/backend/*`, replacing `__TEXT_DOMAIN__` with `<text-domain>` and `__THEME_SLUG__` with `<theme-slug>` in every copied file. |
 | 0.15 | `app/Blocks/BlockPadding.php` and `app/Blocks/BlockImagePosition.php` exist. Templates at `<skill>/templates/BlockPadding.php` and `<skill>/templates/BlockImagePosition.php`. |
 | 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers a `paddingClasses` Blade directive expanding to `\App\Blocks\BlockPadding::resolve(...)` (see `.claude/skills/blade-standards/SKILL.md`). |
 
@@ -75,6 +91,7 @@ Run every check below; show the dev a status table before doing anything else.
 |---|-------|
 | 0.13 | `vite.config.js` `base:` points to the theme's actual path (e.g. `/wp-content/themes/<active-theme>/public/build/`). Sage's default ships with `/app/themes/sage/public/build/` (Bedrock) which **breaks asset URLs** in standard WP. **Warn**, don't auto-fix. |
 | 0.14 | **Global-enqueue smell.** Scan `app/**.php` + `functions.php` for `wp_enqueue_script(`/`wp_enqueue_style(` *outside* `resources/blocks/*/block.php`. Theme handles (`app`, `editor`) are fine; vendor-lib-looking handles (`swiper`, `gsap`, …) loaded globally are a smell — warn with file:line, recommend the canonical pattern from `.claude/skills/blade-standards/SKILL.md` (register in `setup.php`, enqueue in `block.php`). |
+| 0.17 | **Leftover `sage` identity.** Scan `app/`, `resources/blocks/` and `resources/views/` (excluding `resources/{js,css}/vendor/`) for the text domain `'sage'`, `"textdomain": "sage"`, `THEME_SLUG = 'sage'`, or unsubstituted `__TEXT_DOMAIN__` / `__THEME_SLUG__` / `__BLOCK_NAMESPACE__`. Themes bootstrapped by older kit versions carry these (and `IconPicker` 404s every icon). **Warn** with file:line and the replacement (`<text-domain>` / `<theme-slug>`); don't auto-fix. Never flag `$namespace` itself — an existing block namespace is stored in post content and must not change. |
 
 ### Bootstrap UX
 
@@ -233,13 +250,13 @@ If any fails: stop, ask for an alternative. Cheap-only by design — clash with 
 
 ### Read the existing block namespace
 
-Read `$namespace` from `app/Blocks/BlockManager.php` (via `getNamespace()`). Use it as the prefix in each block.json's `name` (`<namespace>/<slug>`). Sage default: `sage`; teams may have changed it.
+Read `$namespace` from `app/Blocks/BlockManager.php` (via `getNamespace()`). Use it as the prefix in each block.json's `name` (`<namespace>/<slug>`). It's chosen once, when `BlockManager.php` is bootstrapped (check 0.1) — never rename it on an existing project.
 
 ---
 
 ## Phase 2 — Generate the block files
 
-Create `resources/blocks/<slug>/` plus the Blade view. Templates at the bottom of this doc. Substitute `<slug>`, `<Title>`, `<category>`, `<icon>`, `<namespace>` with Phase 1 values.
+Create `resources/blocks/<slug>/` plus the Blade view. Templates at the bottom of this doc. Substitute `<slug>`, `<Title>`, `<category>`, `<icon>`, `<namespace>` with Phase 1 values and `<text-domain>` with the value read in Phase 0 › Theme identity.
 
 **Files — always:**
 
@@ -402,7 +419,16 @@ End with a summary table listing every file created/modified.
     └── IconPicker.jsx
 ```
 
-`preview.svg` uses `__BLOCK_TITLE__` as its only placeholder. Every generated `block.jsx` imports `PaddingControls`; image / link / array blocks add the matching imports as needed.
+Copied infra files carry placeholders that must be replaced on copy — none may survive into the project:
+
+| Placeholder | File(s) | Replace with |
+|---|---|---|
+| `__BLOCK_TITLE__` | `preview.svg` | the block's `<Title>` |
+| `__BLOCK_NAMESPACE__` | `BlockManager.php` | the namespace confirmed in check 0.1 |
+| `__TEXT_DOMAIN__` | `RemoveButton.jsx`, `ImageUploadWithHover.jsx` | `<text-domain>` |
+| `__THEME_SLUG__` | `IconPicker.jsx` | `<theme-slug>` |
+
+Every generated `block.jsx` imports `PaddingControls`; image / link / array blocks add the matching imports as needed.
 
 ### Block file placeholders
 
@@ -412,7 +438,8 @@ All block-file templates below use these — substitute throughout:
 - `<Title>` — human-readable (e.g. `Testimonial Carousel`)
 - `<category>` — custom category from check #11 (default `custom-blocks`)
 - `<icon>` — Dashicon picked from context (e.g. `format-quote`)
-- `<namespace>` — value of `BlockManager::$namespace` (e.g. `sage`)
+- `<namespace>` — value of `BlockManager::$namespace` (e.g. `acme`)
+- `<text-domain>` — `Text Domain` from the theme's `style.css` (e.g. `acme-2026`)
 
 ### Block files (Phase 2)
 
@@ -430,7 +457,7 @@ presentational block omits both lines.
     "category": "<category>",
     "icon": "<icon>",
     "description": "<one-line description>",
-    "textdomain": "sage",
+    "textdomain": "<text-domain>",
     "render": "file:./block.php",
     "viewScript": "file:./block.js",
     "viewStyle": "file:./block.css",
@@ -516,7 +543,7 @@ registerBlockType(metadata, {
                 <div {...blockProps}>
                     <img
                         src={previewImage}
-                        alt={__('<Title> preview', 'sage')}
+                        alt={__('<Title> preview', '<text-domain>')}
                         style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '8px' }}
                     />
                 </div>
@@ -548,7 +575,7 @@ registerBlockType(metadata, {
                                     type="text"
                                     value={attributes.heading}
                                     onChange={(e) => setAttributes({ heading: e.target.value })}
-                                    placeholder={__('Enter heading…', 'sage')}
+                                    placeholder={__('Enter heading…', '<text-domain>')}
                                     className="w-full border-0 outline-none m-0 p-0 bg-transparent text-base text-gray-900 placeholder:text-gray-400"
                                 />
                             </div>
@@ -557,15 +584,15 @@ registerBlockType(metadata, {
                             Image → ImageUploadWithHover with a dimension hint in the label:
                         <div>
                             <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
-                                {__('Background Image', 'sage')}
-                                <span className="normal-case font-normal text-gray-400"> — {__('recommended 1920×1080px', 'sage')}</span>
+                                {__('Background Image', '<text-domain>')}
+                                <span className="normal-case font-normal text-gray-400"> — {__('recommended 1920×1080px', '<text-domain>')}</span>
                             </label>
                             <MediaUploadCheck>
                                 <ImageUploadWithHover
                                     imageId={attributes.bgImageId}
                                     imageUrl={attributes.bgImageUrl}
                                     MediaUpload={MediaUpload}
-                                    placeholder={__('Click to select an image (recommended 1920×1080px)', 'sage')}
+                                    placeholder={__('Click to select an image (recommended 1920×1080px)', '<text-domain>')}
                                     onSelect={(media) => setAttributes({ bgImageId: media.id, bgImageUrl: media.url })}
                                     onRemove={() => setAttributes({ bgImageId: 0, bgImageUrl: '' })}
                                 />
@@ -581,7 +608,7 @@ registerBlockType(metadata, {
                                     value={attributes.description}
                                     onChange={(value) => setAttributes({ description: value })}
                                     className="!m-0 min-h-[80px]"
-                                    placeholder={__('Enter description…', 'sage')}
+                                    placeholder={__('Enter description…', '<text-domain>')}
                                 />
                             </div>
                         </div>
@@ -593,14 +620,14 @@ registerBlockType(metadata, {
                                 activeItem={activeIdx}
                                 setActiveItem={setActiveIdx}
                                 addItem={addItem}
-                                itemLabelPrefix={__('Item', 'sage')}
+                                itemLabelPrefix={__('Item', '<text-domain>')}
                             />
                             {active && (
                                 <div className="space-y-4">
                                     {safeItems.length > 1 && (
                                         <div className="flex justify-end">
                                             <RemoveButton
-                                                confirmMessage={__('Remove this item?', 'sage')}
+                                                confirmMessage={__('Remove this item?', '<text-domain>')}
                                                 onClick={() => removeItem(activeIdx)}
                                             />
                                         </div>
