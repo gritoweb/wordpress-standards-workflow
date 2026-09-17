@@ -5,7 +5,7 @@ description: >
   base.css, typography.css, global.css — from a free-text style guide
   description. Use this skill when starting a new theme's CSS foundation,
   or whenever a project is missing any of
-  resources/css/{variables,base,typography,global}.css. Runs a
+  resources/css/global/{variables,base,typography,global}.css. Runs a
   4-step wizard (variables → base → typography → global, each step
   depending on tokens from the previous one), then wires the generated
   files into resources/css/app.css.
@@ -14,7 +14,9 @@ description: >
 # css-foundation-wizard — interactive CSS foundation setup
 
 Turns a dev's style guide description into the four CSS foundation files
-every Sage 11 theme needs, one step at a time — each step gated by an
+every Sage 11 theme needs — all in **`resources/css/global/`**, never the root
+of `resources/css/` (folder layout: `css-standards` › **CSS folder layout**) —
+one step at a time — each step gated by an
 "anything to adjust?" confirmation before writing, same as
 `create-block`'s inferred-plan gate. Never runs `npm` / `composer` /
 `lando` / `git` — the dev does that themselves.
@@ -52,7 +54,7 @@ never placeholders.
 
 ---
 
-## Step 1 — `variables.css`
+## Step 1 — `global/variables.css`
 
 1. Ask, open-ended: **"Describe your style guide (colors, fonts, type
    sizes)."**
@@ -67,7 +69,7 @@ never placeholders.
      weight) — offer sensible defaults for anything the dev didn't
      specify (e.g. a standard modular scale) and let them override.
    - Shadows, if the style guide mentions elevation/depth.
-4. Generate `resources/css/variables.css`:
+4. Generate `resources/css/global/variables.css`:
    - Tokens meant to also become a Tailwind utility go in `@theme {}` —
      e.g. `--color-ink` auto-generates `text-ink`/`bg-ink`/`border-ink`;
      `--text-h1` (with its paired `--text-h1--line-height` /
@@ -101,7 +103,7 @@ never placeholders.
 
 ---
 
-## Step 2 — `base.css`
+## Step 2 — `global/base.css`
 
 1. Fixed candidate tag list, asked as **one** batched closed question
    (which tags to style now vs. leave at browser default):
@@ -136,7 +138,7 @@ never placeholders.
 
 ---
 
-## Step 3 — `typography.css`
+## Step 3 — `global/typography.css`
 
 1. Ask, open-ended: **"Quais tratamentos de texto reusáveis o site
    precisa, além do que já ficou em `base.css`?"** (e.g. an eyebrow
@@ -176,7 +178,7 @@ never placeholders.
 
 ---
 
-## Step 4 — `global.css`
+## Step 4 — `global/global.css`
 
 1. Ask, open-ended: **"Quais containers/wrappers estruturais o site
    inteiro usa?"** (e.g. a root `.app` wrapper, a `.container` with a
@@ -222,11 +224,15 @@ layers reference earlier tokens/base styles:
 
 ```css
 /* ↓ append below Sage's stock lines — don't touch what's above */
-@import "./variables.css";
-@import "./base.css";
-@import "./typography.css";
-@import "./global.css";
+@import "./global/variables.css";
+@import "./global/base.css";
+@import "./global/typography.css";
+@import "./global/global.css";
 ```
+
+Leave a blank line after this group: `components/` and `pages/` imports go
+below it, one group each, in that order (see `css-standards` › **CSS folder
+layout**).
 
 If they're missing or out of order, show the dev the diff and ask for
 confirmation before editing — same confirm-before-editing pattern
@@ -247,6 +253,8 @@ skill never runs it).
 ## Behavior Rules
 
 - **Never run `npm`/`composer`/`lando`/`git`.**
+- **All four files go in `resources/css/global/`** — create the folder if
+  missing; never write them to the root of `resources/css/`.
 - **Tokens only in `variables.css`** — every other file references them
   via `var(--...)`, never a raw hex/px value.
 - **Order matters**: variables → base → typography → global, both in

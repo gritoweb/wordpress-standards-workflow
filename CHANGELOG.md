@@ -4,6 +4,15 @@ Notable changes to the GritoWeb WordPress standards.
 
 ## 2026-09-17
 
+### Changed
+- **CSS files live in folders, never at the root of `resources/css/`.** The
+  foundation moved to `resources/css/global/{variables,base,typography,global}.css`,
+  and `css-standards` gained a **CSS folder layout** section: `global/`,
+  `components/` (one file per reusable component), `pages/` (template-specific)
+  and `vendor/`, imported from `app.css` in that order, one group per folder.
+  This is the layout every recent project already used by hand; the wizard kept
+  writing the four files to the root, so each new theme had to be fixed.
+
 ### Fixed
 - **`create-block` no longer writes `sage` into renamed themes.** The July fix
   stopped hardcoding the theme *folder* in docs, but the code templates still

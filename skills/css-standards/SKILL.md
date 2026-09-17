@@ -18,7 +18,7 @@ reusable/semantic patterns.
 
 ## Theme CSS foundation (start here)
 
-Every theme starts with **four foundation files** in `resources/css/`
+Every theme starts with **four foundation files** in `resources/css/global/`
 — `variables.css` (design tokens), `base.css` (unclassed tag defaults),
 `typography.css` (semantic text classes), `global.css` (site-wide
 structural classes like `.app`/`.container`). Build these before any
@@ -41,6 +41,43 @@ narrower still: only site-wide structural/layout classes (`.app`,
 `.container`, `.section-wrap`) — never block-level classes (those live
 in each block's own `.css` file, see **Block styles** below) and never
 button/badge/state-variant classes.
+
+---
+
+## CSS folder layout
+
+Nothing we write lives at the root of `resources/css/`. The root holds only
+Sage's Vite entrypoints (`app.css`, `editor.css`); everything else goes in a
+folder by role:
+
+| Folder | Holds | Example |
+|---|---|---|
+| `global/` | The four foundation files (see above) | `global/variables.css` |
+| `components/` | One file per reusable UI component used across blocks/pages | `components/button.css`, `components/form.css` |
+| `pages/` | Styles that only apply to one template/page | `pages/single-project.css` |
+| `vendor/` | Third-party CSS, committed as-is (never ours, never formatted) | `vendor/swiper-bundle.min.css` |
+
+A block's own CSS is **not** here — it lives next to the block
+(`resources/blocks/<slug>/block.css`, see **Block styles**).
+
+`app.css` imports them below Sage's stock lines, one group per folder, in this
+order, separated by a blank line — `global/` first because every later file
+references its tokens:
+
+```css
+@import './global/variables.css';
+@import './global/base.css';
+@import './global/typography.css';
+@import './global/global.css';
+
+@import './components/button.css';
+
+@import './pages/single-project.css';
+```
+
+New file → add its `@import` to its group. Never create a new `.css` at the
+root of `resources/css/`, and never import `vendor/` from `app.css` (vendor
+libs are registered in `setup.php` and enqueued per block).
 
 ---
 
