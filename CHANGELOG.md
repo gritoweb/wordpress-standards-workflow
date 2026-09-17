@@ -21,6 +21,10 @@ Notable changes to the GritoWeb WordPress standards.
   - New warning **0.17** flags leftover `sage` identity in themes bootstrapped by
     older kit versions (warn only — no auto-fix).
   - `_docs/examples.md` uses `acme` / `acme-2026` instead of `sage`.
+- **`prettierignore.example` now covers `resources/{js,css}/vendor/`.** Vendor
+  libs are committed there per `CLAUDE.md` › Blocks, which puts them inside the
+  `{app,resources}` lint-staged glob — the first commit touching a vendor bundle
+  would have reformatted third-party code (seen with `swiper-bundle.min.js/.css`).
 
 ## 2026-09-16
 
