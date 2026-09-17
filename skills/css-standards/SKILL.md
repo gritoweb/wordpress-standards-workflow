@@ -55,6 +55,7 @@ folder by role:
 | `global/` | The four foundation files (see above) | `global/variables.css` |
 | `components/` | One file per reusable UI component used across blocks/pages | `components/button.css`, `components/form.css` |
 | `pages/` | Styles that only apply to one template/page | `pages/single-project.css` |
+| `editor/` | Styles only the block editor loads, imported from `editor.css` (never `app.css`) | `editor/blocks.css` |
 | `vendor/` | Third-party CSS, committed as-is (never ours, never formatted) | `vendor/swiper-bundle.min.css` |
 
 A block's own CSS is **not** here — it lives next to the block
@@ -75,7 +76,7 @@ references its tokens:
 @import './pages/single-project.css';
 ```
 
-New file → add its `@import` to its group. Never create a new `.css` at the
+New file → add its `@import` to its group (`editor/` files go in `editor.css`). Never create a new `.css` at the
 root of `resources/css/`, and never import `vendor/` from `app.css` (vendor
 libs are registered in `setup.php` and enqueued per block).
 
