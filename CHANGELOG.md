@@ -261,33 +261,6 @@ not a trip to the sidebar.
   `featured-grid`'s items all show `"url":""`, no stray `"#"` left.
 - Branch is `refactor`; `master` is untouched.
 
-## 2026-09-22 — LinkControl's own preview row, mistaken for emoji
-
-Reported as "emoji messing everything up" on an *already-set* link (a fresh/empty one
-looked fine) — the globe/pencil/chain-link/copy icon row `LinkControl` shows once a value
-exists. Not a bug, and not something this kit added: it's Gutenberg core's standard
-"preview" state for any set link, the same row that appears linking plain text in a core
-paragraph block. It read as redundant here because `LinkPicker`'s own trigger (a button's
-label in canvas mode, a field label in the sidebar) already shows the destination, so the
-preview row was an unnecessary extra click before you could change it.
-
-### Fixed
-- **`templates/components/backend/LinkPicker.jsx`** — added `forceIsEditingLink` to the
-  wrapped `<LinkControl>`. This is a documented Gutenberg core prop built for exactly this:
-  it keeps `LinkControl` in its search/URL-entry form permanently and never switches to
-  the preview-with-icons state. Not a CSS override hiding real WordPress buttons — the
-  official mechanism for skipping that state.
-- **`test-wordpress`** — same one-line change applied directly to its own
-  `LinkPicker.jsx` (this project's is a standing copy of the template, not re-synced
-  automatically).
-- **`create-block/SKILL.md`** — noted next to the "Button pair" rule so anyone editing
-  `LinkPicker.jsx` later doesn't drop the prop while refactoring.
-
-### How verified
-- `npm run build` clean; grepped the compiled bundle for `forceIsEditingLink` — present.
-- Rendered home page still HTTP 200 (editor-only change, no front-end/PHP surface).
-- Branch is `refactor`; `master` is untouched.
-
 ## 2026-09-17
 
 ### Changed
