@@ -148,6 +148,26 @@ repeater-item images stay on the canvas.
   changelog, which record what happened, not current state).
 - Branch is `refactor`; `master` is untouched.
 
+### Fixed
+- **`ActionEditor` CTA popovers now float instead of expanding inline.** The
+  featured-grid card link fixed earlier today used a real `<Popover>`; the
+  block.jsx template's own CTA example, and `test-wordpress`'s `home-hero`
+  (×2), `banner-cta` (×2) and `text-media-split` (×1) still opened
+  `ActionEditor` in-flow, pushing content down and reflowing the canvas each
+  toggle. All now wrap the trigger `<span>` in its own
+  `position: 'relative'` container and open `ActionEditor` inside a
+  `<Popover>` anchored to it. Updated the keyword table, the "Button pair"
+  special expansion rule, the "What goes where" Buttons/CTAs bullet, and the
+  `block.jsx` template's commented CTA example to match, so a block
+  scaffolded from now on gets the floating popover by default.
+
+### How verified
+- `npm run build` clean in `test-wordpress` after converting all five CTA
+  triggers.
+- Rendered home page still HTTP 200 with no PHP errors (this is an
+  editor-only change; `block.php`/Blade views were untouched).
+- Branch is `refactor`; `master` is untouched.
+
 ## 2026-09-17
 
 ### Changed

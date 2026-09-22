@@ -163,7 +163,7 @@ placeholder + accidental-newline behavior than RichText.
 | `bg`/`background image`/`cover image` (fills the block behind other content) | image (ID-first) | `<name>Id` (number) | In the **sidebar**, inside a `PanelBody title="Background Media"`: `<AttachmentImageControl imageId={...} onSelect={...} onRemove={...} noStylesheet />` + `<ImagePositionControl />` right under it for the focal point. The canvas keeps only the **passive** full-bleed preview (`backgroundImage`/`<img>` with `focalCss(<name>Position)`) — no click target there. |
 | `icon` | string (Dashicon slug or arbitrary name) | `<name>` | `<TextControl>` (or `<IconPicker>` if the project ships one) |
 | `link`, `url`, `cta link`, `href` | link (Gutenberg `LinkControl` object: `{url, opensInNewTab}`) | `<name>` | `<LinkPicker label="..." value={...} onChange={...} />` — sized to match the white-card input height so it lines up next to a sibling text field |
-| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor stacked={false}>` as a popover below the button** (text input + `<LinkPicker>` + new-tab checkbox + optional icon). Never in the sidebar. |
+| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor stacked={false}>` inside a floating `<Popover>` anchored to the button** (text input + `<LinkPicker>` + new-tab checkbox + optional icon). Never in the sidebar, and never rendered inline in the document flow (see the "Buttons / CTAs" rule below for why). |
 | `color`, `bg color`, `text color` | string (hex / palette slug) | `<name>` | `<ColorPalette>` or `<PanelColorSettings>` |
 | `size`, `width`, `height`, `count`, `amount`, plain `number` | number (unsigned) | `<name>` | `<TextControl type="number">` or `<RangeControl>` |
 | `show X`, `enable X`, `visible`, `active`, `toggle`, "is X" boolean | boolean | `<name>` | `<ToggleControl>` |
@@ -207,9 +207,14 @@ placeholder + accidental-newline behavior than RichText.
    attributes** — `<name>Text` (string) + `<name>Link` (Gutenberg
    `LinkControl` object: `{url, opensInNewTab}`). Render a styled `<span>`
    preview on the canvas reflecting the button label; **clicking it opens
-   `<ActionEditor stacked={false}>` as a popover anchored below** (text
-   input + `<LinkPicker>` + new-tab checkbox + optional icon). Never place
-   button/link editing in the sidebar.
+   `<ActionEditor stacked={false}>` inside a floating `<Popover>`
+   (`@wordpress/components`) anchored to the button** (text input +
+   `<LinkPicker>` + new-tab checkbox + optional icon). Never place
+   button/link editing in the sidebar, and never render the `ActionEditor`
+   inline in the document flow — an inline one reflows the whole canvas
+   every time it opens or closes. Wrap the trigger `<span>` in a
+   `position: 'relative'` container so the anchor-less `Popover` floats
+   under that specific button.
 
 3. **Array recursion**: when the dev says "list of X with title, image, and description", recurse the inference for each sub-field (`title` → string, `image` → pair, `description` → string). The final shape is one array attribute whose items are objects with typed sub-fields. Sanitize per-sub-field in `block.php`'s `array_map(...)`.
 
@@ -277,9 +282,15 @@ Attributes:
     Selecting/replacing/removing the image happens in the sidebar (see
     above). Nothing here needs to be clickable, so there is no risk of an
     image dropzone swallowing clicks meant for selecting the block.
-  - **Buttons / CTAs:** Styled `<span>` preview on canvas. **Clicking
-    opens `<ActionEditor stacked={false}>` as a popover anchored below
-    the button** — never in the sidebar.
+  - **Buttons / CTAs:** Styled `<span>` preview on canvas, wrapped in a
+    `position: 'relative'` container. **Clicking opens
+    `<ActionEditor stacked={false}>` inside a floating `<Popover>`
+    anchored to that button** — never in the sidebar, and never inline in
+    the document flow (an inline editor reflows the whole canvas open or
+    closed, and looks inconsistent next to every other popover-driven
+    control). One `editingCta`-style state var and its own
+    `position: relative` wrapper per button — sharing a wrapper anchors
+    the popover to the wrong one.
   - **Repeaters / lists:** `<ItemList>` (sidebar) with drag handles +
     keyboard arrows (up/down), driven by `onMove` calling `moveItem(items,
     from, to)`. The image inside each item still follows the media rule
@@ -613,6 +624,7 @@ import { PaddingControls } from '../components/backend/PaddingControls.jsx';
 import { EntranceControl } from '../components/backend/EntranceControl.jsx';
 // Uncomment the imports your attributes actually need:
 // import { PanelBody } from '@wordpress/components'; // needed if this block has a Background Media panel
+// import { Popover } from '@wordpress/components'; // needed if this block has a button/CTA
 // import { AttachmentImageControl } from '../components/backend/AttachmentImageControl.jsx';
 // import { ActionEditor }           from '../components/backend/ActionEditor.jsx';
 // import { AutoGrowingTextarea }     from '../components/backend/AutoGrowingTextarea.jsx';
@@ -717,34 +729,46 @@ registerBlockType(metadata, {
                     */}
 
                     {/* CTA button — styled preview on canvas.
-                        Clicking the button opens ActionEditor inline directly below:
-                    <span
-                        role="button"
-                        tabIndex={0}
-                        aria-label={__('Edit button', '<text-domain>')}
-                        className="btn btn-primary"
-                        onClick={() => setIsEditingButton(!isEditingButton)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                setIsEditingButton(!isEditingButton);
-                            }
-                        }}
-                    >
-                        {ctaText || __('Button', '<text-domain>')}
-                    </span>
-                    {isEditingButton && (
-                        <ActionEditor
-                            groupLabel={__('Button editing', '<text-domain>')}
-                            label={__('Button label', '<text-domain>')}
-                            linkLabel={__('Button destination', '<text-domain>')}
-                            text={ctaText}
-                            link={ctaLink}
-                            stacked={false}
-                            onTextChange={(value) => setAttributes({ ctaText: value })}
-                            onLinkChange={(value) => setAttributes({ ctaLink: value })}
-                        />
-                    )}
+                        Clicking the button opens ActionEditor in a FLOATING Popover
+                        (@wordpress/components), not inline in the document flow — an
+                        inline ActionEditor pushes everything below it down and reflows
+                        the whole canvas every time it opens/closes, which reads as
+                        broken next to every other popover in the block. The wrapping
+                        div needs position:'relative' so the Popover (which has no
+                        explicit anchor) floats under THIS button and not the page origin:
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <span
+                            role="button"
+                            tabIndex={0}
+                            aria-label={__('Edit button', '<text-domain>')}
+                            className="btn btn-primary"
+                            onClick={() => setIsEditingButton(!isEditingButton)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    setIsEditingButton(!isEditingButton);
+                                }
+                            }}
+                        >
+                            {ctaText || __('Button', '<text-domain>')}
+                        </span>
+                        {isEditingButton && (
+                            <Popover position="bottom center" onClose={() => setIsEditingButton(false)}>
+                                <div style={{ padding: '16px', minWidth: '320px' }}>
+                                    <ActionEditor
+                                        groupLabel={__('Button editing', '<text-domain>')}
+                                        label={__('Button label', '<text-domain>')}
+                                        linkLabel={__('Button destination', '<text-domain>')}
+                                        text={ctaText}
+                                        link={ctaLink}
+                                        stacked={false}
+                                        onTextChange={(value) => setAttributes({ ctaText: value })}
+                                        onLinkChange={(value) => setAttributes({ ctaLink: value })}
+                                    />
+                                </div>
+                            </Popover>
+                        )}
+                    </div>
                     */}
                 </section>
             </>
