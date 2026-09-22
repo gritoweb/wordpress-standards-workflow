@@ -118,6 +118,36 @@ canvas with real data, inline editing, and theme-styled controls.
   time with real front-end interactive tabs.
 - Branch is `refactor`; `master` is untouched.
 
+## 2026-09-22 — Sidebar background media
+
+Reverses the "Background Media is NEVER in the sidebar" rule this same kit shipped
+earlier today (see `Brand Refactor` above, commit `5988e1a`). Explicit decision:
+background images move to the sidebar; only foreground/inline images and
+repeater-item images stay on the canvas.
+
+### Changed
+- **`create-block/SKILL.md`** — "What goes where" section: background media
+  (`<AttachmentImageControl noStylesheet />` + `<ImagePositionControl />`) now lives
+  in a sidebar `PanelBody title="Background Media"`. The canvas keeps only the
+  passive full-bleed preview, no click target. The keyword lookup table and the
+  "Image (ID-first)" special expansion rule split into two rows/paths — foreground
+  (canvas) vs. background/cover (sidebar). The `block.jsx` template example updated
+  to match.
+- **`_docs/editor-fidelity-checklist.md`**, item 2 — same reversal.
+- **Templates** — removed the now-dead `BACKGROUND_MEDIA_PANEL` export from
+  `templates/components/backend/editorCanvas.js` (its only consumer was the pattern
+  just removed).
+
+### How verified
+- Applied to `test-wordpress`'s `home-hero` block (its only background-image
+  block): `bgImageId` select/replace/remove and `bgImagePosition` focal point both
+  now live in one sidebar panel; canvas backdrop preview is unchanged and
+  non-interactive. `npm run build` clean.
+- Grepped both the skill repo and `test-wordpress` for `BACKGROUND_MEDIA_PANEL`
+  after the edit — no live references left (only historical mentions in this
+  changelog, which record what happened, not current state).
+- Branch is `refactor`; `master` is untouched.
+
 ## 2026-09-17
 
 ### Changed

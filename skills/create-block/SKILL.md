@@ -159,7 +159,8 @@ placeholder + accidental-newline behavior than RichText.
 | `title`, `heading`, `headline`, `name`, `label` | string | `<name>` | **plain input** in white-card wrapper (`<div className="p-3 border border-gray-300 rounded bg-white"><input type="text" ... /></div>`) |
 | `subtitle`, `subheading`, `tagline`, `eyebrow` | string | `<name>` | **plain input** (same wrapper) |
 | `description`, `body`, `content`, `paragraph`, `quote`, `excerpt`, `long text`, `copy` | string (multi-line / formatted) | `<name>` | `<RichText tagName="p" className="!m-0 min-h-[80px]">` in white-card wrapper |
-| `image`, `photo`, `picture`, `thumbnail`, `cover`, `bg`/`background image` | image (ID-first) | `<name>Id` (number) | `<AttachmentImageControl imageId={...} onSelect={(media) => setAttributes({ <name>Id: media.id })} onRemove={() => setAttributes({ <name>Id: 0 })} />` — URL resolved at render via `useAttachmentUrls`. × on hover to remove. If wording contains "background" / "bg" → also add `<name>Position` (string, default `"center"`) + render `<ImagePositionControl />` in sidebar |
+| `image`, `photo`, `picture`, `thumbnail`, `cover` (foreground/inline) | image (ID-first) | `<name>Id` (number) | On the **canvas**: `<AttachmentImageControl imageId={...} onSelect={(media) => setAttributes({ <name>Id: media.id })} onRemove={() => setAttributes({ <name>Id: 0 })} />` — URL resolved at render via `useAttachmentUrls`. × on hover to remove. |
+| `bg`/`background image`/`cover image` (fills the block behind other content) | image (ID-first) | `<name>Id` (number) | In the **sidebar**, inside a `PanelBody title="Background Media"`: `<AttachmentImageControl imageId={...} onSelect={...} onRemove={...} noStylesheet />` + `<ImagePositionControl />` right under it for the focal point. The canvas keeps only the **passive** full-bleed preview (`backgroundImage`/`<img>` with `focalCss(<name>Position)`) — no click target there. |
 | `icon` | string (Dashicon slug or arbitrary name) | `<name>` | `<TextControl>` (or `<IconPicker>` if the project ships one) |
 | `link`, `url`, `cta link`, `href` | link (Gutenberg `LinkControl` object: `{url, opensInNewTab}`) | `<name>` | `<LinkPicker label="..." value={...} onChange={...} />` — sized to match the white-card input height so it lines up next to a sibling text field |
 | `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor stacked={false}>` as a popover below the button** (text input + `<LinkPicker>` + new-tab checkbox + optional icon). Never in the sidebar. |
@@ -178,9 +179,13 @@ placeholder + accidental-newline behavior than RichText.
    via the `useAttachmentUrls` hook (calls `@wordpress/data`'s `getMedia`)
    — no stale URL stored in the block. Render via `<AttachmentImageControl>`
    (× on hover to remove, Spinner while loading, "unavailable" state when
-   attachment is deleted). If the wording mentions "background" or "bg",
-   add a second attribute `<name>Position` (string, default `"center"`) and
-   render `<ImagePositionControl />` in the **sidebar** (config).
+   attachment is deleted). **Foreground/inline image → canvas.**
+   **Background/cover image → sidebar** (`<AttachmentImageControl
+   noStylesheet />` inside `PanelBody title="Background Media"`), and if
+   the wording mentions "background" or "bg", also add a second attribute
+   `<name>Position` (string, default `"center"`) and render
+   `<ImagePositionControl />` in that same sidebar panel, right under the
+   image control.
 
    **Always show a suggested dimension hint** next to the field label (e.g.
    `Background Image — recommended 1920×1080px`), so the editor knows what
@@ -239,12 +244,25 @@ Attributes:
 
 ### What goes where in the editor (sidebar vs canvas)
 
-- **InspectorControls (sidebar)** = block **configuration only** — always
-  `<PaddingControls />` and `<EntranceControl />`; plus layout/variant
-  selects, `<ImagePositionControl />` (focal point), `<DividerControl />`, ground/surface
-  selects, toggles.
-  - **CRITICAL**: **NO text fields, NO link editors, NO button editing, and NO media uploaders in the sidebar.**
-  - **Background Media is NEVER in the sidebar:** All image selection, previewing, and removal must happen directly on the canvas. The sidebar only holds `<ImagePositionControl />` for adjusting focal points.
+- **InspectorControls (sidebar)** = block **configuration**, plus
+  **background media** — always `<PaddingControls />` and
+  `<EntranceControl />`; plus layout/variant selects, `<DividerControl />`,
+  ground/surface selects, toggles.
+  - **CRITICAL**: **NO text fields, NO link editors, and NO button editing in the sidebar.**
+  - **Background Media lives in the sidebar** (decision reversed
+    2026-09-22, see the `2026-09-22 — Sidebar background media` changelog
+    entry for the reasoning and what it replaced): a
+    `PanelBody title="Background Media"` holding
+    `<AttachmentImageControl imageId={bgImageId} onSelect={...}
+    onRemove={...} noStylesheet />` for select/replace/remove, then
+    `<ImagePositionControl />` right under it for the focal point. The
+    `noStylesheet` prop matters — the sidebar renders in the admin
+    document, which never loads `editor.css`, so the control's Tailwind
+    resets (`bg-transparent`, `border-0`) would otherwise resolve to
+    nothing and the browser's default button face would cover the preview.
+  - **Foreground/inline images and repeater-item images do NOT move** —
+    they stay on the canvas per the rule below. Only a block's own
+    full-bleed background image relocated.
 
 - **Canvas (inline)** = block **content** — real data rendered with theme
   styling, bounded by `EDITOR_BLOCK_FRAME`:
@@ -253,9 +271,12 @@ Attributes:
   - **Body copy:** `<ParagraphsField>` or `<RichText>`, inline.
   - **Inline Images (foreground):** `<AttachmentImageControl>` with **× on hover** (top-right
     corner) to remove. Clicking the image opens Media Library in browse mode.
-  - **Background Media (hero, banner, cards):** Rendered on the canvas in two layers:
-    1. The full-bleed background preview (e.g. `<img>` or `backgroundImage` with `focalCss(bgImagePosition)`) underneath the copy.
-    2. A bounded thumbnail control in the corner using `BACKGROUND_MEDIA_PANEL` (`import { BACKGROUND_MEDIA_PANEL } from '../components/backend/editorCanvas.js'`). Inside this corner panel, `<AttachmentImageControl imageId={bgImageId} onSelect={...} onRemove={...} />` renders with full thumbnail preview and the hover **× button**. This avoids covering the entire block with an interactive dropzone (which would swallow clicks and prevent selecting the block), while providing full visual fidelity and one-click removal directly on the canvas.
+  - **Background Media (hero, banner, cards):** the canvas shows only the
+    **passive** full-bleed preview — `<img>` or `backgroundImage` with
+    `focalCss(bgImagePosition)` underneath the copy, no click target.
+    Selecting/replacing/removing the image happens in the sidebar (see
+    above). Nothing here needs to be clickable, so there is no risk of an
+    image dropzone swallowing clicks meant for selecting the block.
   - **Buttons / CTAs:** Styled `<span>` preview on canvas. **Clicking
     opens `<ActionEditor stacked={false}>` as a popover anchored below
     the button** — never in the sidebar.
@@ -591,6 +612,7 @@ import { __ } from '@wordpress/i18n';
 import { PaddingControls } from '../components/backend/PaddingControls.jsx';
 import { EntranceControl } from '../components/backend/EntranceControl.jsx';
 // Uncomment the imports your attributes actually need:
+// import { PanelBody } from '@wordpress/components'; // needed if this block has a Background Media panel
 // import { AttachmentImageControl } from '../components/backend/AttachmentImageControl.jsx';
 // import { ActionEditor }           from '../components/backend/ActionEditor.jsx';
 // import { AutoGrowingTextarea }     from '../components/backend/AutoGrowingTextarea.jsx';
@@ -599,7 +621,7 @@ import { EntranceControl } from '../components/backend/EntranceControl.jsx';
 // import { ImagePositionControl }    from '../components/backend/ImagePositionControl.jsx';
 // import { DividerControl }          from '../components/backend/DividerControl.jsx';
 // import { LinkPicker }              from '../components/backend/LinkPicker.jsx';
-// import { EDITOR_TYPE, EDITOR_BLOCK_FRAME, BACKGROUND_MEDIA_PANEL, emptyLink } from '../components/backend/editorCanvas.js';
+// import { EDITOR_TYPE, EDITOR_BLOCK_FRAME, emptyLink } from '../components/backend/editorCanvas.js';
 import previewImage from './preview.svg';
 import metadata from './block.json';
 
@@ -626,13 +648,25 @@ registerBlockType(metadata, {
 
         return (
             <>
-                {/* Sidebar (InspectorControls) — configuration only.
-                    No text fields, no link editors, no button editing, NO media uploaders here. */}
+                {/* Sidebar (InspectorControls) — configuration, plus background media.
+                    No text fields, no link editors, no button editing here. */}
                 <InspectorControls>
+                    {/* Background media panel — only if this block has a bgImageId attribute:
+                    <PanelBody title={__('Background Media', '<text-domain>')} initialOpen={true}>
+                        <AttachmentImageControl
+                            imageId={bgImageId}
+                            label={__('Background image', '<text-domain>')}
+                            onSelect={(media) => setAttributes({ bgImageId: Number(media.id) || 0 })}
+                            onRemove={() => setAttributes({ bgImageId: 0 })}
+                            noStylesheet
+                        />
+                        <ImagePositionControl value={bgImagePosition} onChange={(pos) => setAttributes({ bgImagePosition: pos })} />
+                    </PanelBody>
+                    */}
+
                     <PaddingControls attributes={attributes} setAttributes={setAttributes} />
                     <EntranceControl attributes={attributes} setAttributes={setAttributes} />
-                    {/* Add config-only controls here:
-                        <ImagePositionControl value={bgImagePosition} onChange={(pos) => setAttributes({ bgImagePosition: pos })} />
+                    {/* Add other config-only controls here:
                         <DividerControl value={sectionDivider} onChange={...} />
                         <SelectControl label="Layout" options={[...]} ... />
                     */}
@@ -646,26 +680,14 @@ registerBlockType(metadata, {
                     {...blockProps}
                     className={`${blockProps.className || ''} <slug>-editor ${EDITOR_BLOCK_FRAME}`}
                 >
-                    {/* Background Media — rendered in 2 layers on canvas (NEVER in the sidebar):
-                        1. Full-bleed backdrop (image or gradient) underneath content
-                        2. Corner thumbnail panel (BACKGROUND_MEDIA_PANEL) for upload, preview & hover × remove:
+                    {/* Background Media — passive preview only, canvas has no click target.
+                        Selecting/replacing/removing the image happens in the sidebar (above):
                     {bgUrl && (
                         <div
                             className="absolute inset-0 -z-10 bg-cover bg-no-repeat opacity-40"
                             style={{ backgroundImage: `url(${bgUrl})`, backgroundPosition: focalCss(bgImagePosition) }}
                         />
                     )}
-                    <div className={BACKGROUND_MEDIA_PANEL} data-background-media-panel>
-                        <AttachmentImageControl
-                            imageId={bgImageId}
-                            label={__('Background image', '<text-domain>')}
-                            height="100%"
-                            objectFit="cover"
-                            objectPosition={focalCss(bgImagePosition)}
-                            onSelect={(media) => setAttributes({ bgImageId: Number(media.id) || 0 })}
-                            onRemove={() => setAttributes({ bgImageId: 0 })}
-                        />
-                    </div>
                     */}
 
                     {/* Heading — inline editing via AutoGrowingTextarea:

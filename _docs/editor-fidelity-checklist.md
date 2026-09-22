@@ -6,9 +6,9 @@ The complete 8-step canvas fidelity contract for block development. Following th
 The editor canvas must reflect real data, including fonts, colors, images, and layout spacing. Do not use placeholder generic styling if specific theme styles exist. The editor must look as close to the frontend as possible.
 The block's root boundary on the canvas uses the canonical White Summers dashed frame (`EDITOR_BLOCK_FRAME`: `mb-10 overflow-hidden rounded-[var(--radius-card)] outline outline-1 outline-offset-[-1px] outline-dashed outline-[color:var(--color-ink)]/30`) to visually delineate the block boundary on the canvas while keeping all inner elements 100% WYSIWYG.
 
-## 2. Inspector has only config attrs
-The block sidebar (InspectorControls) should strictly contain configuration attributes (toggles, behavior settings, metadata, focal point via `<ImagePositionControl />`). Direct content editing (text, links, buttons, and images — including background media) must happen directly on the canvas.
-**Background Media is NEVER in the sidebar:** Background images use the `BACKGROUND_MEDIA_PANEL` corner thumbnail on the canvas with `AttachmentImageControl`, providing hover `×` removal and library upload without stealing clicks from the rest of the block. No media uploaders or file selectors belong in the inspector.
+## 2. Inspector has only config attrs, plus background media
+The block sidebar (InspectorControls) contains configuration attributes (toggles, behavior settings, metadata) and background media. Direct content editing (text, links, buttons, and foreground/inline images) must happen on the canvas.
+**Background Media lives in the sidebar** (decision reversed 2026-09-22): a `PanelBody title="Background Media"` holds `<AttachmentImageControl noStylesheet />` for select/replace/remove, with `<ImagePositionControl />` right under it for the focal point. The canvas shows only the passive full-bleed preview, no click target — there is nothing left on the canvas that could swallow a click meant for selecting the block. Foreground/inline images and repeater-item images are unaffected by this — they stay on the canvas as before.
 
 ## 3. No attribute mutation on mount/select
 Never mutate block attributes implicitly when the block mounts or when it is selected. Attributes should only change in response to explicit user interaction. Implicit mutations cause dirty states and unexpected save prompts.

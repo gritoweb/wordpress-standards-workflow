@@ -43,17 +43,6 @@ export const EDITOR_TYPE = {
     'text-[length:calc(var(--text-h4-mobile)*0.75)] leading-[var(--text-h4-mobile--line-height)] xl:text-[length:calc(var(--text-h4)*0.75)] xl:leading-[var(--text-h4--line-height)]',
 };
 
-/*
- * ── Media action over a background photo ────────────────────────────────
- * A frame that fills the block is the right select-or-replace target when
- * the frame is a panel of its own. It is the wrong one when the image is the
- * block's ground, because it covers the whole block and swallows every
- * click, so the block itself can never be selected. There the action is a
- * bounded panel in the corner and the rest of the block stays selectable.
- */
-export const BACKGROUND_MEDIA_PANEL =
-  'absolute top-4 right-4 z-20 grid h-24 w-36 overflow-hidden rounded-[var(--radius-card)] shadow-md ring-1 ring-[color:var(--color-surface)]/70';
-
 export const clamp = (value, min, max, fallback) => {
   const number = Number(value);
 
