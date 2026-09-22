@@ -168,6 +168,38 @@ repeater-item images stay on the canvas.
   editor-only change; `block.php`/Blade views were untouched).
 - Branch is `refactor`; `master` is untouched.
 
+## 2026-09-22 — Revert the "always Popover" overcorrection
+
+The entry above was itself wrong, caught the same day it shipped: it applied the
+floating-`Popover` treatment to every `ActionEditor` CTA trigger "for consistency" — but
+only featured-grid's card link actually needed it (the grid column is too narrow for the
+inline layout). `home-hero`, `banner-cta` and `text-media-split` were never broken; their
+original inline `ActionEditor` grows the block to contain it and never overlaps a
+neighboring block. A `Popover` is a floating overlay — it doesn't grow anything — so on a
+shorter block it spilled past the block's own bottom edge into whatever rendered next.
+Caught by comparing a fresh screenshot against the original (working) behavior.
+
+### Fixed
+- **`create-block/SKILL.md`** — "Button pair" rule, keyword table, and "What goes where"
+  Buttons/CTAs bullet all corrected: the treatment is picked by the trigger's available
+  width, not applied uniformly. Full-width/single CTA → inline, directly below the button.
+  CTA inside a narrow per-item container (grid card, repeater item) → floating `Popover`.
+  The reasoning for why "always Popover" was wrong is now written into the rule itself, not
+  just this changelog, so a future edit of this file doesn't reintroduce it.
+- **`block.jsx` template** — the commented CTA example reverted to the inline treatment as
+  the default, with the narrow-container `Popover` variant kept as a clearly-labeled
+  alternative right below it.
+- **`test-wordpress`** — `home-hero`, `banner-cta`, `text-media-split` reverted to inline
+  `ActionEditor`; `featured-grid` keeps the `Popover` (the one case that needed it).
+
+### How verified
+- `npm run build` clean in `test-wordpress` after the revert (also caught and fixed two
+  stray extra `</div>` closing tags left over from the original conversion, in `home-hero`
+  and `banner-cta` — the build failed on JSX fragment mismatch until those were removed).
+- Rendered home page still HTTP 200, no PHP errors.
+- Grepped `resources/blocks/*/block.jsx` for `Popover` — only `featured-grid` imports it now.
+- Branch is `refactor`; `master` is untouched.
+
 ## 2026-09-17
 
 ### Changed

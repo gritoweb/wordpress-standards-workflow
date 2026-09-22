@@ -163,7 +163,7 @@ placeholder + accidental-newline behavior than RichText.
 | `bg`/`background image`/`cover image` (fills the block behind other content) | image (ID-first) | `<name>Id` (number) | In the **sidebar**, inside a `PanelBody title="Background Media"`: `<AttachmentImageControl imageId={...} onSelect={...} onRemove={...} noStylesheet />` + `<ImagePositionControl />` right under it for the focal point. The canvas keeps only the **passive** full-bleed preview (`backgroundImage`/`<img>` with `focalCss(<name>Position)`) — no click target there. |
 | `icon` | string (Dashicon slug or arbitrary name) | `<name>` | `<TextControl>` (or `<IconPicker>` if the project ships one) |
 | `link`, `url`, `cta link`, `href` | link (Gutenberg `LinkControl` object: `{url, opensInNewTab}`) | `<name>` | `<LinkPicker label="..." value={...} onChange={...} />` — sized to match the white-card input height so it lines up next to a sibling text field |
-| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor stacked={false}>` inside a floating `<Popover>` anchored to the button** (text input + `<LinkPicker>` + new-tab checkbox + optional icon). Never in the sidebar, and never rendered inline in the document flow (see the "Buttons / CTAs" rule below for why). |
+| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor stacked={false}>`** — inline, directly below the button, for a full-width/single CTA; inside a floating `<Popover>` anchored to the button when the trigger sits in a narrow per-item container (grid card, repeater item). See the "Buttons / CTAs" rule below for which is which. Never in the sidebar either way. |
 | `color`, `bg color`, `text color` | string (hex / palette slug) | `<name>` | `<ColorPalette>` or `<PanelColorSettings>` |
 | `size`, `width`, `height`, `count`, `amount`, plain `number` | number (unsigned) | `<name>` | `<TextControl type="number">` or `<RangeControl>` |
 | `show X`, `enable X`, `visible`, `active`, `toggle`, "is X" boolean | boolean | `<name>` | `<ToggleControl>` |
@@ -207,14 +207,31 @@ placeholder + accidental-newline behavior than RichText.
    attributes** — `<name>Text` (string) + `<name>Link` (Gutenberg
    `LinkControl` object: `{url, opensInNewTab}`). Render a styled `<span>`
    preview on the canvas reflecting the button label; **clicking it opens
-   `<ActionEditor stacked={false}>` inside a floating `<Popover>`
-   (`@wordpress/components`) anchored to the button** (text input +
-   `<LinkPicker>` + new-tab checkbox + optional icon). Never place
-   button/link editing in the sidebar, and never render the `ActionEditor`
-   inline in the document flow — an inline one reflows the whole canvas
-   every time it opens or closes. Wrap the trigger `<span>` in a
-   `position: 'relative'` container so the anchor-less `Popover` floats
-   under that specific button.
+   `<ActionEditor stacked={false}>`**. Never place button/link editing in
+   the sidebar either way. Two treatments, picked by available width —
+   **do not default to one for every case** (a same-day mistake in this
+   kit did exactly that and had to be reverted; see below):
+   - **Full-width / single CTA** (hero, banner, one button per block):
+     render `ActionEditor` **inline**, directly below the button, inside
+     `<div className="w-full max-w-xl text-left ...">`. The block is
+     already tall/wide enough that this naturally grows the block to
+     contain the editor — it never overlaps a neighboring block.
+   - **CTA inside a narrow per-item container** (a grid card, a repeater
+     item): render it inside a floating `<Popover>` (`@wordpress/components`)
+     anchored to the button, in a `position: 'relative'` wrapper around the
+     trigger `<span>`. Inline here would squeeze `LinkControl` into the
+     column's width and the fields become unusable (verified: a 3-column
+     grid card at ~280px cramped `ActionEditor`'s `sm:grid-cols-2` layout
+     until the destination field was a sliver).
+   - **Why not always `Popover`, "for consistency"**: a `Popover` is a
+     floating overlay — it does not participate in layout, so it doesn't
+     grow its own block to fit. Wrapping every full-width CTA in one too
+     "for consistency" (done, then reverted, the same day this rule was
+     written) made a short block's popover spill past its own bottom edge
+     into whatever rendered next, which reads as broken precisely because
+     the original inline version never had that failure mode — it was
+     never actually broken to begin with. Match the treatment to the
+     container's width, don't pick one everywhere.
 
 3. **Array recursion**: when the dev says "list of X with title, image, and description", recurse the inference for each sub-field (`title` → string, `image` → pair, `description` → string). The final shape is one array attribute whose items are objects with typed sub-fields. Sanitize per-sub-field in `block.php`'s `array_map(...)`.
 
@@ -282,15 +299,17 @@ Attributes:
     Selecting/replacing/removing the image happens in the sidebar (see
     above). Nothing here needs to be clickable, so there is no risk of an
     image dropzone swallowing clicks meant for selecting the block.
-  - **Buttons / CTAs:** Styled `<span>` preview on canvas, wrapped in a
-    `position: 'relative'` container. **Clicking opens
-    `<ActionEditor stacked={false}>` inside a floating `<Popover>`
-    anchored to that button** — never in the sidebar, and never inline in
-    the document flow (an inline editor reflows the whole canvas open or
-    closed, and looks inconsistent next to every other popover-driven
-    control). One `editingCta`-style state var and its own
-    `position: relative` wrapper per button — sharing a wrapper anchors
-    the popover to the wrong one.
+  - **Buttons / CTAs:** Styled `<span>` preview on canvas. **Clicking opens
+    `<ActionEditor stacked={false}>`** — never in the sidebar. Pick the
+    treatment by the trigger's available width, see the "Button pair" rule
+    above for the full reasoning:
+    - Full-width/single CTA → **inline**, directly below the button; the
+      block grows to contain it, on its own, no extra wrapper needed.
+    - CTA inside a narrow per-item container (grid card, repeater item) →
+      floating `<Popover>` anchored to the button, inside a
+      `position: 'relative'` wrapper around just that trigger `<span>`
+      (sharing a wrapper across triggers anchors the popover to the
+      wrong one).
   - **Repeaters / lists:** `<ItemList>` (sidebar) with drag handles +
     keyboard arrows (up/down), driven by `onMove` calling `moveItem(items,
     from, to)`. The image inside each item still follows the media rule
@@ -729,27 +748,48 @@ registerBlockType(metadata, {
                     */}
 
                     {/* CTA button — styled preview on canvas.
-                        Clicking the button opens ActionEditor in a FLOATING Popover
-                        (@wordpress/components), not inline in the document flow — an
-                        inline ActionEditor pushes everything below it down and reflows
-                        the whole canvas every time it opens/closes, which reads as
-                        broken next to every other popover in the block. The wrapping
-                        div needs position:'relative' so the Popover (which has no
-                        explicit anchor) floats under THIS button and not the page origin:
-                    <div style={{ position: 'relative', display: 'inline-block' }}>
-                        <span
-                            role="button"
-                            tabIndex={0}
-                            aria-label={__('Edit button', '<text-domain>')}
-                            className="btn btn-primary"
-                            onClick={() => setIsEditingButton(!isEditingButton)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    setIsEditingButton(!isEditingButton);
-                                }
-                            }}
-                        >
+                        DEFAULT: a full-width/single CTA opens ActionEditor INLINE,
+                        directly below the button — the block already has the room and
+                        naturally grows to contain it, so it never overlaps whatever
+                        renders next:
+                    <span
+                        role="button"
+                        tabIndex={0}
+                        aria-label={__('Edit button', '<text-domain>')}
+                        className="btn btn-primary"
+                        onClick={() => setIsEditingButton(!isEditingButton)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setIsEditingButton(!isEditingButton);
+                            }
+                        }}
+                    >
+                        {ctaText || __('Button', '<text-domain>')}
+                    </span>
+                    {isEditingButton && (
+                        <div className="w-full max-w-xl text-left">
+                            <ActionEditor
+                                groupLabel={__('Button editing', '<text-domain>')}
+                                label={__('Button label', '<text-domain>')}
+                                linkLabel={__('Button destination', '<text-domain>')}
+                                text={ctaText}
+                                link={ctaLink}
+                                stacked={false}
+                                onTextChange={(value) => setAttributes({ ctaText: value })}
+                                onLinkChange={(value) => setAttributes({ ctaLink: value })}
+                            />
+                        </div>
+                    )}
+                    */}
+
+                    {/* ONLY if this button's trigger sits in a narrow per-item container
+                        (a grid card, a repeater item) — inline would squeeze LinkControl
+                        into the column's width. Wrap the trigger in position:'relative'
+                        so the anchor-less Popover floats under THIS button, not the page
+                        origin, and use Popover instead of the inline block above:
+                    <div style={{ position: 'relative' }}>
+                        <span role="button" tabIndex={0} onClick={() => setIsEditingButton(!isEditingButton)}>
                             {ctaText || __('Button', '<text-domain>')}
                         </span>
                         {isEditingButton && (
