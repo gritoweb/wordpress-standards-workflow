@@ -162,12 +162,19 @@ Phase 0 answer. Do not run any of these commands.
 2. Adjust `.lando.yml` if needed (e.g. `php: "8.3"`), then `lando start`.
 3. `lando wp core download`, configure `wp-config.php`, complete the
    install (language, admin user).
-4. Scaffold Sage (same commands as Scenario A step 4 — name it `<theme>`,
+4. Configure permalinks and ensure `.htaccess` exists at WordPress root:
+   ```bash
+   lando wp rewrite structure '/%postname%/' --hard
+   ```
+   If `.htaccess` is not generated automatically, create it at the WordPress root
+   with standard WordPress rewrite rules so Gutenberg REST API (`/wp-json/wp/v2/media/*`)
+   resolves correctly for image previews.
+5. Scaffold Sage (same commands as Scenario A step 4 — name it `<theme>`,
    not `sage`).
-5. `lando wp theme activate <theme>`.
-6. Optionally `git init` + an initial commit — local only, never push
+6. `lando wp theme activate <theme>`.
+7. Optionally `git init` + an initial commit inside `wp-content/themes/<theme>` — local only, never push
    without permission.
-7. Build theme assets (Step below).
+8. Build theme assets (Step below).
 
 ### Theme assets (both scenarios)
 

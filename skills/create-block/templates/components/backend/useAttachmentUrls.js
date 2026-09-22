@@ -5,7 +5,16 @@ export function useAttachmentUrls(imageIds) {
   return useSelect(
     (select) =>
       Object.fromEntries(
-        ids.map((id) => [id, select('core').getMedia(id)?.source_url || '']),
+        ids.map((id) => {
+          const item = select('core').getMedia(id);
+          const url =
+            item?.source_url ||
+            item?.media_details?.sizes?.full?.source_url ||
+            item?.media_details?.sizes?.large?.source_url ||
+            item?.guid?.rendered ||
+            '';
+          return [id, url];
+        }),
       ),
     [ids.join(',')],
   );

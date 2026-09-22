@@ -68,7 +68,7 @@ export function AttachmentImageControl({
       style={height === '100%' ? { height: '100%', minHeight: 0 } : undefined}
     >
       <div
-        className="relative flex w-full items-center justify-center overflow-hidden rounded-[var(--radius-card)]"
+        className="group relative flex w-full items-center justify-center overflow-hidden rounded-[var(--radius-card)]"
         onMouseEnter={(e) => {
           const rm = e.currentTarget.querySelector('[data-attachment-remove]');
           if (rm) rm.style.opacity = '1';
@@ -183,20 +183,39 @@ export function AttachmentImageControl({
           />
         </MediaUploadCheck>
 
-        {hasReference && onRemove && previewUrl && (
+        {hasReference && onRemove && (
           <button
             type="button"
             aria-label={removeLabel}
-            onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onRemove();
+            }}
             onFocus={(e) => { e.currentTarget.style.opacity = '1'; }}
             onBlur={(e) => { e.currentTarget.style.opacity = '0'; }}
+            className="group-hover:opacity-100 focus:opacity-100 hover:scale-110 active:scale-95"
             style={{
-              position: 'absolute', top: '8px', right: '8px', zIndex: 30,
-              width: '24px', height: '24px', borderRadius: '50%',
-              background: 'rgba(0,0,0,0.6)', color: '#fff', border: 0,
-              fontSize: '14px', lineHeight: 1,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              opacity: 0, transition: 'opacity 0.2s ease', cursor: 'pointer',
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              zIndex: 30,
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              background: 'rgba(0,0,0,0.75)',
+              color: '#fff',
+              border: '2px solid #fff',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              lineHeight: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: 0,
+              transition: 'opacity 0.2s ease, transform 0.15s ease',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
             }}
             data-attachment-remove
           >

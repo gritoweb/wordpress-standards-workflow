@@ -12,15 +12,18 @@ canvas with real data, inline editing, and theme-styled controls.
 - **`AttachmentImageControl`** — new default image component replacing
   `ImageUploadWithHover`. Resolves URLs by attachment ID via `useAttachmentUrls`
   (no stale URL stored). Shows a **× icon on hover** (top-right corner) to
-  remove the image directly — no `window.confirm`, no text button below. States:
-  ready, loading (Spinner), unavailable, empty. `noStylesheet` prop for sidebar.
+  remove the image directly — no `window.confirm`, no text button below. Rendered
+  unconditionally on hover whenever a media reference exists, allowing image removal
+  even if the preview is unavailable or broken. States: ready, loading (Spinner),
+  unavailable, empty. `noStylesheet` prop for sidebar.
 - **`ActionEditor`** — combined CTA editor (text field + `LinkPicker` + new-tab
   checkbox + optional icon). Two modes: `stacked` (sidebar inline styles) and
   default (2-column grid on canvas). **Button/link editing happens inline on the
   canvas**, never in the sidebar.
 - **`AutoGrowingTextarea`** — auto-resizing textarea for inline heading/subtitle
-  editing on the canvas. Hardened with `resize: none`, `overflow: hidden`, and
-  dynamic `scrollHeight` auto-expansion to eliminate scrollbars and resize handles.
+  editing on the canvas. Uses native `field-sizing: content` with `resize: none`,
+  `overflow: hidden`, and zero inline height overrides, guaranteeing 100% of the
+  text is always fully visible on render without vertical clipping or scrollbars.
   Normalizes `onChange` to always pass the string value (`event.target.value`),
   preventing React `SyntheticEvent` serialization crashes in Gutenberg block attributes.
 - **`ImagePositionControl`** — exports `focalCss(position)` and `FOCAL_POSITIONS`
