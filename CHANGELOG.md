@@ -19,7 +19,16 @@ canvas with real data, inline editing, and theme-styled controls.
   default (2-column grid on canvas). **Button/link editing happens inline on the
   canvas**, never in the sidebar.
 - **`AutoGrowingTextarea`** — auto-resizing textarea for inline heading/subtitle
-  editing on the canvas, styled with `EDITOR_TYPE` typography tokens.
+  editing on the canvas. Hardened with `resize: none`, `overflow: hidden`, and
+  dynamic `scrollHeight` auto-expansion to eliminate scrollbars and resize handles.
+  Normalizes `onChange` to always pass the string value (`event.target.value`),
+  preventing React `SyntheticEvent` serialization crashes in Gutenberg block attributes.
+- **`ImagePositionControl`** — exports `focalCss(position)` and `FOCAL_POSITIONS`
+  for resolving 9-point anchor values to CSS `object-position`/`background-position`.
+- **`EntranceControl`** — accepts both `{ attributes, setAttributes }` and
+  `{ value, onChange }` props defensibly to prevent undefined crashes.
+- **`LinkPicker`** — supports `fullWidth` prop for inline sidebar rendering and
+  safe `HTMLElement` Symbol.hasInstance check.
 - **`ParagraphsField`** — multi-paragraph `RichText` editor preserving HTML
   segments, for inline body copy editing.
 - **`ItemList`** — vertical list repeater with drag handles + keyboard arrows

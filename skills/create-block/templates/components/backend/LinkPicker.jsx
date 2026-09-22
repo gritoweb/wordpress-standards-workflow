@@ -3,7 +3,12 @@ import { useState } from '@wordpress/element';
 import { Button, Popover } from '@wordpress/components';
 
 /**
- * Link picker wrapping Gutenberg's stock <LinkControl> in a <Popover>.
+ * Link picker wrapping Gutenberg's stock <LinkControl>.
+ *
+ * With `fullWidth` (the inspector) the control renders inline, always
+ * visible: a popover there opens in the narrow sidebar against the browser
+ * edge and shifts its scroll. Without it (the canvas) a trigger button opens
+ * the control in a <Popover>, since the canvas has no room for it inline.
  *
  * `value` is the standard LinkControl shape — an object with at least
  * `{ url, opensInNewTab }` (plus any extra flags exposed via `settings`,
@@ -26,59 +31,109 @@ import { Button, Popover } from '@wordpress/components';
  * `<div className="p-3 border border-gray-300 rounded bg-white">` input
  * wrapper used by sibling text fields (~46px), so a CTA text input and
  * a CTA link picker line up in a `flex` row.
+ *
+ * `fullWidth` opts into the inline control and inline styles instead of
+ * Tailwind. Pass it from the inspector sidebar, which renders in the
+ * admin document that `editor.css` never reaches. It defaults to false,
+ * so every canvas call site renders unchanged.
  */
 if (typeof window !== 'undefined' && window.HTMLElement) {
-    Object.defineProperty(window.HTMLElement, Symbol.hasInstance, {
-        value: (instance) => {
-            return !!(instance && typeof instance === 'object' && instance.nodeType === 1);
-        },
-        configurable: true
-    });
+  const nativeCheck = Function.prototype[Symbol.hasInstance];
+
+  Object.defineProperty(window.HTMLElement, Symbol.hasInstance, {
+    // Subclasses inherit this static, so only HTMLElement itself is widened.
+    // Otherwise a div would pass `instanceof HTMLInputElement` in core code.
+    value(instance) {
+      if (this !== window.HTMLElement) {
+        return nativeCheck.call(this, instance);
+      }
+
+      return !!(
+        instance &&
+        typeof instance === 'object' &&
+        instance.nodeType === 1
+      );
+    },
+    configurable: true,
+  });
 }
 
-export const LinkPicker = ({ value, onChange, onRemove, label = '', settings, className = '' }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const url = value?.url || '';
+const fullWidthStyles = {
+  wrapper: { position: 'relative', width: '100%' },
+  label: {
+    display: 'block',
+    marginBottom: '4px',
+    fontSize: '11px',
+    fontWeight: 600,
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+    color: '#757575',
+  },
+  control: { width: '100%', minWidth: 0, boxSizing: 'border-box' },
+};
 
-    const handleRemove = () => {
-        if (onRemove) {
-            onRemove();
-        } else {
-            onChange({ url: '', opensInNewTab: false });
-        }
-    };
+export const LinkPicker = ({
+  value,
+  onChange,
+  onRemove,
+  label = '',
+  settings,
+  className = '',
+  fullWidth = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const url = value?.url || '';
 
+  const handleRemove = () => {
+    if (onRemove) {
+      onRemove();
+    } else {
+      onChange({ url: '', opensInNewTab: false });
+    }
+  };
+
+  const control = (
+    <LinkControl
+      value={value}
+      onRemove={handleRemove}
+      onChange={(newVal) => onChange({ ...value, ...newVal })}
+      settings={settings}
+    />
+  );
+
+  if (fullWidth) {
     return (
-        <div className={className} style={{ position: 'relative' }}>
-            {label && (
-                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
-                    {label}
-                </label>
-            )}
-
-            <Button
-                variant="secondary"
-                onClick={() => setIsOpen(!isOpen)}
-                className="!w-full !justify-between !min-h-[46px] !px-3 !text-left !bg-white !border !border-gray-300 !rounded !text-gray-700 !shadow-none hover:!bg-gray-50"
-            >
-                <span className="truncate">{url || 'Select link...'}</span>
-            </Button>
-
-            {isOpen && (
-                <Popover
-                    position="bottom center"
-                    onClose={() => setIsOpen(false)}
-                >
-                    <div style={{ padding: '16px', minWidth: '300px' }}>
-                        <LinkControl
-                            value={value}
-                            onRemove={handleRemove}
-                            onChange={(newVal) => onChange({ ...value, ...newVal })}
-                            settings={settings}
-                        />
-                    </div>
-                </Popover>
-            )}
-        </div>
+      <div
+        className={`link-picker ${className}`.trim()}
+        style={fullWidthStyles.wrapper}
+      >
+        {label && <label style={fullWidthStyles.label}>{label}</label>}
+        <div style={fullWidthStyles.control}>{control}</div>
+      </div>
     );
+  }
+
+  return (
+    <div className={className} style={{ position: 'relative' }}>
+      {label && (
+        <label className="mb-1 block text-[10px] font-bold text-gray-400 uppercase">
+          {label}
+        </label>
+      )}
+
+      <Button
+        variant="secondary"
+        onClick={() => setIsOpen(!isOpen)}
+        className="!min-h-[46px] !w-full !justify-between !rounded !border !border-gray-300 !bg-white !px-3 !text-left !text-gray-700 !shadow-none hover:!bg-gray-50"
+      >
+        <span className="truncate">{url || 'Select link...'}</span>
+      </Button>
+
+      {isOpen && (
+        <Popover position="bottom center" onClose={() => setIsOpen(false)}>
+          <div style={{ padding: '16px', minWidth: '300px' }}>{control}</div>
+        </Popover>
+      )}
+    </div>
+  );
 };

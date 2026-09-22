@@ -146,6 +146,8 @@ function canvasDocument() {
 export function EntranceControl({
   attributes,
   setAttributes,
+  value,
+  onChange,
   clientId,
   preset,
   singlePart = false,
@@ -153,14 +155,22 @@ export function EntranceControl({
   onPreview,
 }) {
   // `saved` is what gets written back; `entrance` is what the block shows.
-  const saved = attributes.entrance ?? {};
+  // Supports both { attributes, setAttributes } and { value, onChange } seamlessly.
+  const saved = attributes?.entrance ?? value ?? {};
   const entrance = resolveEntrance(saved, preset ?? blockPreset(clientId));
   const defaults = { ...SITE_DEFAULTS, ...siteDefaults };
   const type = entrance.type;
   const slides = type === 'slide' || type === 'fade-slide';
 
-  const write = (key, value) =>
-    setAttributes({ entrance: { ...saved, [key]: value } });
+  const write = (key, val) => {
+    const next = { ...saved, [key]: val };
+    if (setAttributes) {
+      setAttributes({ entrance: next });
+    }
+    if (onChange) {
+      onChange(next);
+    }
+  };
   const numberField = (key, label) => (
     <TextControl
       __nextHasNoMarginBottom

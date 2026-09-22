@@ -17,8 +17,23 @@ const POSITIONS = [
     { value: 'middle-right',  d: 'M5 8H11M8.5 5.5L11 8L8.5 10.5' },
     { value: 'bottom-left',   d: 'M11 5L5 11M9 11H5V7' },
     { value: 'bottom-center', d: 'M8 5V11M5.5 8.5L8 11L10.5 8.5' },
-    { value: 'bottom-right',  d: 'M5 5L11 11M7 11H11V7' },
 ];
+
+const FOCAL_POSITIONS = {
+    'top-left': 'left top',
+    'top-center': 'center top',
+    'top-right': 'right top',
+    'middle-left': 'left center',
+    center: 'center center',
+    'middle-right': 'right center',
+    'bottom-left': 'left bottom',
+    'bottom-center': 'center bottom',
+    'bottom-right': 'right bottom',
+};
+
+export function focalCss(position) {
+    return FOCAL_POSITIONS[position] || FOCAL_POSITIONS.center;
+}
 
 function Arrow({ d, circle }) {
     return (

@@ -27,8 +27,12 @@ that themselves. Never writes to a remote or production environment.
 
 - The kit repo (this repo, or a checkout/copy of it) is reachable on
   disk or the dev has pasted its contents.
-- Target = the project's working directory (theme root or full-site
-  repo root — ask if unclear, don't guess).
+- Target = the **active Sage 11 theme root** (`wp-content/themes/<theme>/`),
+  **NEVER the WordPress CMS root**. The theme is the versioned project where
+  blocks, Blade templates, Vite, package.json, and CSS reside. All `.claude/`,
+  `CLAUDE.md`, `_docs/`, and git versioning must live inside the theme directory.
+  If the dev is at the WordPress root, cd into `wp-content/themes/<theme>/`
+  before initializing.
 
 ---
 
