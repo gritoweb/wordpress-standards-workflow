@@ -98,6 +98,16 @@ export const LinkPicker = ({
       onRemove={handleRemove}
       onChange={(newVal) => onChange({ ...value, ...newVal })}
       settings={settings}
+      /*
+       * Without this, LinkControl switches to a "preview" row the moment a
+       * value exists — title text plus edit/unlink/copy icon buttons. Fine
+       * as WordPress's own default elsewhere, but redundant here: our own
+       * label already shows the current destination (the trigger button's
+       * text in canvas mode, the field label in sidebar mode), so the
+       * preview row only added an extra click before you could change it.
+       * Forcing edit mode keeps the search/URL field visible always.
+       */
+      forceIsEditingLink
     />
   );
 

@@ -212,7 +212,12 @@ placeholder + accidental-newline behavior than RichText.
    preview, reading as a duplicated/broken value the moment an editor opens
    it. An empty string renders `LinkControl`'s normal "search for a link"
    empty state instead — this is true anywhere `LinkControl`/`LinkPicker`
-   appears, not just in `ActionEditor`. **Always canvas, never the
+   appears, not just in `ActionEditor`. Relatedly, `LinkPicker.jsx` already
+   passes `forceIsEditingLink` to `LinkControl` — without it, `LinkControl`
+   switches to a "preview" row once a value exists (title text plus
+   edit/unlink/copy icon buttons), which is redundant here since our own
+   trigger already shows the current destination; keep that prop if you
+   ever touch `LinkPicker.jsx` directly. **Always canvas, never the
    sidebar, never a floating `Popover`** — clicking the styled `<span>`
    preview opens `<ActionEditor>` **inline**, directly below the button, in
    both cases. The only thing that changes with context is the `stacked`
