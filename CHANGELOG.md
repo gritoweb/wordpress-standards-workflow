@@ -197,7 +197,35 @@ Caught by comparing a fresh screenshot against the original (working) behavior.
   stray extra `</div>` closing tags left over from the original conversion, in `home-hero`
   and `banner-cta` — the build failed on JSX fragment mismatch until those were removed).
 - Rendered home page still HTTP 200, no PHP errors.
-- Grepped `resources/blocks/*/block.jsx` for `Popover` — only `featured-grid` imports it now.
+- Branch is `refactor`; `master` is untouched.
+
+## 2026-09-22 — Drop Popover for repeater-item links entirely
+
+Caught by the person testing: featured-grid's `Popover` (kept in the revert above as "the
+one case that needed it") still overlapped the card row below it in the 3-up grid. A
+`Popover`'s built-in collision handling keeps it inside the *viewport*; it has no concept
+of a sibling grid row and no way to avoid it. This is true structurally, not a tuning
+problem — no `position`/`placement` value fixes it, because the thing it needs to dodge
+isn't a viewport edge.
+
+### Fixed
+- **`create-block/SKILL.md`** — "Button pair" rule, keyword table, "What goes where", and
+  the `block.jsx` template's commented example all corrected again: a repeater item's link
+  **text** stays inline-editable on canvas; the link **destination** moves to a **sidebar**
+  panel tied to whichever item is "active" (`<LinkPicker fullWidth />` bound to
+  `items[activeItem].link`, same state shape `<ItemList>` already uses). `Popover` is no
+  longer recommended anywhere in this skill for CTA/link editing — its commented-out import
+  was removed from the template.
+- **`test-wordpress`** — `featured-grid` reworked to match: click a card to select it
+  (highlighted with a ring), its link text is still typed inline, its destination is set in
+  a new "Card Link" sidebar panel. No block in the project imports `Popover` any more.
+
+### How verified
+- `npm run build` clean.
+- Grepped `resources/blocks/*/block.jsx` for `Popover` — zero imports left; the one string
+  match left is inside an explanatory code comment, not a usage.
+- Rendered home page still HTTP 200, no PHP errors (`block.php`/Blade views untouched —
+  `featured-grid`'s `items[].link` shape didn't change, only the editor UI around it).
 - Branch is `refactor`; `master` is untouched.
 
 ## 2026-09-17
