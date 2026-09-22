@@ -20,6 +20,8 @@ skills/
   css-foundation-wizard/SKILL.md   # interactive CSS foundation setup skill — imported to <project>/.claude/skills/
   blade-standards/SKILL.md         # Blade/PHP standards skill — imported to <project>/.claude/skills/
   project-init/SKILL.md            # kit-import skill — imported to <project>/.claude/skills/
+  fotos/SKILL.md                   # block screenshot generator — imported to <project>/.claude/skills/
+  site-settings-wizard/SKILL.md    # interactive wizard for Site Settings — imported to <project>/.claude/skills/
 global-skills/
   commit-rules.md                  # commit convention — NOT per-project; recommend installing to ~/.claude/skills/ (user-level)
 _docs/
@@ -59,6 +61,8 @@ the manifest **is** the source of truth either way.
 | `skills/css-foundation-wizard/` | `./.claude/skills/css-foundation-wizard/` | Copy the whole folder |
 | `skills/blade-standards/` | `./.claude/skills/blade-standards/` | Copy the whole folder |
 | `skills/project-init/` | `./.claude/skills/project-init/` | Copy the whole folder — or use it to drive this very import (see below) |
+| `skills/fotos/` | `./.claude/skills/fotos/` | Copy the whole folder — block screenshot generator (Chrome headless → webp + svg fallback) |
+| `skills/site-settings-wizard/` | `./.claude/skills/site-settings-wizard/` | Copy the whole folder — interactive wizard for Site Settings (Customizer + Settings API, no ACF) |
 | `_docs/examples.md` | `./_docs/examples.md` | Reference patterns the AI uses for grounding |
 | `_docs/launch-list.md` | `./_docs/launch-list.md` | Pre-launch checklist for go-live |
 | `gitignore.example` | `./.gitignore` | **Only if** the project has no `.gitignore` yet — never overwrite |

@@ -2,6 +2,72 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-22 — Brand Refactor
+
+Major update backporting patterns evolved in the White Summers project into the
+canonical kit. The editor experience shifts from a dashed-border admin form to a
+canvas with real data, inline editing, and theme-styled controls.
+
+### Added
+- **`AttachmentImageControl`** — new default image component replacing
+  `ImageUploadWithHover`. Resolves URLs by attachment ID via `useAttachmentUrls`
+  (no stale URL stored). Shows a **× icon on hover** (top-right corner) to
+  remove the image directly — no `window.confirm`, no text button below. States:
+  ready, loading (Spinner), unavailable, empty. `noStylesheet` prop for sidebar.
+- **`ActionEditor`** — combined CTA editor (text field + `LinkPicker` + new-tab
+  checkbox + optional icon). Two modes: `stacked` (sidebar inline styles) and
+  default (2-column grid on canvas). **Button/link editing happens inline on the
+  canvas**, never in the sidebar.
+- **`AutoGrowingTextarea`** — auto-resizing textarea for inline heading/subtitle
+  editing on the canvas, styled with `EDITOR_TYPE` typography tokens.
+- **`ParagraphsField`** — multi-paragraph `RichText` editor preserving HTML
+  segments, for inline body copy editing.
+- **`ItemList`** — vertical list repeater with drag handles + keyboard arrows
+  (up/down). Replaces `TabSelector` + `RemoveButton` for new blocks.
+- **`EntranceControl`** — sidebar panel for scroll/entrance animations (Type,
+  Trigger, Direction, Duration, Delay, Stagger) with a **Preview** button that
+  replays the animation directly on the canvas.
+- **`DividerControl`** — section divider selector (none/below/above/both).
+- **`editorCanvas.js`** — canvas constants: `EDITOR_TYPE` tiers, `emptyLink()`.
+- **`entranceCanvas.js`** / **`moveItem.js`** / **`useAttachmentUrls.js`** —
+  supporting helpers.
+- **`BlockEntrance.php`** — resolves entrance-animation attributes into
+  `data-entrance-*` attributes for the front end. Registered as a global
+  attribute via `BlockManager` (same mechanism as `BlockPadding`).
+- **`skills/fotos/`** — block screenshot generator (Chrome headless → webp + svg
+  fallback), bundled into the kit from the global skill.
+- **`skills/site-settings-wizard/`** — interactive wizard for Site Settings using
+  only WordPress core (Customizer + Settings API). Zero ACF/SCF.
+- **`_docs/site-settings-pattern.md`** — reference doc for the Customizer +
+  Settings API pattern.
+- **`_docs/editor-fidelity-checklist.md`** — optional 8-step canvas fidelity
+  contract.
+
+### Changed
+- **`create-block/SKILL.md`** — template `block.jsx` rewritten: canvas with real
+  data (no `dashed-border` wrapper), `InspectorControls` limited to config-only
+  controls (padding, entrance, layout, focal point, dividers), text edited inline
+  via `AutoGrowingTextarea`/`ParagraphsField`, images via
+  `AttachmentImageControl`, CTA via `ActionEditor` popover on canvas.
+- **Keyword lookup table** — image maps to `AttachmentImageControl` (ID-first,
+  single attribute); button/CTA maps to `ActionEditor` popover on canvas.
+- **Per-attribute generation rules** — image stores only `<name>Id` (URL
+  resolved at render); array uses `ItemList` by default.
+- **Templates directory** — 11 new components + `BlockEntrance.php`; 3 legacy
+  components (`ImageUploadWithHover`, `TabSelector`, `RemoveButton`) kept for
+  backward compatibility.
+- **`project-init/SKILL.md`** — import table includes `skills/fotos/` and
+  `skills/site-settings-wizard/`.
+- **`README.md`** — "What's here" table includes new skills.
+
+### How verified
+- All new files created and exist on disk.
+- `create-block/SKILL.md` template has no `dashed-border`, no `ActionEditor` in
+  `InspectorControls`, CTA editing is inline on canvas.
+- `AttachmentImageControl.jsx` has `data-attachment-remove` × button.
+- `site-settings-wizard` contains zero references to ACF.
+- Branch is `refactor`; `master` is untouched.
+
 ## 2026-09-17
 
 ### Changed

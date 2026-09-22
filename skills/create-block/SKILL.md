@@ -81,8 +81,8 @@ wrong domain/path into every file.
 | 0.9 | `resources/css/app.css` has `@source "../blocks/**/*.{php,jsx}";` |
 | 0.10 | `package.json` `devDependencies` has `react@^18` AND `react-dom@^18`. **React pinned to ^18, not ^19** — React 19 breaks Gutenberg (element-symbol mismatch with WP's React 18). |
 | 0.11 | `app/Blocks/BlockCategories.php` exists. Template at `<skill>/templates/BlockCategories.php`. **First-run only**: ask `"Vou criar uma categoria pros seus blocos. Quer chamar de 'Custom Blocks' (default) ou outro nome?"`, copy template, edit `TITLE` and `SLUG` (lowercase + hyphens) if dev picked a different name. The actual `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). Subsequent runs: grep `const SLUG = '...'` from the existing file. |
-| 0.12 | `resources/blocks/components/backend/` contains the 8 canonical shared components: `ImageUploadWithHover.jsx`, `LinkPicker.jsx`, `RemoveButton.jsx`, `TabSelector.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. If missing: copy from `<skill>/templates/components/backend/*`, replacing `__TEXT_DOMAIN__` with `<text-domain>` and `__THEME_SLUG__` with `<theme-slug>` in every copied file. |
-| 0.15 | `app/Blocks/BlockPadding.php` and `app/Blocks/BlockImagePosition.php` exist. Templates at `<skill>/templates/BlockPadding.php` and `<skill>/templates/BlockImagePosition.php`. |
+| 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. Legacy components (`ImageUploadWithHover.jsx`, `RemoveButton.jsx`, `TabSelector.jsx`) also copied for backward compat. If missing: copy from `<skill>/templates/components/backend/*`, replacing `__TEXT_DOMAIN__` with `<text-domain>` and `__THEME_SLUG__` with `<theme-slug>` in every copied file. |
+| 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php` and `app/Blocks/BlockEntrance.php` exist. Templates at `<skill>/templates/BlockPadding.php`, `<skill>/templates/BlockImagePosition.php` and `<skill>/templates/BlockEntrance.php`. |
 | 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers a `paddingClasses` Blade directive expanding to `\App\Blocks\BlockPadding::resolve(...)` (see `.claude/skills/blade-standards/SKILL.md`). |
 
 ### Compatibility warnings (do NOT auto-fix)
@@ -159,10 +159,10 @@ placeholder + accidental-newline behavior than RichText.
 | `title`, `heading`, `headline`, `name`, `label` | string | `<name>` | **plain input** in white-card wrapper (`<div className="p-3 border border-gray-300 rounded bg-white"><input type="text" ... /></div>`) |
 | `subtitle`, `subheading`, `tagline`, `eyebrow` | string | `<name>` | **plain input** (same wrapper) |
 | `description`, `body`, `content`, `paragraph`, `quote`, `excerpt`, `long text`, `copy` | string (multi-line / formatted) | `<name>` | `<RichText tagName="p" className="!m-0 min-h-[80px]">` in white-card wrapper |
-| `image`, `photo`, `picture`, `thumbnail`, `cover`, `bg`/`background image` | image **PAIR** | `<name>Id` (number) + `<name>Url` (string) | `<MediaUploadCheck><ImageUploadWithHover .../></MediaUploadCheck>`. If wording contains "background" / "bg" → also add `<name>Position` (string, default `"center"`) + render `<ImagePositionControl />` |
+| `image`, `photo`, `picture`, `thumbnail`, `cover`, `bg`/`background image` | image (ID-first) | `<name>Id` (number) | `<AttachmentImageControl imageId={...} onSelect={(media) => setAttributes({ <name>Id: media.id })} onRemove={() => setAttributes({ <name>Id: 0 })} />` — URL resolved at render via `useAttachmentUrls`. × on hover to remove. If wording contains "background" / "bg" → also add `<name>Position` (string, default `"center"`) + render `<ImagePositionControl />` in sidebar |
 | `icon` | string (Dashicon slug or arbitrary name) | `<name>` | `<TextControl>` (or `<IconPicker>` if the project ships one) |
 | `link`, `url`, `cta link`, `href` | link (Gutenberg `LinkControl` object: `{url, opensInNewTab}`) | `<name>` | `<LinkPicker label="..." value={...} onChange={...} />` — sized to match the white-card input height so it lines up next to a sibling text field |
-| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | **plain input** for text + `<LinkPicker>` for link, in a `flex gap-3` row so heights align |
+| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor stacked={false}>` as a popover below the button** (text input + `<LinkPicker>` + new-tab checkbox + optional icon). Never in the sidebar. |
 | `color`, `bg color`, `text color` | string (hex / palette slug) | `<name>` | `<ColorPalette>` or `<PanelColorSettings>` |
 | `size`, `width`, `height`, `count`, `amount`, plain `number` | number (unsigned) | `<name>` | `<TextControl type="number">` or `<RangeControl>` |
 | `show X`, `enable X`, `visible`, `active`, `toggle`, "is X" boolean | boolean | `<name>` | `<ToggleControl>` |
@@ -173,7 +173,14 @@ placeholder + accidental-newline behavior than RichText.
 
 #### Special expansion rules (apply BEFORE the keyword lookup)
 
-1. **Image pair**: any image-like mention generates **two attributes** — `<name>Id` (number) + `<name>Url` (string). Render via `ImageUploadWithHover`. WordPress's media library returns both pieces in one call; storing the URL alongside the ID avoids hitting `wp_get_attachment_url()` at render time. If the wording mentions "background" or "bg", add a third attribute `<name>Position` (string, default `"center"`) and render `<ImagePositionControl />` alongside.
+1. **Image (ID-first)**: any image-like mention generates a **single
+   attribute** — `<name>Id` (number). The URL is resolved at render time
+   via the `useAttachmentUrls` hook (calls `@wordpress/data`'s `getMedia`)
+   — no stale URL stored in the block. Render via `<AttachmentImageControl>`
+   (× on hover to remove, Spinner while loading, "unavailable" state when
+   attachment is deleted). If the wording mentions "background" or "bg",
+   add a second attribute `<name>Position` (string, default `"center"`) and
+   render `<ImagePositionControl />` in the **sidebar** (config).
 
    **Always show a suggested dimension hint** next to the field label (e.g.
    `Background Image — recommended 1920×1080px`), so the editor knows what
@@ -191,10 +198,13 @@ placeholder + accidental-newline behavior than RichText.
    | gallery / carousel slide | 1200×800px |
    | unclear | 1200×800px (safe general default) |
 
-   Also pass the same hint text as `ImageUploadWithHover`'s `placeholder`
-   prop so it shows before an image is selected.
-
-2. **Button pair**: "button" / "CTA" alone (without "link") generates **two attributes** — `<name>Text` (string) + `<name>Link` (Gutenberg `LinkControl` object: `{url, opensInNewTab}`). Render the text as a **plain input** (button labels are short, no inline formatting) and the link via `LinkPicker`, side-by-side in a `flex gap-3` row.
+2. **Button pair**: "button" / "CTA" alone (without "link") generates **two
+   attributes** — `<name>Text` (string) + `<name>Link` (Gutenberg
+   `LinkControl` object: `{url, opensInNewTab}`). Render a styled `<span>`
+   preview on the canvas reflecting the button label; **clicking it opens
+   `<ActionEditor stacked={false}>` as a popover anchored below** (text
+   input + `<LinkPicker>` + new-tab checkbox + optional icon). Never place
+   button/link editing in the sidebar.
 
 3. **Array recursion**: when the dev says "list of X with title, image, and description", recurse the inference for each sub-field (`title` → string, `image` → pair, `description` → string). The final shape is one array attribute whose items are objects with typed sub-fields. Sanitize per-sub-field in `block.php`'s `array_map(...)`.
 
@@ -227,12 +237,26 @@ Attributes:
 | **Category** | Custom category from Phase 0 check #11 (default `custom-blocks`). Never ask per-block. |
 | **Icon** | Pick a [Dashicon](https://developer.wordpress.org/resource/dashicons/) that fits intent (use title + description + any visual the dev shared). Examples: testimonial → `format-quote`, hero with image → `format-image`, steps list → `editor-ol`, CTA → `megaphone`. Unclear → default `smiley`. Tell the dev which icon you chose in the inferred plan. |
 
-### What goes where in the editor (Inspector vs body)
+### What goes where in the editor (sidebar vs canvas)
 
-- **InspectorControls (sidebar)** = block **configuration** — always `<PaddingControls />`; plus toggles for layout variants, color, breakpoints, anything visual/structural picked rarely.
-- **Editor body** (dashed-border wrapper) = block **content** — labeled white cards holding **plain `<input>`** for headings / labels / short text, **`<RichText>`** for descriptions / long copy, `<ImageUploadWithHover />` for images, `<LinkPicker />` for links, `<TabSelector />` + per-item edit form for array repeaters (with `<RemoveButton />` at the top-right of the active item's panel).
-
-When uncertain, prefer the body — Inspector is hidden by default.
+- **InspectorControls (sidebar)** = block **configuration only** — always
+  `<PaddingControls />` and `<EntranceControl />`; plus layout/variant
+  selects, `<ImagePositionControl />`, `<DividerControl />`, ground/surface
+  selects, toggles. **No text fields, no link editors, no button editing in
+  the sidebar.**
+- **Canvas (inline)** = block **content** — real data rendered with theme
+  styling, no `dashed-border` form wrapper:
+  - **Headings / subtitles:** `<AutoGrowingTextarea>` styled with
+    `EDITOR_TYPE` tokens, positioned where the text appears visually.
+  - **Body copy:** `<ParagraphsField>` or `<RichText>`, inline.
+  - **Images:** `<AttachmentImageControl>` with **× on hover** (top-right
+    corner) to remove. Clicking the image opens Media Library in browse
+    mode.
+  - **Buttons / CTAs:** Styled `<span>` preview on canvas. **Clicking
+    opens `<ActionEditor stacked={false}>` as a popover anchored below
+    the button** — never in the sidebar.
+  - **Repeaters / lists:** `<ItemList>` with drag handles + keyboard
+    arrows (up/down), replacing `<TabSelector>` + `<RemoveButton>`.
 
 ### What the skill does NOT ask
 
@@ -311,8 +335,8 @@ The editor's `block.jsx` is the **only** block file Vite compiles (via the
 | `string` (description / long copy) | `{"type":"string","default":""}` | `wp_kses_post($attributes['<name>'] ?? '')` if formatting is allowed; otherwise `sanitize_text_field(...)` | `<RichText tagName="p" value={...} onChange={(value) => setAttributes({ <name>: value })} className="!m-0 min-h-[80px]" />` in the white-card wrapper |
 | `number` | `{"type":"number","default":0}` | `absint($attributes['<name>'] ?? 0)` (unsigned) — use `(int)` only if negatives are valid | `<TextControl type="number" ... />` or `<NumberControl ... />` |
 | `boolean` | `{"type":"boolean","default":false}` | `(bool) ($attributes['<name>'] ?? false)` | `<ToggleControl ... />` |
-| `array` | `{"type":"array","default":[]}` | `array_map(...)` with per-item sanitization | **Tabs repeater**: `<TabSelector items={items} activeItem={activeIdx} setActiveItem={setActiveIdx} addItem={addItem} itemLabelPrefix="Slide" />` at top + `useState(0)` for active index + edit form below scoped to `items[activeIdx]`. Place `<RemoveButton onClick={() => removeItem(activeIdx)} />` in a `<div className="flex justify-end">` at the **top of the active item's panel** (right-aligned, before the fields) — gated by `items.length > 1` so the last item can't be removed |
-| image (id + url) | `{"<name>Id":{"type":"number","default":0},"<name>Url":{"type":"string","default":""}}` | `absint($attributes['<name>Id'] ?? 0)` + `esc_url_raw($attributes['<name>Url'] ?? '')` | Label row shows `<name> — recommended <W>×<H>px` (see dimension table above); `<MediaUploadCheck><ImageUploadWithHover imageId={...Id} imageUrl={...Url} MediaUpload={MediaUpload} placeholder="Click to select an image (recommended <W>×<H>px)" onSelect={(media) => setAttributes({ <name>Id: media.id, <name>Url: media.url })} onRemove={() => setAttributes({ <name>Id: 0, <name>Url: '' })} /></MediaUploadCheck>` |
+| `array` | `{"type":"array","default":[]}` | `array_map(...)` with per-item sanitization | **List repeater**: `<ItemList>` with drag handles + keyboard arrows for reordering. Alternative (legacy): `<TabSelector>` + `<RemoveButton>` |
+| image (ID-first) | `{"<name>Id":{"type":"number","default":0}}` | `absint($attributes['<name>Id'] ?? 0)` — URL resolved at render via `wp_get_attachment_url()` or `wp_get_attachment_image()` | `<AttachmentImageControl imageId={...<name>Id} onSelect={(media) => setAttributes({ <name>Id: media.id })} onRemove={() => setAttributes({ <name>Id: 0 })} />` — × on hover to remove, Spinner while loading, `useAttachmentUrls` resolves URL in the editor |
 | link (Gutenberg `LinkControl` object) | `{"type":"object","default":{"url":"","opensInNewTab":false}}` | `esc_url($attributes['<name>']['url'] ?? '')` + `(bool) ($attributes['<name>']['opensInNewTab'] ?? false)` | `<LinkPicker label="..." value={attributes.<name>} onChange={(value) => setAttributes({ <name>: value })} />`. Blade emits `target="_blank"` only when the flag is true; **don't hardcode `rel="noopener"`** — WP's `wp_targeted_link_rel()` filter (priority 15 on `the_content`) adds it automatically |
 
 **Always include the 4 global padding attrs** in `block.php`'s `view(...)` data array, even if the block doesn't use them visually — they're injected by `BlockManager::globalAttributes()` and should be available to Blade:
@@ -406,13 +430,25 @@ End with a summary table listing every file created/modified.
 ├── BlockCategories.php             → copied to app/Blocks/BlockCategories.php (check 0.11)
 ├── BlockPadding.php                → copied to app/Blocks/BlockPadding.php (check 0.15)
 ├── BlockImagePosition.php          → copied to app/Blocks/BlockImagePosition.php (check 0.15)
+├── BlockEntrance.php               → copied to app/Blocks/BlockEntrance.php (check 0.15)
 ├── blocks.php                      → copied to app/blocks.php (check 0.6)
 ├── preview.svg                     → copied per block (with __BLOCK_TITLE__ substituted)
 └── components/backend/             → copied to resources/blocks/components/backend/ (check 0.12)
-    ├── ImageUploadWithHover.jsx
+    ├── AttachmentImageControl.jsx   ← default image control (× on hover)
+    ├── useAttachmentUrls.js         ← hook for resolving attachment URLs
+    ├── ActionEditor.jsx             ← CTA label + link editor (canvas popover)
+    ├── AutoGrowingTextarea.jsx      ← inline heading/subtitle editor
+    ├── editorCanvas.js              ← canvas constants (EDITOR_TYPE, emptyLink)
+    ├── EntranceControl.jsx          ← entrance animation sidebar panel
+    ├── entranceCanvas.js            ← entrance animation canvas helpers
+    ├── DividerControl.jsx           ← section divider selector
+    ├── ItemList.jsx                 ← list repeater with drag + keyboard
+    ├── moveItem.js                  ← reorder helper for ItemList
+    ├── ParagraphsField.jsx          ← multi-paragraph RichText editor
+    ├── ImageUploadWithHover.jsx     ← legacy (kept for backward compat)
     ├── LinkPicker.jsx
-    ├── RemoveButton.jsx
-    ├── TabSelector.jsx
+    ├── RemoveButton.jsx             ← legacy (kept for backward compat)
+    ├── TabSelector.jsx              ← legacy (kept for backward compat)
     ├── PaddingControls.jsx
     ├── padding-presets.js
     ├── ImagePositionControl.jsx
@@ -517,16 +553,21 @@ echo view('blocks.<slug>', [
 
 ```jsx
 import { registerBlockType } from '@wordpress/blocks';
-import { useBlockProps, MediaUpload, MediaUploadCheck, RichText } from '@wordpress/block-editor';
+import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { PaddingControls } from '../components/backend/PaddingControls.jsx';
+import { EntranceControl } from '../components/backend/EntranceControl.jsx';
 // Uncomment the imports your attributes actually need:
-// import { ImageUploadWithHover } from '../components/backend/ImageUploadWithHover.jsx';
-// import { LinkPicker }           from '../components/backend/LinkPicker.jsx';
-// import { TabSelector }          from '../components/backend/TabSelector.jsx';
-// import { RemoveButton }         from '../components/backend/RemoveButton.jsx';
-// import { ImagePositionControl } from '../components/backend/ImagePositionControl.jsx';
+// import { AttachmentImageControl } from '../components/backend/AttachmentImageControl.jsx';
+// import { ActionEditor }           from '../components/backend/ActionEditor.jsx';
+// import { AutoGrowingTextarea }     from '../components/backend/AutoGrowingTextarea.jsx';
+// import { ParagraphsField }         from '../components/backend/ParagraphsField.jsx';
+// import { ItemList }                from '../components/backend/ItemList.jsx';
+// import { ImagePositionControl }    from '../components/backend/ImagePositionControl.jsx';
+// import { DividerControl }          from '../components/backend/DividerControl.jsx';
+// import { LinkPicker }              from '../components/backend/LinkPicker.jsx';
+// import { EDITOR_TYPE, emptyLink }  from '../components/backend/editorCanvas.js';
 import previewImage from './preview.svg';
 import metadata from './block.json';
 
@@ -535,7 +576,8 @@ registerBlockType(metadata, {
         const blockProps = useBlockProps();
         const { isPreview } = attributes;
         // Destructure your block's other attributes here.
-        // Example: const { heading, items } = attributes;
+        // Example: const { heading, bgImageId, ctaText, ctaLink } = attributes;
+        // const [isEditingButton, setIsEditingButton] = useState(false);
 
         // Static preview for the Gutenberg inserter hover panel.
         if (isPreview) {
@@ -552,92 +594,77 @@ registerBlockType(metadata, {
 
         return (
             <>
-                {/* Sidebar (InspectorControls) — config attrs only. */}
-                <PaddingControls attributes={attributes} setAttributes={setAttributes} />
+                {/* Sidebar (InspectorControls) — configuration only.
+                    No text fields, no link editors, no button editing here. */}
+                <InspectorControls>
+                    <PaddingControls attributes={attributes} setAttributes={setAttributes} />
+                    <EntranceControl attributes={attributes} setAttributes={setAttributes} />
+                    {/* Add config-only controls here:
+                        <ImagePositionControl value={bgImagePosition} onChange={...} />
+                        <DividerControl value={sectionDivider} onChange={...} />
+                        <SelectControl label="Layout" options={[...]} ... />
+                    */}
+                </InspectorControls>
 
-                {/* Editor body — content attrs in the dashed wrapper. */}
-                <section
-                    {...blockProps}
-                    className={`${blockProps.className} mb-10 bg-gray-50 border-2 border-dashed border-gray-600 rounded-lg p-6 relative overflow-hidden`}
-                >
-                    <h3 className="text-base font-sans! font-bold mb-8 uppercase tracking-widest text-gray-500 relative z-10">
-                        <Title> Preview
-                    </h3>
+                {/* Canvas — real data, inline editing, theme-styled.
+                    No dashed-border wrapper. Content appears as it will on the front end. */}
+                <section {...blockProps}>
+                    {/* Heading — inline editing via AutoGrowingTextarea:
+                    <AutoGrowingTextarea
+                        value={heading}
+                        onChange={(value) => setAttributes({ heading: value })}
+                        placeholder={__('Enter heading…', '<text-domain>')}
+                        className={EDITOR_TYPE.display}
+                    />
+                    */}
 
-                    <div className="space-y-6 relative z-10">
-                        {/* Each content field gets a labeled white card.
+                    {/* Image — AttachmentImageControl with × on hover:
+                    <AttachmentImageControl
+                        imageId={bgImageId}
+                        onSelect={(media) => setAttributes({ bgImageId: media.id })}
+                        onRemove={() => setAttributes({ bgImageId: 0 })}
+                        height="380px"
+                    />
+                    */}
 
-                            Heading / label / simple short text → plain <input>:
-                        <div>
-                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Heading</label>
-                            <div className="p-3 border border-gray-300 rounded bg-white">
-                                <input
-                                    type="text"
-                                    value={attributes.heading}
-                                    onChange={(e) => setAttributes({ heading: e.target.value })}
-                                    placeholder={__('Enter heading…', '<text-domain>')}
-                                    className="w-full border-0 outline-none m-0 p-0 bg-transparent text-base text-gray-900 placeholder:text-gray-400"
-                                />
-                            </div>
-                        </div>
+                    {/* Body copy — inline ParagraphsField or RichText:
+                    <ParagraphsField
+                        value={description}
+                        onChange={(value) => setAttributes({ description: value })}
+                        placeholder={__('Enter description…', '<text-domain>')}
+                    />
+                    */}
 
-                            Image → ImageUploadWithHover with a dimension hint in the label:
-                        <div>
-                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">
-                                {__('Background Image', '<text-domain>')}
-                                <span className="normal-case font-normal text-gray-400"> — {__('recommended 1920×1080px', '<text-domain>')}</span>
-                            </label>
-                            <MediaUploadCheck>
-                                <ImageUploadWithHover
-                                    imageId={attributes.bgImageId}
-                                    imageUrl={attributes.bgImageUrl}
-                                    MediaUpload={MediaUpload}
-                                    placeholder={__('Click to select an image (recommended 1920×1080px)', '<text-domain>')}
-                                    onSelect={(media) => setAttributes({ bgImageId: media.id, bgImageUrl: media.url })}
-                                    onRemove={() => setAttributes({ bgImageId: 0, bgImageUrl: '' })}
-                                />
-                            </MediaUploadCheck>
-                        </div>
-
-                            Description / long copy → RichText:
-                        <div>
-                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Description</label>
-                            <div className="p-3 border border-gray-300 rounded bg-white">
-                                <RichText
-                                    tagName="p"
-                                    value={attributes.description}
-                                    onChange={(value) => setAttributes({ description: value })}
-                                    className="!m-0 min-h-[80px]"
-                                    placeholder={__('Enter description…', '<text-domain>')}
-                                />
-                            </div>
-                        </div>
-
-                            Repeater (array attribute) — RemoveButton at top-right of active panel:
-                        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                            <TabSelector
-                                items={safeItems}
-                                activeItem={activeIdx}
-                                setActiveItem={setActiveIdx}
-                                addItem={addItem}
-                                itemLabelPrefix={__('Item', '<text-domain>')}
-                            />
-                            {active && (
-                                <div className="space-y-4">
-                                    {safeItems.length > 1 && (
-                                        <div className="flex justify-end">
-                                            <RemoveButton
-                                                confirmMessage={__('Remove this item?', '<text-domain>')}
-                                                onClick={() => removeItem(activeIdx)}
-                                            />
-                                        </div>
-                                    )}
-                                    // per-item fields here
-                                </div>
-                            )}
-                        </div>
-                        */}
-                    </div>
+                    {/* CTA button — styled preview on canvas.
+                        Clicking the button opens ActionEditor inline directly below:
+                    <span
+                        role="button"
+                        tabIndex={0}
+                        aria-label={__('Edit button', '<text-domain>')}
+                        className="btn btn-primary"
+                        onClick={() => setIsEditingButton(!isEditingButton)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setIsEditingButton(!isEditingButton);
+                            }
+                        }}
+                    >
+                        {ctaText || __('Button', '<text-domain>')}
+                    </span>
+                    {isEditingButton && (
+                        <ActionEditor
+                            groupLabel={__('Button editing', '<text-domain>')}
+                            label={__('Button label', '<text-domain>')}
+                            linkLabel={__('Button destination', '<text-domain>')}
+                            text={ctaText}
+                            link={ctaLink}
+                            stacked={false}
+                            onTextChange={(value) => setAttributes({ ctaText: value })}
+                            onLinkChange={(value) => setAttributes({ ctaLink: value })}
+                        />
+                    )}
+                    */}
                 </section>
             </>
         );
