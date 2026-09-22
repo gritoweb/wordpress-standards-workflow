@@ -18,29 +18,31 @@ reusable/semantic patterns.
 
 ## Theme CSS foundation (start here)
 
-Every theme starts with **four foundation files** in `resources/css/global/`
-— `variables.css` (design tokens), `base.css` (unclassed tag defaults),
-`typography.css` (semantic text classes), `global.css` (site-wide
-structural classes like `.app`/`.container`). Build these before any
-block styles — they're the base every component inherits from.
+Every theme starts with **five foundation files** in `resources/css/global/`:
+- `variables.css` — design tokens (`@theme`, fonts, colors, radiuses).
+- `layout.css` — root layout structure (`.app`, viewport helpers, body setup).
+- `base.css` — unclassed tag defaults (`body`, `p`, `a`, `h1`–`h6`, `img`).
+- `typography.css` — semantic type classes (`.heading-1`, `.font-eyebrow`, text sizes).
+- `container.css` — `.container` max-width, lateral gutters, and grid alignment.
 
-Before writing any CSS in a project, check whether all four files exist.
+Build these before any block styles — they're the base every component inherits from.
+
+Before writing any CSS in a project, check whether all five files exist.
 If any is missing, **use the `css-foundation-wizard` skill**
 (`.claude/skills/css-foundation-wizard/SKILL.md`) to generate them
-interactively from the dev's style guide — don't hand-walk the dev
-through creating them inline; the wizard owns that flow (tokens in
-`@theme {}`/`:root`, base rules in `@layer base`, typography/global
-classes in `@layer components`, plus wiring the four `@import`s into
-`resources/css/app.css` in order).
+interactively from the dev's style guide — the wizard owns that flow (tokens in
+`@theme {}`/`:root`, base rules in `@layer base`, typography/layout/container
+classes in `@layer components`, plus wiring the `@import`s into
+`resources/css/app.css` and `resources/css/editor.css` in order).
 
-**`base.css` vs `typography.css`:** `base.css` is how a tag looks *by
-default, unclassed*. `typography.css` applies a type treatment to *any*
-element regardless of tag — give a `<div>` an h1 look, or a hero
-`.heading-display` that's larger than any `<h*>`. **`global.css`** is
-narrower still: only site-wide structural/layout classes (`.app`,
-`.container`, `.section-wrap`) — never block-level classes (those live
-in each block's own `.css` file, see **Block styles** below) and never
-button/badge/state-variant classes.
+**Scope boundaries:**
+- **`variables.css`**: tokens only. Every other file uses `var(--...)`.
+- **`layout.css`**: site-wide structural layout (e.g. `.app { overflow-x: hidden; }`).
+- **`base.css`**: how a tag looks *by default, unclassed*.
+- **`typography.css`**: applies a type treatment to *any* element regardless of tag.
+- **`container.css`**: `.container` max-width and lateral padding only.
+
+Never put block-level classes (`.hero`, `.testimonials`) or button/badge variants in these files.
 
 ---
 
@@ -52,8 +54,8 @@ folder by role:
 
 | Folder | Holds | Example |
 |---|---|---|
-| `global/` | The four foundation files (see above) | `global/variables.css` |
-| `components/` | One file per reusable UI component used across blocks/pages | `components/button.css`, `components/form.css` |
+| `global/` | The five foundation files (see above) | `global/variables.css`, `global/container.css` |
+| `components/` | One file per reusable UI component used across blocks/pages | `components/button.css` |
 | `pages/` | Styles that only apply to one template/page | `pages/single-project.css` |
 | `editor/` | Styles only the block editor loads, imported from `editor.css` (never `app.css`) | `editor/blocks.css` |
 | `vendor/` | Third-party CSS, committed as-is (never ours, never formatted) | `vendor/swiper-bundle.min.css` |
@@ -61,19 +63,36 @@ folder by role:
 A block's own CSS is **not** here — it lives next to the block
 (`resources/blocks/<slug>/block.css`, see **Block styles**).
 
-`app.css` imports them below Sage's stock lines, one group per folder, in this
-order, separated by a blank line — `global/` first because every later file
-references its tokens:
+### Front-end entrypoint: `resources/css/app.css`
+
+`app.css` imports the foundation below Sage's stock lines, in this order:
 
 ```css
 @import './global/variables.css';
+@import './global/layout.css';
 @import './global/base.css';
 @import './global/typography.css';
-@import './global/global.css';
+@import './global/container.css';
 
 @import './components/button.css';
 
 @import './pages/single-project.css';
+```
+
+### Editor entrypoint: `resources/css/editor.css`
+
+`editor.css` imports only the foundation layers needed for the Gutenberg canvas to match the front-end layout and typography:
+
+```css
+@import "tailwindcss";
+
+@import "./global/variables.css";
+@import "./global/typography.css";
+@import "./global/layout.css";
+@import "./global/container.css";
+
+@source "../blocks/**/*.{php,jsx,js}";
+@source "../components/**/*.{jsx,js}";
 ```
 
 New file → add its `@import` to its group (`editor/` files go in `editor.css`). Never create a new `.css` at the

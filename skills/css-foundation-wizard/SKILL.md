@@ -2,18 +2,17 @@
 name: css-foundation-wizard
 description: >
   Interactively set up a Sage 11 theme's CSS foundation — variables.css,
-  base.css, typography.css, global.css — from a free-text style guide
+  layout.css, base.css, typography.css, container.css — from a free-text style guide
   description. Use this skill when starting a new theme's CSS foundation,
   or whenever a project is missing any of
-  resources/css/global/{variables,base,typography,global}.css. Runs a
-  4-step wizard (variables → base → typography → global, each step
-  depending on tokens from the previous one), then wires the generated
-  files into resources/css/app.css.
+  resources/css/global/{variables,layout,base,typography,container}.css. Runs a
+  5-step wizard (variables → layout → base → typography → container), then wires the generated
+  files into resources/css/app.css and resources/css/editor.css.
 ---
 
 # css-foundation-wizard — interactive CSS foundation setup
 
-Turns a dev's style guide description into the four CSS foundation files
+Turns a dev's style guide description into the five CSS foundation files
 every Sage 11 theme needs — all in **`resources/css/global/`**, never the root
 of `resources/css/` (folder layout: `css-standards` › **CSS folder layout**) —
 one step at a time — each step gated by an
@@ -34,7 +33,7 @@ class ordering, hand-written CSS formatting) — see
   `vite.config.js`, `resources/`). If unsure, **ask** — don't guess.
 - Re-running this skill to *update* an already-generated foundation
   (e.g. add one new color) is out of scope for now — it's built for
-  first-time generation. If any of the four files already exists, tell
+  first-time generation. If any of the five files already exists, tell
   the dev and ask whether they want to overwrite it or stop.
 
 ---
@@ -42,11 +41,12 @@ class ordering, hand-written CSS formatting) — see
 ## Execution Flow
 
 1. **Step 1** — `variables.css` (design tokens)
-2. **Step 2** — `base.css` (unclassed tag defaults)
-3. **Step 3** — `typography.css` (semantic text classes)
-4. **Step 4** — `global.css` (site-wide structural classes)
-5. **Wiring** — import all four into `resources/css/app.css`, in order
-6. **Handoff** — summary of what was created/edited
+2. **Step 2** — `layout.css` (root viewport layout, body structure)
+3. **Step 3** — `base.css` (unclassed tag defaults)
+4. **Step 4** — `typography.css` (semantic text classes)
+5. **Step 5** — `container.css` (max-width, container grids, lateral gutters)
+6. **Wiring** — import into `resources/css/app.css` and `resources/css/editor.css`, in order
+7. **Handoff** — summary of what was created/edited
 
 Each step only starts once the previous step's file has been confirmed
 and written — later steps reference token names the dev actually chose,
@@ -103,7 +103,35 @@ never placeholders.
 
 ---
 
-## Step 2 — `global/base.css`
+## Step 2 — `global/layout.css`
+
+1. Ask, open-ended: **"Quais estilos estruturais de viewport e html/body o site precisa?"** (e.g. root layout wrapper, background base, viewport min-height).
+2. Generate `resources/css/global/layout.css`:
+
+   ```css
+   @layer base {
+     html,
+     body {
+       min-height: 100%;
+       overflow-x: hidden;
+     }
+   }
+
+   @layer components {
+     .app {
+       min-height: 100vh;
+       display: flex;
+       flex-direction: column;
+       overflow-x: hidden;
+     }
+   }
+   ```
+
+3. Show the generated file. Ask **"ajustar algo?"** before writing.
+
+---
+
+## Step 3 — `global/base.css`
 
 1. Fixed candidate tag list, asked as **one** batched closed question
    (which tags to style now vs. leave at browser default):
@@ -138,7 +166,7 @@ never placeholders.
 
 ---
 
-## Step 3 — `global/typography.css`
+## Step 4 — `global/typography.css`
 
 1. Ask, open-ended: **"Quais tratamentos de texto reusáveis o site
    precisa, além do que já ficou em `base.css`?"** (e.g. an eyebrow
@@ -178,73 +206,67 @@ never placeholders.
 
 ---
 
-## Step 4 — `global/global.css`
+## Step 5 — `global/container.css`
 
-1. Ask, open-ended: **"Quais containers/wrappers estruturais o site
-   inteiro usa?"** (e.g. a root `.app` wrapper, a `.container` with a
-   max-width + side padding, a `.section-wrap`).
-2. Each becomes a class in `@layer components`, pulling from
-   `variables.css` where relevant (e.g. a max-width token) or from the
-   project's existing padding presets if `BlockPadding`/
-   `@paddingClasses` are already set up (see
-   `.claude/skills/blade-standards/SKILL.md`).
+1. Ask, open-ended: **"Qual a largura máxima do container e o padding lateral?"** (e.g. max-width 80rem / 1280px, padding-inline 1.5rem).
+2. Generate `resources/css/global/container.css` inside `@layer components`:
 
    ```css
    @layer components {
-     .app {
-       overflow-x: hidden;
-     }
-
      .container {
+       width: 100%;
        margin-inline: auto;
-       max-width: 80rem;
-       padding-inline: 1.5rem;
+       max-width: var(--container-max-width, 80rem);
+       padding-inline: var(--container-padding-x, 1.5rem);
      }
    }
    ```
 
-3. **Scope boundary — say this explicitly in the file as a comment**:
-   `global.css` is **not** for block-level classes (`.hero`,
-   `.testimonials` — those live in each block's own `.css` file, see
-   `.claude/skills/css-standards/SKILL.md`) and **not** for button/badge/
-   state-variant classes. It only holds site-wide structural/layout
-   classes. Keeping this boundary is what stops `global.css` from
-   becoming a catch-all drawer.
+3. **Scope boundary**: `container.css` is only for container widths, margins, and gutters. Block classes (`.hero`, `.testimonials`) live in each block's own `.css` file.
 4. Show the generated file. Ask **"ajustar algo?"** before writing.
 
 ---
 
-## Wiring — `resources/css/app.css`
+## Wiring — `resources/css/app.css` and `resources/css/editor.css`
 
-After all four files are written, add these four `@import`s to
-`resources/css/app.css`, **below whatever Sage already ships at the top of the
-file** (its `@import "tailwindcss" …` line and any `@source` directives — leave
-those exactly as they are). Keep the four in this order among themselves — later
-layers reference earlier tokens/base styles:
+After all five files are written:
+
+### 1. Wire `resources/css/app.css`
+
+Add the five `@import`s below Sage's stock lines in `resources/css/app.css`, in this order:
 
 ```css
-/* ↓ append below Sage's stock lines — don't touch what's above */
 @import "./global/variables.css";
+@import "./global/layout.css";
 @import "./global/base.css";
 @import "./global/typography.css";
-@import "./global/global.css";
+@import "./global/container.css";
 ```
 
-Leave a blank line after this group: `components/` and `pages/` imports go
-below it, one group each, in that order (see `css-standards` › **CSS folder
-layout**).
+Leave a blank line after this group for any future `components/` and `pages/` imports.
 
-If they're missing or out of order, show the dev the diff and ask for
-confirmation before editing — same confirm-before-editing pattern
-`create-block` uses for `vite.config.js`/`editor.js`/`app.css`. Only touch these
-four lines; never rewrite or reorder the stock top of the file.
+### 2. Wire `resources/css/editor.css`
+
+Ensure `resources/css/editor.css` imports the necessary layers so the Gutenberg editor canvas has visual parity with the front-end layout and typography:
+
+```css
+@import "tailwindcss";
+
+@import "./global/variables.css";
+@import "./global/typography.css";
+@import "./global/layout.css";
+@import "./global/container.css";
+
+@source "../blocks/**/*.{php,jsx,js}";
+@source "../components/**/*.{jsx,js}";
+```
 
 ---
 
 ## Handoff
 
-End with a summary table: which of the four files were created, whether
-`app.css` was edited (and how), and a reminder to run `npm run dev` /
+End with a summary table: which of the five files were created, whether
+`app.css` and `editor.css` were edited, and a reminder to run `npm run dev` /
 `npm run build` to see the result (the dev runs it themselves — this
 skill never runs it).
 
@@ -253,15 +275,14 @@ skill never runs it).
 ## Behavior Rules
 
 - **Never run `npm`/`composer`/`lando`/`git`.**
-- **All four files go in `resources/css/global/`** — create the folder if
+- **All five files go in `resources/css/global/`** — create the folder if
   missing; never write them to the root of `resources/css/`.
 - **Tokens only in `variables.css`** — every other file references them
   via `var(--...)`, never a raw hex/px value.
-- **Order matters**: variables → base → typography → global, both in
-  file generation and in `app.css`'s `@import` order.
-- **`global.css` scope is structural/layout only** — no block classes,
-  no button/badge/state variants.
-- **Ask before overwriting** any of the four files that already exists.
+- **Order matters**: variables → layout → base → typography → container,
+  both in file generation and in `app.css`'s `@import` order.
+- **Ask before overwriting** any of the five files that already exists.
+- **No project-specific bloat** — no third-party plugin styles, no specialized widgets in the foundation. Only the 5 essential foundation files.
 - **Don't run this skill unattended for updates** — it's for first-time
   generation; adding one token to an existing `variables.css` later is a
   normal edit, not a wizard re-run.

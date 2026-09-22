@@ -58,6 +58,13 @@ canvas with real data, inline editing, and theme-styled controls.
   backward compatibility.
 - **`project-init/SKILL.md`** — import table includes `skills/fotos/` and
   `skills/site-settings-wizard/`.
+- **CSS Foundation modularization** (`css-standards` + `css-foundation-wizard`) —
+  standardized the 5 essential foundation files in `resources/css/global/`:
+  `variables.css` (tokens), `layout.css` (root structure/app), `base.css` (unclassed tags),
+  `typography.css` (semantic text), and `container.css` (max-width/gutters). Replaces the
+  generic catch-all `global.css`. `editor.css` now mirrors `variables`, `typography`,
+  `layout`, and `container` for complete visual parity on the canvas. Excludes any
+  project-specific or third-party bloat.
 - **`README.md`** — "What's here" table includes new skills.
 
 ### How verified
