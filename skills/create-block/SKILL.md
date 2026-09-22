@@ -567,7 +567,7 @@ import { EntranceControl } from '../components/backend/EntranceControl.jsx';
 // import { ImagePositionControl }    from '../components/backend/ImagePositionControl.jsx';
 // import { DividerControl }          from '../components/backend/DividerControl.jsx';
 // import { LinkPicker }              from '../components/backend/LinkPicker.jsx';
-// import { EDITOR_TYPE, emptyLink }  from '../components/backend/editorCanvas.js';
+// import { EDITOR_TYPE, EDITOR_BLOCK_FRAME, emptyLink }  from '../components/backend/editorCanvas.js';
 import previewImage from './preview.svg';
 import metadata from './block.json';
 
@@ -606,9 +606,14 @@ registerBlockType(metadata, {
                     */}
                 </InspectorControls>
 
-                {/* Canvas — real data, inline editing, theme-styled.
-                    No dashed-border wrapper. Content appears as it will on the front end. */}
-                <section {...blockProps}>
+                {/* Canvas — White Summers format:
+                    Root wrapper uses EDITOR_BLOCK_FRAME for the signature 1px dashed outline boundary,
+                    rounded card corners, and mb-10 separation between blocks.
+                    Inside: real data, inline editing, theme typography, no form clutter. */}
+                <section
+                    {...blockProps}
+                    className={`${blockProps.className || ''} <slug>-editor ${EDITOR_BLOCK_FRAME}`}
+                >
                     {/* Heading — inline editing via AutoGrowingTextarea:
                     <AutoGrowingTextarea
                         value={heading}

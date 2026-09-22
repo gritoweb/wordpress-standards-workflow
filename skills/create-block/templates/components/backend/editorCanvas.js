@@ -63,3 +63,15 @@ export const clamp = (value, min, max, fallback) => {
 };
 
 export const emptyLink = () => ({ url: '', opensInNewTab: false });
+
+/**
+ * Canonical dashed editor boundary for blocks on the canvas.
+ * Ported directly from the White Summers pattern:
+ * - 1px dashed outline inset by 1px with 30% ink opacity
+ * - Rounded card radius (rounded-[var(--radius-card,1rem)])
+ * - Containment with overflow-hidden
+ * - Spacing between sibling blocks (mb-10)
+ */
+export const EDITOR_BLOCK_FRAME =
+  'mb-10 overflow-hidden rounded-[var(--radius-card,1rem)] outline outline-1 outline-offset-[-1px] outline-dashed outline-[color:var(--color-ink,#000)]/30';
+

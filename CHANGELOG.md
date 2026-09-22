@@ -40,7 +40,9 @@ canvas with real data, inline editing, and theme-styled controls.
   Trigger, Direction, Duration, Delay, Stagger) with a **Preview** button that
   replays the animation directly on the canvas.
 - **`DividerControl`** — section divider selector (none/below/above/both).
-- **`editorCanvas.js`** — canvas constants: `EDITOR_TYPE` tiers, `emptyLink()`.
+- **`editorCanvas.js`** — canvas constants: `EDITOR_TYPE` tiers, `emptyLink()`,
+  and `EDITOR_BLOCK_FRAME` (the signature White Summers 1px dashed boundary:
+  `mb-10 overflow-hidden rounded-[var(--radius-card,1rem)] outline outline-1 outline-offset-[-1px] outline-dashed outline-[color:var(--color-ink,#000)]/30`).
 - **`entranceCanvas.js`** / **`moveItem.js`** / **`useAttachmentUrls.js`** —
   supporting helpers.
 - **`BlockEntrance.php`** — resolves entrance-animation attributes into
@@ -56,11 +58,11 @@ canvas with real data, inline editing, and theme-styled controls.
   contract.
 
 ### Changed
-- **`create-block/SKILL.md`** — template `block.jsx` rewritten: canvas with real
-  data (no `dashed-border` wrapper), `InspectorControls` limited to config-only
-  controls (padding, entrance, layout, focal point, dividers), text edited inline
-  via `AutoGrowingTextarea`/`ParagraphsField`, images via
-  `AttachmentImageControl`, CTA via `ActionEditor` popover on canvas.
+- **`create-block/SKILL.md`** — template `block.jsx` rewritten: root wrapper uses
+  canonical White Summers dashed frame (`EDITOR_BLOCK_FRAME`) for block boundaries,
+  `InspectorControls` limited to config-only controls (padding, entrance, layout,
+  focal point, dividers), text edited inline via `AutoGrowingTextarea`/`ParagraphsField`,
+  images via `AttachmentImageControl`, CTA via `ActionEditor` popover on canvas.
 - **Keyword lookup table** — image maps to `AttachmentImageControl` (ID-first,
   single attribute); button/CTA maps to `ActionEditor` popover on canvas.
 - **Per-attribute generation rules** — image stores only `<name>Id` (URL

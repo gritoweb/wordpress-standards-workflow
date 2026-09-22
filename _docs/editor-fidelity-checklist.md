@@ -4,6 +4,7 @@ The complete 8-step canvas fidelity contract for block development. Following th
 
 ## 1. Canvas shows real data
 The editor canvas must reflect real data, including fonts, colors, images, and layout spacing. Do not use placeholder generic styling if specific theme styles exist. The editor must look as close to the frontend as possible.
+The block's root boundary on the canvas uses the canonical White Summers dashed frame (`EDITOR_BLOCK_FRAME`: `mb-10 overflow-hidden rounded-[var(--radius-card)] outline outline-1 outline-offset-[-1px] outline-dashed outline-[color:var(--color-ink)]/30`) to visually delineate the block boundary on the canvas while keeping all inner elements 100% WYSIWYG.
 
 ## 2. Inspector has only config attrs
 The block sidebar (InspectorControls) should strictly contain configuration attributes (toggles, behavior settings, metadata). Direct content editing (text, images) should happen directly on the canvas via `RichText` or `MediaPlaceholder`.
