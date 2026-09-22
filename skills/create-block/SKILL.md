@@ -163,7 +163,7 @@ placeholder + accidental-newline behavior than RichText.
 | `bg`/`background image`/`cover image` (fills the block behind other content) | image (ID-first) | `<name>Id` (number) | In the **sidebar**, inside a `PanelBody title="Background Media"`: `<AttachmentImageControl imageId={...} onSelect={...} onRemove={...} noStylesheet />` + `<ImagePositionControl />` right under it for the focal point. The canvas keeps only the **passive** full-bleed preview (`backgroundImage`/`<img>` with `focalCss(<name>Position)`) — no click target there. |
 | `icon` | string (Dashicon slug or arbitrary name) | `<name>` | `<TextControl>` (or `<IconPicker>` if the project ships one) |
 | `link`, `url`, `cta link`, `href` | link (Gutenberg `LinkControl` object: `{url, opensInNewTab}`) | `<name>` | `<LinkPicker label="..." value={...} onChange={...} />` — sized to match the white-card input height so it lines up next to a sibling text field |
-| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Full-width/single CTA**: click opens `<ActionEditor stacked={false}>` **inline**, directly below the button. **Repeater item's button/link** (a grid card, a list item): text stays inline-editable on canvas; the **link destination** is edited in the sidebar via `<LinkPicker fullWidth />`, tied to whichever item is "active" (click the item to select it) — see the "Buttons / CTAs" rule below. |
+| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor>` inline**, directly below the button — always on canvas, never in the sidebar, never a floating `Popover`. `stacked={false}` (two-column layout) for a full-width/single CTA; `stacked={true}` (single vertical column, the same treatment `ActionEditor` uses in a sidebar) when the trigger sits inside a narrow per-item container (grid card, list item) — see the "Buttons / CTAs" rule below. |
 | `color`, `bg color`, `text color` | string (hex / palette slug) | `<name>` | `<ColorPalette>` or `<PanelColorSettings>` |
 | `size`, `width`, `height`, `count`, `amount`, plain `number` | number (unsigned) | `<name>` | `<TextControl type="number">` or `<RangeControl>` |
 | `show X`, `enable X`, `visible`, `active`, `toggle`, "is X" boolean | boolean | `<name>` | `<ToggleControl>` |
@@ -205,43 +205,48 @@ placeholder + accidental-newline behavior than RichText.
 
 2. **Button pair**: "button" / "CTA" alone (without "link") generates **two
    attributes** — `<name>Text` (string) + `<name>Link` (Gutenberg
-   `LinkControl` object: `{url, opensInNewTab}`). Never place button/link
-   editing in the sidebar — **except** the one case below where it belongs
-   there. Two shapes, picked by context, **not one default for every case**
-   (this kit got this wrong twice the same day; both mistakes are below so
-   a third pass doesn't repeat either):
+   `LinkControl` object: `{url, opensInNewTab}`). **Default `link.url` to
+   `""`, never `"#"`** — a bare `#` isn't empty to `LinkControl`, it's a
+   real (bad) URL it tries to preview; with no fetchable title it falls
+   back to showing the raw `#` in both the title and info slots of its
+   preview, reading as a duplicated/broken value the moment an editor opens
+   it. An empty string renders `LinkControl`'s normal "search for a link"
+   empty state instead — this is true anywhere `LinkControl`/`LinkPicker`
+   appears, not just in `ActionEditor`. **Always canvas, never the
+   sidebar, never a floating `Popover`** — clicking the styled `<span>`
+   preview opens `<ActionEditor>` **inline**, directly below the button, in
+   both cases. The only thing that changes with context is the `stacked`
+   prop:
    - **Full-width / single CTA** (hero, banner, one button per block):
-     styled `<span>` preview on canvas; clicking it opens
-     `<ActionEditor stacked={false}>` **inline**, directly below the
-     button, inside `<div className="w-full max-w-xl text-left ...">`.
-     The block is already tall/wide enough that this naturally grows the
-     block to contain the editor — it never overlaps a neighboring block.
-   - **CTA inside a repeater item** (a grid card, a list item): the link
-     **text** stays inline-editable on the canvas (typing it was never a
-     problem). The link **destination** is edited in the **sidebar**,
-     tied to whichever item is "active" — clicking a card sets
-     `activeItem` (same state var and pattern `<ItemList>` uses), and a
-     `PanelBody` shows `<LinkPicker fullWidth />` bound to
-     `items[activeItem].link`. Highlight the active card
-     (`ring-1 ring-blue-400` or similar) so which sidebar panel applies
-     is never ambiguous.
-   - **Mistake #1 — always `Popover`, "for consistency"**: floated
-     `ActionEditor` in a `<Popover>` for every CTA, including full-width
-     ones. A `Popover` doesn't participate in layout, so it doesn't grow
-     its own block to fit; on a shorter block it spilled past the block's
-     own bottom edge into whatever rendered next. Reverted — full-width
-     CTAs went back to inline.
-   - **Mistake #2 — `Popover` for the repeater-item case too**: seemed
-     right at first (inline would squeeze `LinkControl` into a ~280px grid
-     column until the destination field was a sliver — that diagnosis was
-     correct). But a floating `Popover` only avoids the *viewport* edge;
-     it has no idea a grid has a second row of cards two inches below the
-     trigger, so it just as reliably overlapped the sibling row as the
-     first mistake overlapped the next block. **A `Popover` cannot be made
-     safe against overlapping arbitrary sibling content** — its collision
-     detection is viewport-relative, not DOM-sibling-relative. The sidebar
-     fix above has no such failure mode because it never renders on top of
-     the canvas at all.
+     `<ActionEditor stacked={false}>` (two-column layout — label field
+     beside the link picker), inside
+     `<div className="w-full max-w-xl text-left ...">`. The block already
+     has the width and naturally grows to contain it.
+   - **CTA inside a repeater item** (a grid card, a list item):
+     `<ActionEditor stacked={true}>` — the SAME component, just the single
+     vertical-column layout it already has for sidebar use (label, then
+     the link picker, then the checkbox, each full width). A ~280px grid
+     column has no room for `stacked={false}`'s two-column layout, but
+     easily fits one stacked field at a time — no separate mechanism
+     needed, just the prop `ActionEditor` was already built with.
+   - **Why not `Popover`, twice**: floating a `Popover` around
+     `ActionEditor` for consistency, then again only for the narrow-item
+     case, both got reverted the same day. A `Popover` doesn't participate
+     in layout, so it never grows its own block/card to fit; on a shorter
+     block it spilled into whatever rendered next, and inside a grid it
+     spilled into the row below — its collision handling only avoids the
+     *viewport* edge, never a sibling element a few inches away. There is
+     no `position`/`placement` value that fixes that, because the problem
+     isn't positioning, it's that a floating overlay is the wrong tool
+     here at all.
+   - **Why not the sidebar either**: moving the repeater-item's link
+     **destination** into a sidebar panel tied to an "active" item (mirror
+     of `<ItemList>`'s pattern) does avoid every overlap — sidebar and
+     canvas never touch — but it was never what was asked for, and it
+     reads as inconsistent with every other button in the theme, which
+     opens inline on the canvas right where you clicked. `stacked={true}`
+     gets the same "fits a narrow column" property without leaving the
+     canvas.
 
 3. **Array recursion**: when the dev says "list of X with title, image, and description", recurse the inference for each sub-field (`title` → string, `image` → pair, `description` → string). The final shape is one array attribute whose items are objects with typed sub-fields. Sanitize per-sub-field in `block.php`'s `array_map(...)`.
 
@@ -310,17 +315,16 @@ Attributes:
     above). Nothing here needs to be clickable, so there is no risk of an
     image dropzone swallowing clicks meant for selecting the block.
   - **Buttons / CTAs:** see the "Button pair" rule above for the full
-    reasoning (including two same-day mistakes worth reading before
-    touching this again):
-    - Full-width/single CTA → styled `<span>` preview, clicking opens
-      `<ActionEditor stacked={false}>` **inline**, directly below the
-      button; the block grows to contain it, on its own.
-    - CTA inside a repeater item (grid card, list item) → link text stays
-      inline-editable on canvas; the link **destination** moves to the
-      **sidebar**, tied to the clicked/active item (`<LinkPicker fullWidth />`
-      bound to `items[activeItem].link`). Never a floating `Popover` for
-      this case — it cannot avoid overlapping sibling items, only the
-      viewport edge.
+    reasoning (including three same-day mistakes worth reading before
+    touching this again). Styled `<span>` preview on canvas; clicking it
+    always opens `<ActionEditor>` **inline**, directly below the button —
+    never the sidebar, never a floating `Popover`. Only the `stacked` prop
+    changes:
+    - Full-width/single CTA → `stacked={false}` (two-column layout); the
+      block grows to contain it, on its own.
+    - CTA inside a repeater item (grid card, list item) → `stacked={true}`
+      (the same single-column layout `ActionEditor` already has for
+      sidebar use) — fits a narrow column without leaving the canvas.
   - **Repeaters / lists:** `<ItemList>` (sidebar) with drag handles +
     keyboard arrows (up/down), driven by `onMove` calling `moveItem(items,
     from, to)`. The image inside each item still follows the media rule
@@ -653,7 +657,7 @@ import { __ } from '@wordpress/i18n';
 import { PaddingControls } from '../components/backend/PaddingControls.jsx';
 import { EntranceControl } from '../components/backend/EntranceControl.jsx';
 // Uncomment the imports your attributes actually need:
-// import { PanelBody } from '@wordpress/components'; // needed for a Background Media or repeater-item-link sidebar panel
+// import { PanelBody } from '@wordpress/components'; // needed if this block has a Background Media panel
 // import { AttachmentImageControl } from '../components/backend/AttachmentImageControl.jsx';
 // import { ActionEditor }           from '../components/backend/ActionEditor.jsx';
 // import { AutoGrowingTextarea }     from '../components/backend/AutoGrowingTextarea.jsx';
@@ -794,40 +798,33 @@ registerBlockType(metadata, {
                     */}
 
                     {/* ONLY for a button/link that belongs to a REPEATER ITEM (a grid
-                        card, a list item) — inline would squeeze LinkControl into the
-                        column's width, and a floating Popover can't avoid overlapping a
-                        sibling row (it only dodges the viewport edge, not DOM siblings —
-                        verified against a real 3-up grid where "bottom center" always
-                        landed on the row below). The fix isn't a smarter Popover, it's not
-                        floating over the canvas at all: link TEXT stays inline-editable on
-                        canvas, the link DESTINATION moves to the sidebar, tied to whichever
-                        item is "active" (click an item to select it — same state shape
-                        ItemList's activeItem/setActiveItem uses). Needs `activeItem` state
-                        and `items[activeItem]` alongside this block's InspectorControls:
-
-                    // In InspectorControls, alongside PaddingControls/EntranceControl:
-                    {items[activeItem] && (
-                        <PanelBody title={`${__('Item Link', '<text-domain>')} — ${items[activeItem].title || activeItem + 1}`} initialOpen={true}>
-                            <LinkPicker
-                                label={__('Link destination', '<text-domain>')}
-                                value={items[activeItem].link || emptyLink()}
-                                onChange={(value) => updateItem(activeItem, 'link', value)}
-                                fullWidth
-                            />
-                        </PanelBody>
-                    )}
-
-                    // On the canvas, per item — click selects it, text stays inline:
-                    <div
-                        onClick={() => setActiveItem(index)}
-                        className={index === activeItem ? 'ring-1 ring-blue-400' : ''}
+                        card, a list item) — SAME inline pattern as the default above,
+                        SAME component, just stacked={true} instead of stacked={false}.
+                        stacked renders ActionEditor's fields in one vertical column
+                        (the layout it already uses inside a sidebar), which is what
+                        fits a ~280px grid column — no separate mechanism, no sidebar,
+                        no Popover:
+                    <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setEditingLink(editingLink === index ? null : index)}
                     >
-                        <AutoGrowingTextarea
-                            value={item.linkText}
-                            onChange={(value) => updateItem(index, 'linkText', value)}
-                            placeholder={__('Link text…', '<text-domain>')}
-                        />
-                    </div>
+                        {item.linkText || __('Learn more', '<text-domain>')}
+                    </span>
+                    {editingLink === index && (
+                        <div className="mt-3 text-left">
+                            <ActionEditor
+                                groupLabel={`${__('Item link editing', '<text-domain>')} ${index + 1}`}
+                                label={__('Link text', '<text-domain>')}
+                                linkLabel={__('Link destination', '<text-domain>')}
+                                text={item.linkText}
+                                link={item.link}
+                                stacked={true}
+                                onTextChange={(value) => updateItem(index, 'linkText', value)}
+                                onLinkChange={(value) => updateItem(index, 'link', value)}
+                            />
+                        </div>
+                    )}
                     */}
                 </section>
             </>

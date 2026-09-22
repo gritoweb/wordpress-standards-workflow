@@ -228,6 +228,39 @@ isn't a viewport edge.
   `featured-grid`'s `items[].link` shape didn't change, only the editor UI around it).
 - Branch is `refactor`; `master` is untouched.
 
+## 2026-09-22 — featured-grid: stacked ActionEditor, not sidebar
+
+The sidebar fix in the entry above was itself wrong — never asked for, and inconsistent
+with every other button in the theme (which opens its editor inline, on the canvas, right
+where you clicked). The actual fix was already sitting in `ActionEditor`: its `stacked`
+prop, built for sidebar-width contexts, renders the same fields in one vertical column
+instead of two side by side. `featured-grid` needed `stacked={true}`, not a `Popover` and
+not a trip to the sidebar.
+
+### Fixed
+- **`create-block/SKILL.md`** — "Button pair" rule, keyword table, "What goes where", and
+  the `block.jsx` template corrected a third time: a repeater item's CTA opens
+  `ActionEditor` **inline** like every other button, just with `stacked={true}` instead of
+  `stacked={false}`. `Popover` and the sidebar are both off the table for CTA/link editing
+  now, for any context.
+- **Default `link.url` of `"#"` replaced with `""`.** `LinkControl` treats any non-empty
+  URL as real and tries to preview it; a bare `#` has no fetchable title, so it falls back
+  to showing the raw `#` in both its title and info slots — reads as duplicated/broken the
+  moment an editor opens the link picker. An empty string gets `LinkControl`'s normal
+  empty "search for a link" state instead. Noted in the "Button pair" rule so a future
+  scaffold doesn't seed example content with `"#"` again.
+- **`test-wordpress`** — `featured-grid` back to inline (matching home-hero/banner-cta/
+  text-media-split's interaction exactly), just `stacked={true}`; `block.json`'s seed
+  items and the already-saved home page content both had their `link.url` cleared from
+  `"#"` to `""`.
+
+### How verified
+- `npm run build` clean.
+- Rendered home page still HTTP 200, no PHP errors.
+- Checked `test-wordpress`'s saved home page content directly (`wp post get 5`) —
+  `featured-grid`'s items all show `"url":""`, no stray `"#"` left.
+- Branch is `refactor`; `master` is untouched.
+
 ## 2026-09-17
 
 ### Changed
