@@ -241,17 +241,21 @@ Attributes:
 
 - **InspectorControls (sidebar)** = block **configuration only** — always
   `<PaddingControls />` and `<EntranceControl />`; plus layout/variant
-  selects, `<ImagePositionControl />`, `<DividerControl />`, ground/surface
-  selects, toggles. **No text fields, no link editors, no button editing in
-  the sidebar.**
+  selects, `<ImagePositionControl />` (focal point), `<DividerControl />`, ground/surface
+  selects, toggles.
+  - **CRITICAL**: **NO text fields, NO link editors, NO button editing, and NO media uploaders in the sidebar.**
+  - **Background Media is NEVER in the sidebar:** All image selection, previewing, and removal must happen directly on the canvas. The sidebar only holds `<ImagePositionControl />` for adjusting focal points.
+
 - **Canvas (inline)** = block **content** — real data rendered with theme
-  styling, no `dashed-border` form wrapper:
+  styling, bounded by `EDITOR_BLOCK_FRAME`:
   - **Headings / subtitles:** `<AutoGrowingTextarea>` styled with
     `EDITOR_TYPE` tokens, positioned where the text appears visually.
   - **Body copy:** `<ParagraphsField>` or `<RichText>`, inline.
-  - **Images:** `<AttachmentImageControl>` with **× on hover** (top-right
-    corner) to remove. Clicking the image opens Media Library in browse
-    mode.
+  - **Inline Images (foreground):** `<AttachmentImageControl>` with **× on hover** (top-right
+    corner) to remove. Clicking the image opens Media Library in browse mode.
+  - **Background Media (hero, banner, cards):** Rendered on the canvas in two layers:
+    1. The full-bleed background preview (e.g. `<img>` or `backgroundImage` with `focalCss(bgImagePosition)`) underneath the copy.
+    2. A bounded thumbnail control in the corner using `BACKGROUND_MEDIA_PANEL` (`import { BACKGROUND_MEDIA_PANEL } from '../components/backend/editorCanvas.js'`). Inside this corner panel, `<AttachmentImageControl imageId={bgImageId} onSelect={...} onRemove={...} />` renders with full thumbnail preview and the hover **× button**. This avoids covering the entire block with an interactive dropzone (which would swallow clicks and prevent selecting the block), while providing full visual fidelity and one-click removal directly on the canvas.
   - **Buttons / CTAs:** Styled `<span>` preview on canvas. **Clicking
     opens `<ActionEditor stacked={false}>` as a popover anchored below
     the button** — never in the sidebar.
@@ -567,7 +571,7 @@ import { EntranceControl } from '../components/backend/EntranceControl.jsx';
 // import { ImagePositionControl }    from '../components/backend/ImagePositionControl.jsx';
 // import { DividerControl }          from '../components/backend/DividerControl.jsx';
 // import { LinkPicker }              from '../components/backend/LinkPicker.jsx';
-// import { EDITOR_TYPE, EDITOR_BLOCK_FRAME, emptyLink }  from '../components/backend/editorCanvas.js';
+// import { EDITOR_TYPE, EDITOR_BLOCK_FRAME, BACKGROUND_MEDIA_PANEL, emptyLink } from '../components/backend/editorCanvas.js';
 import previewImage from './preview.svg';
 import metadata from './block.json';
 
@@ -576,7 +580,7 @@ registerBlockType(metadata, {
         const blockProps = useBlockProps();
         const { isPreview } = attributes;
         // Destructure your block's other attributes here.
-        // Example: const { heading, bgImageId, ctaText, ctaLink } = attributes;
+        // Example: const { heading, bgImageId, bgImagePosition, ctaText, ctaLink } = attributes;
         // const [isEditingButton, setIsEditingButton] = useState(false);
 
         // Static preview for the Gutenberg inserter hover panel.
@@ -595,12 +599,12 @@ registerBlockType(metadata, {
         return (
             <>
                 {/* Sidebar (InspectorControls) — configuration only.
-                    No text fields, no link editors, no button editing here. */}
+                    No text fields, no link editors, no button editing, NO media uploaders here. */}
                 <InspectorControls>
                     <PaddingControls attributes={attributes} setAttributes={setAttributes} />
                     <EntranceControl attributes={attributes} setAttributes={setAttributes} />
                     {/* Add config-only controls here:
-                        <ImagePositionControl value={bgImagePosition} onChange={...} />
+                        <ImagePositionControl value={bgImagePosition} onChange={(pos) => setAttributes({ bgImagePosition: pos })} />
                         <DividerControl value={sectionDivider} onChange={...} />
                         <SelectControl label="Layout" options={[...]} ... />
                     */}
@@ -614,6 +618,28 @@ registerBlockType(metadata, {
                     {...blockProps}
                     className={`${blockProps.className || ''} <slug>-editor ${EDITOR_BLOCK_FRAME}`}
                 >
+                    {/* Background Media — rendered in 2 layers on canvas (NEVER in the sidebar):
+                        1. Full-bleed backdrop (image or gradient) underneath content
+                        2. Corner thumbnail panel (BACKGROUND_MEDIA_PANEL) for upload, preview & hover × remove:
+                    {bgUrl && (
+                        <div
+                            className="absolute inset-0 -z-10 bg-cover bg-no-repeat opacity-40"
+                            style={{ backgroundImage: `url(${bgUrl})`, backgroundPosition: focalCss(bgImagePosition) }}
+                        />
+                    )}
+                    <div className={BACKGROUND_MEDIA_PANEL} data-background-media-panel>
+                        <AttachmentImageControl
+                            imageId={bgImageId}
+                            label={__('Background image', '<text-domain>')}
+                            height="100%"
+                            objectFit="cover"
+                            objectPosition={focalCss(bgImagePosition)}
+                            onSelect={(media) => setAttributes({ bgImageId: Number(media.id) || 0 })}
+                            onRemove={() => setAttributes({ bgImageId: 0 })}
+                        />
+                    </div>
+                    */}
+
                     {/* Heading — inline editing via AutoGrowingTextarea:
                     <AutoGrowingTextarea
                         value={heading}
@@ -623,11 +649,11 @@ registerBlockType(metadata, {
                     />
                     */}
 
-                    {/* Image — AttachmentImageControl with × on hover:
+                    {/* Inline Image — AttachmentImageControl with × on hover:
                     <AttachmentImageControl
-                        imageId={bgImageId}
-                        onSelect={(media) => setAttributes({ bgImageId: media.id })}
-                        onRemove={() => setAttributes({ bgImageId: 0 })}
+                        imageId={imageId}
+                        onSelect={(media) => setAttributes({ imageId: media.id })}
+                        onRemove={() => setAttributes({ imageId: 0 })}
                         height="380px"
                     />
                     */}

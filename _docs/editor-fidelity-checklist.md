@@ -7,7 +7,8 @@ The editor canvas must reflect real data, including fonts, colors, images, and l
 The block's root boundary on the canvas uses the canonical White Summers dashed frame (`EDITOR_BLOCK_FRAME`: `mb-10 overflow-hidden rounded-[var(--radius-card)] outline outline-1 outline-offset-[-1px] outline-dashed outline-[color:var(--color-ink)]/30`) to visually delineate the block boundary on the canvas while keeping all inner elements 100% WYSIWYG.
 
 ## 2. Inspector has only config attrs
-The block sidebar (InspectorControls) should strictly contain configuration attributes (toggles, behavior settings, metadata). Direct content editing (text, images) should happen directly on the canvas via `RichText` or `MediaPlaceholder`.
+The block sidebar (InspectorControls) should strictly contain configuration attributes (toggles, behavior settings, metadata, focal point via `<ImagePositionControl />`). Direct content editing (text, links, buttons, and images — including background media) must happen directly on the canvas.
+**Background Media is NEVER in the sidebar:** Background images use the `BACKGROUND_MEDIA_PANEL` corner thumbnail on the canvas with `AttachmentImageControl`, providing hover `×` removal and library upload without stealing clicks from the rest of the block. No media uploaders or file selectors belong in the inspector.
 
 ## 3. No attribute mutation on mount/select
 Never mutate block attributes implicitly when the block mounts or when it is selected. Attributes should only change in response to explicit user interaction. Implicit mutations cause dirty states and unexpected save prompts.

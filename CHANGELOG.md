@@ -41,6 +41,7 @@ canvas with real data, inline editing, and theme-styled controls.
   replays the animation directly on the canvas.
 - **`DividerControl`** — section divider selector (none/below/above/both).
 - **`editorCanvas.js`** — canvas constants: `EDITOR_TYPE` tiers, `emptyLink()`,
+  `BACKGROUND_MEDIA_PANEL` (bounded corner thumbnail panel for canvas background media controls),
   and `EDITOR_BLOCK_FRAME` (the signature White Summers 1px dashed boundary:
   `mb-10 overflow-hidden rounded-[var(--radius-card,1rem)] outline outline-1 outline-offset-[-1px] outline-dashed outline-[color:var(--color-ink,#000)]/30`).
 - **`entranceCanvas.js`** / **`moveItem.js`** / **`useAttachmentUrls.js`** —
@@ -63,6 +64,8 @@ canvas with real data, inline editing, and theme-styled controls.
   `InspectorControls` limited to config-only controls (padding, entrance, layout,
   focal point, dividers), text edited inline via `AutoGrowingTextarea`/`ParagraphsField`,
   images via `AttachmentImageControl`, CTA via `ActionEditor` popover on canvas.
+  Background media strictly prohibited in the sidebar; rendered directly on canvas via
+  `BACKGROUND_MEDIA_PANEL` with hover `×` remove button.
 - **Keyword lookup table** — image maps to `AttachmentImageControl` (ID-first,
   single attribute); button/CTA maps to `ActionEditor` popover on canvas.
 - **Per-attribute generation rules** — image stores only `<name>Id` (URL
