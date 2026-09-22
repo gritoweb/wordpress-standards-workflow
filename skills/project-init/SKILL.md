@@ -25,14 +25,13 @@ that themselves. Never writes to a remote or production environment.
 
 ## Pre-conditions
 
-- The kit repo (this repo, or a checkout/copy of it) is reachable on
-  disk or the dev has pasted its contents.
-- Target = the **active Sage 11 theme root** (`wp-content/themes/<theme>/`),
-  **NEVER the WordPress CMS root**. The theme is the versioned project where
-  blocks, Blade templates, Vite, package.json, and CSS reside. All `.claude/`,
-  `CLAUDE.md`, `_docs/`, and git versioning must live inside the theme directory.
-  If the dev is at the WordPress root, cd into `wp-content/themes/<theme>/`
-  before initializing.
+- The kit repo (this repo, or a checkout/copy of it) is reachable on disk or via git.
+- **Target is ALWAYS the active Sage 11 theme root** (`wp-content/themes/<theme>/`), **NEVER the WordPress CMS root**. The theme is the versioned project where blocks, Blade templates, Vite, package.json, and CSS reside. All `.claude/skills/`, `CLAUDE.md`, `_docs/`, and git versioning must live inside the theme directory (`wp-content/themes/<theme>/`).
+- **Zero repository clutter in WordPress root**: If an AI assistant or developer clones this repository (`wordpress-standards-workflow`) from GitHub (e.g. `git clone https://github.com/gritoweb/wordpress-standards-workflow`), it must:
+  1. Clone to a temporary folder outside the project (or `./.temp-kit`);
+  2. Copy the required skills, docs, and configs into `wp-content/themes/<theme>/`;
+  3. **Immediately delete the cloned kit directory** (`rm -rf ...`).
+  Under no circumstances should the `wordpress-standards-workflow` git repository be left sitting inside the WordPress root or inside `wp-content/`.
 
 ---
 
@@ -40,7 +39,7 @@ that themselves. Never writes to a remote or production environment.
 
 1. **Phase 0** — Ask which scenario applies (only to know what to tell
    the dev to run next).
-2. **Phase 1** — Copy kit files into the target project.
+2. **Phase 1** — Copy kit files into the target theme (`wp-content/themes/<theme>/`).
 3. **Phase 2** — Offer the global (user-level) skills.
 4. **Phase 3** — Hand off the manual steps for the chosen scenario.
 
@@ -60,40 +59,39 @@ Phase 1 is identical for both.
 
 ---
 
-## Phase 1 — Copy kit files into the project
+## Phase 1 — Copy kit files into the theme
 
-Copy the following from the kit into the target project. Before
+Copy the following from the kit into the target theme (`wp-content/themes/<theme>/`). Before
 overwriting any file that **already exists** at the destination, stop,
 show the dev a diff of what would change, and ask for confirmation —
 never silently overwrite (same "bail > guessing" principle as
 `create-block`'s idempotency handling).
 
-| From (kit) | To (target project) | Overwrite rule |
+`<theme>` = the Sage theme root, typically `wp-content/themes/<name>`.
+
+| From (kit) | To (target theme in `wp-content/themes/<name>/`) | Overwrite rule |
 |---|---|---|
-| `CLAUDE.md` | `./CLAUDE.md` | Ask before overwriting if present |
-| `skills/create-block/` | `./.claude/skills/create-block/` | Copy whole folder; ask before overwriting |
-| `skills/html-qa-smoketest/` | `./.claude/skills/html-qa-smoketest/` | Copy whole folder; ask before overwriting |
-| `skills/css-standards/` | `./.claude/skills/css-standards/` | Copy whole folder; ask before overwriting |
-| `skills/css-foundation-wizard/` | `./.claude/skills/css-foundation-wizard/` | Copy whole folder; ask before overwriting |
-| `skills/blade-standards/` | `./.claude/skills/blade-standards/` | Copy whole folder; ask before overwriting |
-| `skills/project-init/` | `./.claude/skills/project-init/` | Copy whole folder; ask before overwriting |
-| `skills/fotos/`                   | `./.claude/skills/fotos/`                   | Copy whole folder; ask before overwriting |
-| `skills/site-settings-wizard/`    | `./.claude/skills/site-settings-wizard/`    | Copy whole folder; ask before overwriting |
-| `_docs/examples.md` | `./_docs/examples.md` | Ask before overwriting if present |
-| `_docs/launch-list.md` | `./_docs/launch-list.md` | Ask before overwriting if present |
-| `gitignore.example` | `./.gitignore` | **Only if `.gitignore` doesn't exist yet** — never overwrite an existing one |
+| `CLAUDE.md` | `<theme>/CLAUDE.md` | Ask before overwriting if present |
+| `skills/create-block/` | `<theme>/.claude/skills/create-block/` | Copy whole folder; ask before overwriting |
+| `skills/html-qa-smoketest/` | `<theme>/.claude/skills/html-qa-smoketest/` | Copy whole folder; ask before overwriting |
+| `skills/css-standards/` | `<theme>/.claude/skills/css-standards/` | Copy whole folder; ask before overwriting |
+| `skills/css-foundation-wizard/` | `<theme>/.claude/skills/css-foundation-wizard/` | Copy whole folder; ask before overwriting |
+| `skills/blade-standards/` | `<theme>/.claude/skills/blade-standards/` | Copy whole folder; ask before overwriting |
+| `skills/project-init/` | `<theme>/.claude/skills/project-init/` | Copy whole folder; ask before overwriting |
+| `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy whole folder; ask before overwriting |
+| `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy whole folder; ask before overwriting |
+| `_docs/examples.md` | `<theme>/_docs/examples.md` | Ask before overwriting if present |
+| `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Ask before overwriting if present |
+| `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | Ask before overwriting if present |
+| `_docs/editor-fidelity-checklist.md` | `<theme>/_docs/editor-fidelity-checklist.md` | Ask before overwriting if present |
+| `gitignore.example` | `<theme>/.gitignore` | **Only if `<theme>/.gitignore` doesn't exist yet** — never overwrite an existing one |
 | `prettier.config.example.js` | `<theme>/prettier.config.js` | Ask before overwriting if present |
-| `prettierignore.example` | `<theme>/.prettierignore` | Ask before overwriting if present. **Required** — without it the committed `vendor/` and `public/build/` reach the formatter |
+| `prettierignore.example` | `<theme>/.prettierignore` | Ask before overwriting if present. **Required** — keeps `vendor/` and `public/build/` away from formatter |
 | `install-git-hooks.example.mjs` | `<theme>/scripts/install-git-hooks.mjs` | Ask before overwriting if present |
-| `mu-plugins/acorn-pantheon-storage.php` | `wp-content/mu-plugins/acorn-pantheon-storage.php` | **Pantheon: required, copy as-is.** Relocates Acorn storage off the read-only filesystem; must be in the first commits |
+| `mu-plugins/acorn-pantheon-storage.php` | `wp-content/mu-plugins/acorn-pantheon-storage.php` | **Pantheon: required, copy as-is.** Relocates Acorn storage off the read-only filesystem |
 
-`<theme>` = the Sage theme root, typically `wp-content/themes/<name>`
-(ask the dev if there's more than one theme, or if the repo layout is
-non-standard).
-
-> **`.gitignore` — two separate actions.** Copy `gitignore.example` **only if
-> the project has none** (Pantheon clones already ship one — leave it). Either
-> way, **append `/.githooks/`** to whatever `.gitignore` the project ends up
+> **`.gitignore` — two separate actions.** Copy `gitignore.example` to `<theme>/.gitignore` **only if
+> the theme has none**. Either way, **append `/.githooks/`** to whatever `.gitignore` the project ends up
 > with: the hook installer regenerates that folder on every install and it must
 > not be tracked. Append the single line; never rewrite the file.
 
@@ -166,15 +164,40 @@ Phase 0 answer. Do not run any of these commands.
    ```bash
    lando wp rewrite structure '/%postname%/' --hard
    ```
-   If `.htaccess` is not generated automatically, create it at the WordPress root
-   with standard WordPress rewrite rules so Gutenberg REST API (`/wp-json/wp/v2/media/*`)
-   resolves correctly for image previews.
+   **CRITICAL for image preview**: Verify that `.htaccess` exists at the WordPress root with standard Apache rewrite rules:
+   ```apache
+   # BEGIN WordPress
+   <IfModule mod_rewrite.c>
+   RewriteEngine On
+   RewriteBase /
+   RewriteRule ^index\.php$ - [L]
+   RewriteCond %{REQUEST_FILENAME} !-f
+   RewriteCond %{REQUEST_FILENAME} !-d
+   RewriteRule . /index.php [L]
+   </IfModule>
+   # END WordPress
+   ```
+   Without this file, Apache returns 404 HTML for REST API requests (`/wp-json/wp/v2/media/*`), breaking Gutenberg image previews.
 5. Scaffold Sage (same commands as Scenario A step 4 — name it `<theme>`,
    not `sage`).
-6. `lando wp theme activate <theme>`.
-7. Optionally `git init` + an initial commit inside `wp-content/themes/<theme>` — local only, never push
-   without permission.
-8. Build theme assets (Step below).
+6. Copy kit standards into `wp-content/themes/<theme>/` per Phase 1 table.
+   If the kit repository was cloned from GitHub, **delete the cloned kit directory immediately** (`rm -rf ...`) so the WordPress root remains clean.
+7. `lando wp theme activate <theme>`.
+8. Optionally `git init` + an initial commit inside `wp-content/themes/<theme>` — local only, never push without permission.
+9. Build theme assets (Step below).
+10. **Creating Home Page with Sample Blocks** (when requested by user prompt):
+    - Scaffold blocks in `<theme>/resources/blocks/<name>/` using `create-block` patterns (`EDITOR_BLOCK_FRAME` for White Summers dashed border, `AutoGrowingTextarea` without inline height clamping, and `AttachmentImageControl` with `×` remove button on hover).
+    - Run `npm run build` in `<theme>`.
+    - Create the "Home" page in WordPress with the blocks serialized:
+      ```bash
+      lando wp post create --post_type=page --post_title='Home' --post_status='publish' --post_content='<!-- wp:<theme>/<block-1> /--><!-- wp:<theme>/<block-2> /-->...'
+      ```
+    - Set the "Home" page as the static front page:
+      ```bash
+      HOME_ID=$(lando wp post list --post_type=page --name=home --field=ID)
+      lando wp option update show_on_front 'page'
+      lando wp option update page_on_front "$HOME_ID"
+      ```
 
 ### Theme assets (both scenarios)
 

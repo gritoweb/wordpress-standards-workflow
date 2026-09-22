@@ -13,6 +13,7 @@
 - **Version the theme and every plugin we own** using SemVer (`MAJOR.MINOR.PATCH`): MAJOR = breaking, MINOR = backwards-compatible feature, PATCH = fix. Version lives in the theme's `style.css` header and the plugin's main PHP file header. A version bump is what triggers a `CHANGELOG.md` entry — internal refactors, chores, docs and formatting that don't bump the version need no entry.
 - **Never add `Co-authored-by`** in commit messages.
 - **English** for all commit messages, comments, and variables.
+- **Theme root is the development target**: In Sage 11 setups, code, `.claude/skills/`, `CLAUDE.md`, and versioning reside inside `wp-content/themes/<theme>/`. Never clone or leave the kit repository in the WordPress root.
 - **Never assume** — when unclear, stop and ask.
 - **Don't just agree** — push back on flawed requests with explanation.
 

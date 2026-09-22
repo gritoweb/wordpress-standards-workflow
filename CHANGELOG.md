@@ -79,6 +79,12 @@ canvas with real data, inline editing, and theme-styled controls.
   generic catch-all `global.css`. `editor.css` now mirrors `variables`, `typography`,
   `layout`, and `container` for complete visual parity on the canvas. Excludes any
   project-specific or third-party bloat.
+- **`project-init/SKILL.md` & `README.md`** — explicitly designated `wp-content/themes/<theme>/` as
+  the canonical target destination for all `.claude/skills/`, `CLAUDE.md`, and `_docs/`.
+  Strictly prohibited leaving cloned kit repository copies in the WordPress root (must delete
+  any temporary clone folder immediately). Added explicit Apache `.htaccess` rewrite rules
+  to eliminate REST API 404 errors during image preview resolution, and formalized the sample
+  home page blocks creation flow.
 - **`README.md`** — "What's here" table includes new skills.
 
 ### How verified

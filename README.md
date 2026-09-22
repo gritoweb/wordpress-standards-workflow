@@ -50,26 +50,36 @@ If skills aren't supported, the AI should fetch the repo and place every
 file according to the manifest below by hand. No shell script needed —
 the manifest **is** the source of truth either way.
 
+> ⚠️ **CRITICAL FOR AI ASSISTANTS: Theme Root vs. WordPress Root**
+> - In standard WordPress installations with Sage 11, the codebase lives in `wp-content/themes/<theme>/`.
+> - All `.claude/skills/`, `CLAUDE.md`, and `_docs/` must be imported into `<theme>/` (`wp-content/themes/<theme>/`), **NEVER into the WordPress root**.
+> - **NEVER clone or leave the `wordpress-standards-workflow` repository inside the WordPress root.**
+> - If you clone this repository from GitHub to extract skills, copy the files to `<theme>/` and **delete the cloned kit directory immediately** (`rm -rf ...`).
+
 ### Import manifest
+
+`<theme>` = the Sage theme root, typically `wp-content/themes/<name>`.
 
 | From (this repo) | To (your project) | Notes |
 |---|---|---|
-| `CLAUDE.md` | `./CLAUDE.md` | Must be at the project root — Claude auto-loads it from there |
-| `skills/html-qa-smoketest/` | `./.claude/skills/html-qa-smoketest/` | Copy the whole folder |
-| `skills/create-block/` | `./.claude/skills/create-block/` | Copy the whole folder |
-| `skills/css-standards/` | `./.claude/skills/css-standards/` | Copy the whole folder |
-| `skills/css-foundation-wizard/` | `./.claude/skills/css-foundation-wizard/` | Copy the whole folder |
-| `skills/blade-standards/` | `./.claude/skills/blade-standards/` | Copy the whole folder |
-| `skills/project-init/` | `./.claude/skills/project-init/` | Copy the whole folder — or use it to drive this very import (see below) |
-| `skills/fotos/` | `./.claude/skills/fotos/` | Copy the whole folder — block screenshot generator (Chrome headless → webp + svg fallback) |
-| `skills/site-settings-wizard/` | `./.claude/skills/site-settings-wizard/` | Copy the whole folder — interactive wizard for Site Settings (Customizer + Settings API, no ACF) |
-| `_docs/examples.md` | `./_docs/examples.md` | Reference patterns the AI uses for grounding |
-| `_docs/launch-list.md` | `./_docs/launch-list.md` | Pre-launch checklist for go-live |
-| `gitignore.example` | `./.gitignore` | **Only if** the project has no `.gitignore` yet — never overwrite |
+| `CLAUDE.md` | `<theme>/CLAUDE.md` | Must be at the theme root — Claude auto-loads it when working in the theme |
+| `skills/html-qa-smoketest/` | `<theme>/.claude/skills/html-qa-smoketest/` | Copy the whole folder |
+| `skills/create-block/` | `<theme>/.claude/skills/create-block/` | Copy the whole folder |
+| `skills/css-standards/` | `<theme>/.claude/skills/css-standards/` | Copy the whole folder |
+| `skills/css-foundation-wizard/` | `<theme>/.claude/skills/css-foundation-wizard/` | Copy the whole folder |
+| `skills/blade-standards/` | `<theme>/.claude/skills/blade-standards/` | Copy the whole folder |
+| `skills/project-init/` | `<theme>/.claude/skills/project-init/` | Copy the whole folder — or use it to drive this very import (see below) |
+| `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy the whole folder — block screenshot generator (Chrome headless → webp + svg fallback) |
+| `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — interactive wizard for Site Settings (Customizer + Settings API, no ACF) |
+| `_docs/examples.md` | `<theme>/_docs/examples.md` | Reference patterns the AI uses for grounding |
+| `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Pre-launch checklist for go-live |
+| `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | Reference doc for Customizer + Settings API pattern |
+| `_docs/editor-fidelity-checklist.md` | `<theme>/_docs/editor-fidelity-checklist.md` | Canvas fidelity checklist |
+| `gitignore.example` | `<theme>/.gitignore` | **Only if** `<theme>/.gitignore` does not exist yet — never overwrite |
 | `prettier.config.example.js` | `<theme>/prettier.config.js` | Theme root; then add the `prepare` + `lint-staged` keys and copy the hook installer — see "Code formatting" |
 | `prettierignore.example` | `<theme>/.prettierignore` | Theme root; keeps the committed `vendor/` and `public/build/` away from the formatter — see "Code formatting" |
 | `install-git-hooks.example.mjs` | `<theme>/scripts/install-git-hooks.mjs` | Pre-commit installer; wired via the theme's `prepare` script |
-| `mu-plugins/acorn-pantheon-storage.php` | `wp-content/mu-plugins/acorn-pantheon-storage.php` | **Pantheon: required, copy as-is.** Relocates Acorn's storage off the read-only filesystem — commit it in the **first commits** or Test/Live white-screen. See "Deploying to Pantheon" |
+| `mu-plugins/acorn-pantheon-storage.php` | `wp-content/mu-plugins/acorn-pantheon-storage.php` | **Pantheon: required, copy as-is.** Relocates Acorn's storage off the read-only filesystem |
 
 `README.md`, `CHANGELOG.md` and any other file at the kit's root are about
 the kit itself and are **not** imported into projects.
