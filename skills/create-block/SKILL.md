@@ -259,8 +259,36 @@ Attributes:
   - **Buttons / CTAs:** Styled `<span>` preview on canvas. **Clicking
     opens `<ActionEditor stacked={false}>` as a popover anchored below
     the button** — never in the sidebar.
-  - **Repeaters / lists:** `<ItemList>` with drag handles + keyboard
-    arrows (up/down), replacing `<TabSelector>` + `<RemoveButton>`.
+  - **Repeaters / lists:** `<ItemList>` (sidebar) with drag handles +
+    keyboard arrows (up/down), driven by `onMove` calling `moveItem(items,
+    from, to)`. The image inside each item still follows the media rule
+    above and stays on the **canvas** (`<AttachmentImageControl>` per item,
+    in array order) — only the item's non-media fields (name, link,
+    reorder) live in the sidebar list.
+    - **CRITICAL — array position must be the ONLY source of order.** Do
+      not also store a per-item `order`/`row`/`position` number unless the
+      block genuinely needs independent layout tuning (custom width/height/
+      gap per row, the way a logo-wall-style block might). If it does, the
+      `onMove` callback MUST update that field on every affected item in the
+      same call, or reordering silently stops changing anything: both the
+      canvas render and `block.php` will keep sorting by the stored field
+      and ignore the array `ItemList` just spliced. **Verified against a
+      live post** (a sibling project's logo-wall block, post 154): every
+      item already carried an explicit `desktop.order`, so dragging a row
+      in the sidebar changed the `logos[]` array while the rendered order —
+      editor and front end alike — never moved. `<ItemList>` and
+      `moveItem.js` are not the bug; a second, unsynced order field
+      layered on top of them is. Simplest fix for a new block: don't add
+      that field at all.
+  - **Paginated one-at-a-time editing (`<TabSelector>` + `<RemoveButton>`):
+    legacy for generic repeaters** (superseded by `<ItemList>` above,
+    which shows every row and lets you reorder without leaving the sidebar).
+    Still the right call for a block whose **front end is itself a
+    one-active-item widget** — real tabs, an accordion, a slider — where
+    "which item is being edited" is naturally the same question as "which
+    item is showing." There the front end needs its own interactive
+    `block.js` (plain vanilla, ARIA `tablist`/`tab`/`tabpanel` or
+    equivalent) in addition to the `<TabSelector>`-driven canvas.
 
 ### What the skill does NOT ask
 

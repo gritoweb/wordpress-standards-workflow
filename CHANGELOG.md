@@ -89,6 +89,14 @@ canvas with real data, inline editing, and theme-styled controls.
   to eliminate REST API 404 errors during image preview resolution, and formalized the sample
   home page blocks creation flow.
 - **`README.md`** — "What's here" table includes new skills.
+- **`create-block/SKILL.md`, repeaters section** — documented that
+  `<ItemList>`/`moveItem.js` reordering only works when array position is the
+  block's *only* source of order: a per-item `order`/`row` field layered on
+  top for custom layout tuning must be resynced inside `onMove`, or the
+  sidebar reorder silently stops affecting the render. Also scoped
+  `<TabSelector>` + `<RemoveButton>` down from "legacy, avoid" to "still
+  correct when the block's own front end is a one-active-item widget (real
+  tabs, accordion, slider)".
 
 ### How verified
 - All new files created and exist on disk.
@@ -96,6 +104,18 @@ canvas with real data, inline editing, and theme-styled controls.
   `InspectorControls`, CTA editing is inline on canvas.
 - `AttachmentImageControl.jsx` has `data-attachment-remove` × button.
 - `site-settings-wizard` contains zero references to ACF.
+- The `<ItemList>` dual-source-of-truth warning was verified against a live
+  post in a sibling project (not modified — see that project's own
+  changelog/notes if a fix is wanted there): every item already carries an
+  explicit `desktop.order`/`row`, and dragging a row in the sidebar changes
+  the array without moving one rendered pixel, in the editor or on the
+  front end.
+- Built a fresh test project (`test-wordpress`) against the updated skill:
+  a `logo-strip` block using `<ItemList>` + `moveItem` with no parallel
+  order field reorders correctly end to end (`render_block()` with a
+  reordered `logos[]` array produced markup in that same order), and a
+  `tabs` block exercises `<TabSelector>` + `<RemoveButton>` for the first
+  time with real front-end interactive tabs.
 - Branch is `refactor`; `master` is untouched.
 
 ## 2026-09-17
