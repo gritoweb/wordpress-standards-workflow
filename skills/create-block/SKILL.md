@@ -231,9 +231,13 @@ placeholder + accidental-newline behavior than RichText.
    prop:
    - **Full-width / single CTA** (hero, banner, one button per block):
      `<ActionEditor stacked={false}>` (two-column layout — label field
-     beside the link picker), inside
-     `<div className="w-full max-w-xl text-left ...">`. The block already
-     has the width and naturally grows to contain it.
+     beside the link picker), inside exactly
+     `<div className="w-full max-w-xl text-left">`. The block already
+     has the width and naturally grows to contain it. **That wrapper is
+     layout only — never give it `bg-*`, `p-*`, `rounded-*`, `shadow-*`,
+     `border` or a top margin:** `ActionEditor` already draws its own panel
+     (white background, padding, shadow, `mt-3`), so a styled wrapper puts
+     a card inside a card.
    - **CTA inside a repeater item** (a grid card, a list item):
      `<ActionEditor stacked={true}>` — the SAME component, just the single
      vertical-column layout it already has for sidebar use (label, then

@@ -2,6 +2,17 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-23 — CTA editor wrapper is layout only
+
+### Fixed
+- A project built from the kit showed the CTA editor as a card inside a
+  card: the agent styled the wrapper around `ActionEditor` (`bg-white p-4
+  rounded-xl shadow-lg mt-3`), and `ActionEditor` already draws its own
+  panel. The skill showed the wrapper as `w-full max-w-xl text-left ...`,
+  and the `...` read as "add classes here". It now names the exact wrapper
+  and forbids background, padding, radius, shadow, border and top margin on
+  it.
+
 ## 2026-09-23 — Editor fidelity report
 
 The Blade view and `block.jsx` are written separately, so a front-end change
