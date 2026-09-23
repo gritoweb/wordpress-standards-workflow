@@ -40,8 +40,10 @@ that themselves. Never writes to a remote or production environment.
 1. **Phase 0** — Ask which scenario applies (only to know what to tell
    the dev to run next).
 2. **Phase 1** — Copy kit files into the target theme (`wp-content/themes/<theme>/`).
-3. **Phase 2** — Offer the global (user-level) skills.
-4. **Phase 3** — Hand off the manual steps for the chosen scenario.
+3. **Phase 1b** — Replace Sage's bare header with the kit's responsive
+   header + primary navigation (once the Sage theme exists).
+4. **Phase 2** — Offer the global (user-level) skills.
+5. **Phase 3** — Hand off the manual steps for the chosen scenario.
 
 ---
 
@@ -97,6 +99,45 @@ never silently overwrite (same "bail > guessing" principle as
 
 After copying, show a summary table of what was created vs. skipped
 (already existed, dev declined).
+
+---
+
+## Phase 1b — Header & primary navigation (theme code)
+
+Sage ships `resources/views/sections/header.blade.php` as an unstyled brand
+link + a `<nav>` that renders **only when a menu is assigned** — a fresh site
+comes out with no menu, and assigning one gives an unstyled bullet list with
+no mobile toggle. Never leave that in place. Runs as soon as the Sage theme
+exists (Scenario B: after step 5; Scenario A: after step 4).
+
+| From (`<skill>/templates/`) | To (`<theme>/`) | Rule |
+|---|---|---|
+| `header.blade.php` | `resources/views/sections/header.blade.php` | Overwrite **only** if it is still Sage's stock header (contains `class="banner"` and `nav-primary`); otherwise show the diff and ask |
+| `header.css` | `resources/css/components/header.css` | Create; ask if it exists |
+| `navigation.js` | `resources/js/modules/navigation.js` | Create; ask if it exists |
+| `front-page.blade.php` | `resources/views/front-page.blade.php` | Create; ask if it exists. Sage's `page.blade.php` prints `partials.page-header` (an unstyled `<h1>` with the page title) above the content — on a block-built home that stray "Home" line under the header reads as a broken menu, and it duplicates the hero's `<h1>` |
+
+Replace `__TEXT_DOMAIN__` with the theme's `Text Domain`, then wire it:
+
+```css
+/* resources/css/app.css */
+@import './components/header.css';
+```
+
+```js
+// resources/js/app.js
+import { initNavigation } from './modules/navigation';
+
+// app.js loads as type="module" (deferred), so the DOM is already parsed.
+initNavigation();
+```
+
+The header keeps Sage's `primary_navigation` location (registered in
+`app/setup.php`). With no menu assigned it lists the published pages, so it
+is never empty; the real menu is created in Phase 3 (**Primary menu**).
+**Verify** at 390px and 1280px: desktop shows the links inline; mobile shows
+the toggle, which opens/closes the panel (`aria-expanded` flips, `Esc` closes);
+nothing but the blocks renders between the header and the first block.
 
 ---
 
@@ -198,6 +239,17 @@ Phase 0 answer. Do not run any of these commands.
       lando wp option update show_on_front 'page'
       lando wp option update page_on_front "$HOME_ID"
       ```
+11. **Primary menu** — create it and assign it to Sage's location, so the
+    Phase 1b header shows a real menu (add every page the site has):
+    ```bash
+    lando wp menu create "Primary"
+    lando wp menu item add-post primary "$HOME_ID" --title="Home"
+    lando wp menu location assign primary primary_navigation
+    ```
+12. **Smoke check before handing off** — open the home at desktop and mobile
+    width: header menu works (Phase 1b), and each block with an entrance
+    animation gains `data-entered` on scroll (`create-block` › "Entrance
+    animation wiring"). Report what was checked, not "should work".
 
 ### Theme assets (both scenarios)
 

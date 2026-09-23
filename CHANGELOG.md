@@ -2,6 +2,39 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-23 — Working entrance animations and site header
+
+A project scaffolded with the kit shipped with dead entrance animations, a
+Preview button that did nothing and Sage's bare header. Verified end to end on
+a fresh Lando + Sage 11 project with 5 blocks (editor + front end, 1280px and
+mobile).
+
+### Fixed
+- **Entrance animations never ran.** The kit shipped only the editor half
+  (`EntranceControl` / `entranceCanvas.js`); `BlockEntrance.php` was an older
+  copy with a different contract (`data-entrance-type`, `zoom`/`flip`,
+  `load`/`scroll`) and there was no front-end CSS/JS. Ported the complete
+  system: `BlockEntrance.php` (`fromBlock`/`root`/`part`), `entrance.css`,
+  `entrance.js`, the `@entrance` / `@entrancePart` Blade directives, and the
+  canvas wiring (`entranceRootProps` / `entrancePartProps`) in the block
+  templates.
+- **Sidebar Preview did nothing.** It looks for a `[data-entrance]` root by
+  `clientId`; blocks now pass `clientId` and spread the root props, and
+  `editor.css` imports `entrance.css`.
+- **Stray "Home" under the header** looked like a broken menu: it was Sage's
+  `page-header` `<h1>`. `project-init` now adds a `front-page.blade.php` that
+  renders only the blocks.
+
+### Added
+- **Global animation defaults** — `BlockMotion.php` adds Appearance ›
+  Customize › Motion (duration, delay, stagger, distance, unit); block fields
+  left empty inherit it. `entrance` is now a global block attribute in
+  `BlockManager` with null numbers.
+- **Site header** — `project-init` Phase 1b replaces Sage's bare header with a
+  responsive header (inline menu on desktop, toggle panel on mobile, `Esc`
+  closes), falls back to a page list when no menu is assigned, and Phase 3
+  creates and assigns the "Primary" menu.
+
 ## 2026-09-22 — Brand Refactor
 
 Major update backporting patterns evolved in the White Summers project into the

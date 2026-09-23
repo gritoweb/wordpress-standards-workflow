@@ -75,15 +75,17 @@ wrong domain/path into every file.
 | 0.3 | `resources/views/blocks/` exists |
 | 0.4 | `resources/js/vendor/` exists |
 | 0.5 | `resources/css/vendor/` exists |
-| 0.6 | `app/blocks.php` is the **central block-bootstrap file** — must (a) exist, (b) contain top-level `BlockCategories::register();`, (c) contain `add_action('init', function () { (new BlockManager())->register(); });`, (d) be loaded by `functions.php`'s `collect([...])` array (see 0.6.1). Template at `<skill>/templates/blocks.php`. |
+| 0.6 | `app/blocks.php` is the **central block-bootstrap file** — must (a) exist, (b) contain top-level `BlockCategories::register();` and `BlockMotion::register();`, (c) contain `add_action('init', function () { (new BlockManager())->register(); });`, (d) be loaded by `functions.php`'s `collect([...])` array (see 0.6.1). Template at `<skill>/templates/blocks.php`. |
 | 0.6.1 | `functions.php`'s `collect([...])` array includes `'blocks'`. Without it, `app/blocks.php` never loads. If `functions.php` doesn't use the `collect([...])` pattern at all, **bail out** — needs manual wiring. |
 | 0.8 | `resources/js/editor.js` calls `import.meta.glob('../blocks/*/block.jsx', { eager: true });` (Vite compiles the **editor** JSX only — front-end `block.js`/`block.css` are served from source via `file:`, see "Block asset loading") |
 | 0.9 | `resources/css/app.css` has `@source "../blocks/**/*.{php,jsx}";` |
 | 0.10 | `package.json` `devDependencies` has `react@^18` AND `react-dom@^18`. **React pinned to ^18, not ^19** — React 19 breaks Gutenberg (element-symbol mismatch with WP's React 18). |
 | 0.11 | `app/Blocks/BlockCategories.php` exists. Template at `<skill>/templates/BlockCategories.php`. **First-run only**: ask `"Vou criar uma categoria pros seus blocos. Quer chamar de 'Custom Blocks' (default) ou outro nome?"`, copy template, edit `TITLE` and `SLUG` (lowercase + hyphens) if dev picked a different name. The actual `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). Subsequent runs: grep `const SLUG = '...'` from the existing file. |
 | 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. Legacy components (`ImageUploadWithHover.jsx`, `RemoveButton.jsx`, `TabSelector.jsx`) also copied for backward compat. If missing: copy from `<skill>/templates/components/backend/*`, replacing `__TEXT_DOMAIN__` with `<text-domain>` and `__THEME_SLUG__` with `<theme-slug>` in every copied file. |
-| 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php` and `app/Blocks/BlockEntrance.php` exist. Templates at `<skill>/templates/BlockPadding.php`, `<skill>/templates/BlockImagePosition.php` and `<skill>/templates/BlockEntrance.php`. |
-| 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers a `paddingClasses` Blade directive expanding to `\App\Blocks\BlockPadding::resolve(...)` (see `.claude/skills/blade-standards/SKILL.md`). |
+| 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php`, `app/Blocks/BlockEntrance.php` and `app/Blocks/BlockMotion.php` exist. Templates at `<skill>/templates/`. `BlockEntrance.php` must expose `fromBlock()`, `root()` and `part()` — an older copy that only has `resolve()` (it prints `data-entrance-type`) is **incompatible** with `EntranceControl`/`entranceCanvas.js`: replace it. |
+| 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers three Blade directives: `paddingClasses` → `\App\Blocks\BlockPadding::resolve(...)`, `entrance` → `\App\Blocks\BlockEntrance::root(...)` and `entrancePart` → `\App\Blocks\BlockEntrance::part(...)` (see "Infra bootstrap templates"). |
+| 0.18 | `resources/css/components/entrance.css` exists (template `<skill>/templates/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). |
+| 0.19 | `resources/js/modules/entrance.js` exists (template `<skill>/templates/entrance.js`) and `resources/js/app.js` has `import { initEntrance } from './modules/entrance';` plus a top-level `initEntrance();` call (module scripts are deferred). Without it the front end never adds `data-entered` and the head script's 5s safety net is the only thing that un-hides the page. |
 
 ### Compatibility warnings (do NOT auto-fix)
 
@@ -95,7 +97,7 @@ wrong domain/path into every file.
 
 ### Bootstrap UX
 
-If any check 0.1–0.16 (incl. 0.6.1) fails:
+If any check 0.1–0.19 (incl. 0.6.1) fails:
 
 1. Show the dev a status table of failed checks.
 2. Split fixes into **(A) Creations** (new files/folders) and **(B) Modifications** (edits to `functions.php`, `editor.js`, `app.css`). `package.json` is not edited — tell the dev to run `npm install --save-dev react@^18.0.0 react-dom@^18.0.0` themselves.
@@ -107,11 +109,13 @@ Phase 0 must be re-runnable. Before each create/modify, Read the target and chec
 
 | Target | Expected shape | If matches | If partial | If diverges from stock |
 |---|---|---|---|---|
-| `app/blocks.php` (Group A) | Has both `BlockCategories::register()` and `add_action('init', ...)` referencing `BlockManager` | **Skip** | **Bail** — name the missing piece | **Bail** — content unrecognized; ask dev to move/rename |
+| `app/blocks.php` (Group A) | Has `BlockCategories::register()`, `BlockMotion::register()` and `add_action('init', ...)` referencing `BlockManager` | **Skip** | Only `BlockMotion::register()` missing → insert it (plus its `use`) after `BlockCategories::register();`. Anything else missing → **Bail** — name the missing piece | **Bail** — content unrecognized; ask dev to move/rename |
 | `functions.php` (Group B) | `collect([...])->each(...)` array includes `'blocks'` | **Skip** | Edit the array (insert `'blocks'`); preserve formatting | **Bail** — pattern not found / dynamic array |
 | `resources/js/editor.js` | `import.meta.glob('../blocks/*/block.jsx'` | **Skip** | apply documented edit | **Bail** |
-| `resources/css/app.css` | `@source "../blocks/**` | **Skip** | apply documented edit | **Bail** |
-| `app/Providers/ThemeServiceProvider.php` (Group B) | `boot()` calls `parent::boot()` and registers a `Blade::directive('paddingClasses', ...)` | **Skip** | `boot()` exists but lacks the directive — insert the `Blade::directive(...)` call | **Bail** — provider doesn't match Sage's stock shape (custom providers are common; ask the dev to wire it manually) |
+| `resources/css/app.css` | `@source "../blocks/**` and `@import './components/entrance.css'` | **Skip** | apply documented edit | **Bail** |
+| `resources/css/editor.css` | `@import './components/entrance.css'` | **Skip** | append the import | **Bail** |
+| `resources/js/app.js` | imports and calls `initEntrance` | **Skip** | add the import + call | **Bail** |
+| `app/Providers/ThemeServiceProvider.php` (Group B) | `boot()` calls `parent::boot()` and registers the `paddingClasses`, `entrance` and `entrancePart` directives | **Skip** | `boot()` exists but lacks some — insert the missing `Blade::directive(...)` calls | **Bail** — provider doesn't match Sage's stock shape (custom providers are common; ask the dev to wire it manually) |
 
 **Bailing > guessing.** Each bail message must name (a) the file, (b) expected shape, (c) what was found, (d) the manual fix the dev would apply.
 
@@ -529,6 +533,9 @@ End with a summary table listing every file created/modified.
 ├── BlockPadding.php                → copied to app/Blocks/BlockPadding.php (check 0.15)
 ├── BlockImagePosition.php          → copied to app/Blocks/BlockImagePosition.php (check 0.15)
 ├── BlockEntrance.php               → copied to app/Blocks/BlockEntrance.php (check 0.15)
+├── BlockMotion.php                 → copied to app/Blocks/BlockMotion.php (check 0.15)
+├── entrance.css                    → copied to resources/css/components/entrance.css (check 0.18)
+├── entrance.js                     → copied to resources/js/modules/entrance.js (check 0.19)
 ├── blocks.php                      → copied to app/blocks.php (check 0.6)
 ├── preview.svg                     → copied per block (with __BLOCK_TITLE__ substituted)
 └── components/backend/             → copied to resources/blocks/components/backend/ (check 0.12)
@@ -559,7 +566,7 @@ Copied infra files carry placeholders that must be replaced on copy — none may
 |---|---|---|
 | `__BLOCK_TITLE__` | `preview.svg` | the block's `<Title>` |
 | `__BLOCK_NAMESPACE__` | `BlockManager.php` | the namespace confirmed in check 0.1 |
-| `__TEXT_DOMAIN__` | `RemoveButton.jsx`, `ImageUploadWithHover.jsx` | `<text-domain>` |
+| `__TEXT_DOMAIN__` | `RemoveButton.jsx`, `ImageUploadWithHover.jsx`, `BlockMotion.php` | `<text-domain>` |
 | `__THEME_SLUG__` | `IconPicker.jsx` | `<theme-slug>` |
 
 Every generated `block.jsx` imports `PaddingControls`; image / link / array blocks add the matching imports as needed.
@@ -639,6 +646,10 @@ echo view('blocks.<slug>', [
     // Gutenberg HTML anchor → id on the section wrapper (see "Anchor support").
     'anchor' => sanitize_html_class($attributes['anchor'] ?? ''),
 
+    // Entrance animation: block.json preset + saved object, sanitized. Consumed
+    // by @entrance / @entrancePart in the view (see "Entrance animation wiring").
+    'entrance' => \App\Blocks\BlockEntrance::fromBlock($attributes, __DIR__),
+
     // Always include the global padding attrs.
     'paddingVertDesktop' => absint($attributes['paddingVertDesktop'] ?? 112),
     'paddingVertMobile'  => absint($attributes['paddingVertMobile']  ?? 56),
@@ -656,6 +667,7 @@ import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { PaddingControls } from '../components/backend/PaddingControls.jsx';
 import { EntranceControl } from '../components/backend/EntranceControl.jsx';
+import { resolveEntrance, entranceRootProps, entrancePartProps } from '../components/backend/entranceCanvas.js';
 // Uncomment the imports your attributes actually need:
 // import { PanelBody } from '@wordpress/components'; // needed if this block has a Background Media panel
 // import { AttachmentImageControl } from '../components/backend/AttachmentImageControl.jsx';
@@ -671,9 +683,12 @@ import previewImage from './preview.svg';
 import metadata from './block.json';
 
 registerBlockType(metadata, {
-    edit({ attributes, setAttributes }) {
+    edit({ attributes, setAttributes, clientId }) {
         const blockProps = useBlockProps();
         const { isPreview } = attributes;
+        // Same resolution as BlockEntrance::fromBlock, so canvas == front end.
+        const entrance = resolveEntrance(attributes.entrance, metadata.attributes.entrance?.default ?? {});
+        const rootEntrance = entranceRootProps(entrance);
         // Destructure your block's other attributes here.
         // Example: const { heading, bgImageId, bgImagePosition, ctaText, ctaLink } = attributes;
         // const [isEditingButton, setIsEditingButton] = useState(false);
@@ -710,7 +725,8 @@ registerBlockType(metadata, {
                     */}
 
                     <PaddingControls attributes={attributes} setAttributes={setAttributes} />
-                    <EntranceControl attributes={attributes} setAttributes={setAttributes} />
+                    {/* clientId is REQUIRED: Preview finds this block's canvas root by it. */}
+                    <EntranceControl attributes={attributes} setAttributes={setAttributes} clientId={clientId} />
                     {/* Add other config-only controls here:
                         <DividerControl value={sectionDivider} onChange={...} />
                         <SelectControl label="Layout" options={[...]} ... />
@@ -723,8 +739,17 @@ registerBlockType(metadata, {
                     Inside: real data, inline editing, theme typography, no form clutter. */}
                 <section
                     {...blockProps}
+                    {...rootEntrance}
                     className={`${blockProps.className || ''} <slug>-editor ${EDITOR_BLOCK_FRAME}`}
+                    style={{ ...blockProps.style, ...rootEntrance.style }}
                 >
+                    {/* Every visible part (heading, subtitle, body, CTA row, each
+                        repeater item) spreads entrancePartProps with a running
+                        index — same order as @entrancePart in the Blade view:
+                    <div {...entrancePartProps(entrance, 0)}>…heading…</div>
+                    <div {...entrancePartProps(entrance, 1)}>…subtitle…</div>
+                    {items.map((item, i) => <article key={i} {...entrancePartProps(entrance, 2 + i)}>…</article>)}
+                    */}
                     {/* Background Media — passive preview only, canvas has no click target.
                         Selecting/replacing/removing the image happens in the sidebar (above):
                     {bgUrl && (
@@ -871,15 +896,21 @@ vendor lib's internals, scoped under the block's root class:
 #### `resources/views/blocks/<slug>.blade.php`
 
 ```blade
-<section @if ($anchor) id="{{ $anchor }}" @endif class="<slug> py-16">
+<section @if ($anchor) id="{{ $anchor }}" @endif class="<slug> py-16" @entrance($entrance)>
+    {{-- @entrance prints its own style="" — never put a second style attribute
+         on this element. Each visible part gets @entrancePart(<running index>),
+         in the same order block.jsx uses (see "Entrance animation wiring"). --}}
     {{-- Anchor id stays on this <section>; any dynamic/unique id (e.g. a Swiper
          instance id) goes on an INNER element so it can't collide — see
          "Anchor support". This note is guidance: keep it only if the block
          actually emits a dynamic id, else drop it. --}}
     {{-- Scaffolding — replace with the real render. Example:
         @if ($heading)
-            <h2 class="<slug>__heading">{{ $heading }}</h2>
+            <h2 class="<slug>__heading" @entrancePart(0)>{{ $heading }}</h2>
         @endif
+        @foreach ($items as $item)
+            <article @entrancePart($loop->index + 1)>…</article>
+        @endforeach
     --}}
 </section>
 ```
@@ -908,7 +939,65 @@ value (padding numbers/booleans, or an `imagePosition` string) to a
 literal Tailwind class string, so Tailwind's build-time scanner picks the
 classes up — never interpolate a class dynamically.
 
-#### `app/Providers/ThemeServiceProvider.php` — register the `paddingClasses` directive
+#### `app/Blocks/BlockEntrance.php`, `app/Blocks/BlockMotion.php`, `entrance.css`, `entrance.js`
+
+Copy from `<skill>/templates/` (destinations in the templates directory tree).
+Then wire them — each piece is required, the system fails **silently** when
+one is missing (no console error, just no animation):
+
+```css
+/* resources/css/app.css AND resources/css/editor.css */
+@import './components/entrance.css';
+```
+
+```js
+// resources/js/app.js
+import { initEntrance } from './modules/entrance';
+
+// app.js loads as type="module" (deferred), so the DOM is already parsed.
+initEntrance();
+```
+
+`BlockMotion::register()` is called from `app/blocks.php` (template already
+does it). It adds **Appearance › Customize › Motion** (the site-wide
+duration / delay / stagger / distance that every block field left empty
+inherits), the `html.ws-entrance` head script, and the same `--e-*` values
+inside the editor canvas.
+
+#### Entrance animation wiring (every block)
+
+The contract is shared by `BlockEntrance.php`, `entranceCanvas.js`,
+`entrance.css` and `entrance.js` — never invent other attribute names:
+
+| Where | Root (the `<section>`) | Each part |
+|---|---|---|
+| Blade | `@entrance($entrance)` | `@entrancePart(<index>)` |
+| block.jsx canvas | `{...entranceRootProps(entrance)}` (merge its `style` with `blockProps.style`) | `{...entrancePartProps(entrance, <index>)}` |
+| Sidebar | `<EntranceControl attributes setAttributes clientId={clientId} />` | — |
+
+- Only **parts** move; the section never gets a transform. A block with no
+  `@entrancePart` animates nothing.
+- Indexes run 0, 1, 2… in reading order (heading, subtitle, body, CTA row,
+  then each repeater item); the stagger multiplies them.
+- `{...entrancePartProps(...)}` goes **inside the opening tag**, as an
+  attribute. Placed after the `>` it becomes a spread *child*; React then
+  tries to iterate the object and the whole block dies with
+  `TypeError: … is not iterable` / "This block has encountered an error".
+- Numbers left `null` inherit Customizer › Motion. Defaults come from
+  `BlockManager::globalAttributes()['entrance']`; a block may override the
+  preset with its own `"entrance"` attribute in `block.json` — `type` /
+  `direction` / `trigger` only. A number written there overrides the global
+  Motion setting for that block forever, so leave numbers out.
+- Only the values in `entranceCanvas.js` exist: types `none | fade | slide |
+  fade-slide`, triggers `section | item`. Anything else (`load`, `scroll`,
+  `zoom`…) is silently replaced by the default.
+- **Verify** before calling the block done, after `npm run build`: open the
+  page in the editor — no block shows "This block has encountered an error"
+  (console clean); clicking the sidebar **Preview** hides and replays the
+  parts; on the front end the section has `data-entrance` and gains
+  `data-entered` on scroll.
+
+#### `app/Providers/ThemeServiceProvider.php` — register the Blade directives
 
 Add to the existing `boot()` method (this file is scaffolded by Sage
 itself — don't create it, edit it):
@@ -920,6 +1009,16 @@ itself — don't create it, edit it):
 +
 +    Blade::directive('paddingClasses', function (string $expression) {
 +        return "<?php echo \App\Blocks\BlockPadding::resolve($expression); ?>";
++    });
++
++    // <section @entrance($entrance)> — prints its own style attribute.
++    Blade::directive('entrance', function (string $expression) {
++        return "<?php echo \App\Blocks\BlockEntrance::root($expression); ?>";
++    });
++
++    // <h2 @entrancePart(0)>, <article @entrancePart($loop->index + 1)>.
++    Blade::directive('entrancePart', function (string $expression) {
++        return "<?php echo \App\Blocks\BlockEntrance::part($expression); ?>";
 +    });
  }
 ```

@@ -1,0 +1,160 @@
+/*
+ * Entrance animations. Only parts move, never a section: a section can be a
+ * size container, a bleed wrapper or a clipping panel, and a transform on one
+ * of those breaks its children's layout.
+ *
+ * Parts are hidden only under html.ws-entrance, which a head script adds. With
+ * no JavaScript, or after the module gives up, everything is simply visible.
+ * The direction is the direction of travel: "up" starts below and moves up.
+ */
+
+/*
+ * Defaults, so the editor canvas and any page without saved Customizer > Motion
+ * values still animate. BlockMotion.php overrides them with html:root.
+ */
+:root {
+  --e-duration: 600ms;
+  --e-delay: 0ms;
+  --e-stagger: 120ms;
+  --e-distance: 32px;
+  --e-ease: var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+[data-entrance] {
+  --e-from-opacity: 1;
+  --e-from-x: 0px;
+  --e-from-y: 0px;
+}
+
+[data-entrance='fade'],
+[data-entrance='fade-slide'] {
+  --e-from-opacity: 0;
+}
+
+[data-entrance='slide'],
+[data-entrance='fade-slide'] {
+  --e-from-y: var(--e-distance);
+}
+
+:is(
+  [data-entrance='slide'],
+  [data-entrance='fade-slide']
+)[data-entrance-dir='up'] {
+  --e-from-x: 0px;
+  --e-from-y: var(--e-distance);
+}
+
+:is(
+  [data-entrance='slide'],
+  [data-entrance='fade-slide']
+)[data-entrance-dir='down'] {
+  --e-from-x: 0px;
+  --e-from-y: calc(var(--e-distance) * -1);
+}
+
+:is(
+  [data-entrance='slide'],
+  [data-entrance='fade-slide']
+)[data-entrance-dir='left'] {
+  --e-from-x: var(--e-distance);
+  --e-from-y: 0px;
+}
+
+:is(
+  [data-entrance='slide'],
+  [data-entrance='fade-slide']
+)[data-entrance-dir='right'] {
+  --e-from-x: calc(var(--e-distance) * -1);
+  --e-from-y: 0px;
+}
+
+/* A part with no printed index is the first one. */
+[data-entrance-part] {
+  --e-i: 0;
+}
+
+html.ws-entrance
+  [data-entrance]:not([data-entrance-trigger='item']):not([data-entered])
+  [data-entrance-part] {
+  opacity: var(--e-from-opacity);
+  transform: translate(var(--e-from-x), var(--e-from-y));
+}
+
+/*
+ * The item trigger: each part waits for its own data-entered. Once every part
+ * has entered the module marks the section, so a part added afterwards is
+ * never hidden.
+ */
+html.ws-entrance
+  [data-entrance][data-entrance-trigger='item']:not([data-entered])
+  [data-entrance-part]:not([data-entered]) {
+  opacity: var(--e-from-opacity);
+  transform: translate(var(--e-from-x), var(--e-from-y));
+}
+
+/*
+ * Replay hook for the editor canvas: data-entrance-replay on one block root
+ * hides that block's parts, with no html.ws-entrance, so other blocks stay
+ * visible. The replay removes the marker's effect the same way a visitor's
+ * entry does, with data-entered on the root or on each part.
+ */
+[data-entrance][data-entrance-replay]:not([data-entrance-trigger='item']):not(
+    [data-entered]
+  )
+  [data-entrance-part],
+[data-entrance][data-entrance-replay][data-entrance-trigger='item']:not(
+    [data-entered]
+  )
+  [data-entrance-part]:not([data-entered]) {
+  opacity: var(--e-from-opacity);
+  transform: translate(var(--e-from-x), var(--e-from-y));
+}
+
+/*
+ * The transition lives on the end state, so it plays as the section flips to
+ * entered. A part added later lands in the end state with nothing to animate.
+ * Once a part reports done, its own transitions (a button's hover) return.
+ */
+[data-entrance]:not([data-entrance-trigger='item'])[data-entered]
+  [data-entrance-part]:not([data-entrance-done]),
+[data-entrance][data-entrance-trigger='item']
+  [data-entrance-part][data-entered]:not([data-entrance-done]) {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--e-duration) linear,
+    transform var(--e-duration) var(--e-ease);
+  transition-delay: calc(var(--e-delay) + var(--e-i) * var(--e-stagger));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-entrance] [data-entrance-part] {
+    --e-duration: 150ms;
+  }
+
+  html.ws-entrance
+    [data-entrance]:not([data-entrance-trigger='item']):not([data-entered])
+    [data-entrance-part],
+  html.ws-entrance
+    [data-entrance][data-entrance-trigger='item']:not([data-entered])
+    [data-entrance-part]:not([data-entered]),
+  [data-entrance][data-entrance-replay]:not([data-entrance-trigger='item']):not(
+      [data-entered]
+    )
+    [data-entrance-part],
+  [data-entrance][data-entrance-replay][data-entrance-trigger='item']:not(
+      [data-entered]
+    )
+    [data-entrance-part]:not([data-entered]) {
+    transform: none;
+  }
+}
+
+/* A printed page must never come out blank. */
+@media print {
+  html.ws-entrance [data-entrance] [data-entrance-part] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

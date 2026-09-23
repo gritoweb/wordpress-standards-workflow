@@ -30,6 +30,20 @@ class BlockManager
             'paddingVertMobile'  => ['type' => 'number',  'default' => 56],
             'paddingXDesktop'    => ['type' => 'boolean', 'default' => true],
             'paddingXMobile'     => ['type' => 'boolean', 'default' => true],
+            // Null numbers inherit Customizer > Motion (BlockMotion).
+            'entrance'           => [
+                'type'    => 'object',
+                'default' => [
+                    'type'      => 'fade-slide',
+                    'direction' => 'up',
+                    'unit'      => 'px',
+                    'trigger'   => 'section',
+                    'distance'  => null,
+                    'duration'  => null,
+                    'delay'     => null,
+                    'stagger'   => null,
+                ],
+            ],
         ];
     }
 
