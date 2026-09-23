@@ -1,6 +1,7 @@
 import { MediaUpload, MediaUploadCheck } from '@wordpress/block-editor';
 import { Button, Spinner } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
+import { useLayoutEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { useAttachmentUrls } from './useAttachmentUrls.js';
 import { RemoveImageButton } from './RemoveImageButton.jsx';
@@ -37,6 +38,14 @@ export function AttachmentImageControl({
   // Extra inline style for the rendered img only, e.g. a colour filter.
   imageStyle,
 }) {
+  // The sidebar renders in the admin document (the canvas is an iframe), so detect it rather than rely on the prop.
+  const rootRef = useRef(null);
+  const [inAdminDocument, setInAdminDocument] = useState(false);
+  useLayoutEffect(() => {
+    setInAdminDocument(rootRef.current?.ownerDocument === document);
+  }, []);
+  const withoutThemeCss = noStylesheet || inAdminDocument;
+
   const numericId = Number(imageId) || 0;
   const attachmentUrls = useAttachmentUrls([numericId]);
   const resolvedUrl = attachmentUrls[numericId] || '';
@@ -64,6 +73,7 @@ export function AttachmentImageControl({
    */
   return (
     <div
+      ref={rootRef}
       role="group"
       aria-label={label}
       data-attachment-state={state}
@@ -174,7 +184,7 @@ export function AttachmentImageControl({
                   inset: 0,
                   width: '100%',
                   height: '100%',
-                  ...(noStylesheet ? { background: 'transparent' } : {}),
+                  ...(withoutThemeCss ? { background: 'transparent' } : {}),
                   border: 0,
                   padding: 0,
                   appearance: 'none',

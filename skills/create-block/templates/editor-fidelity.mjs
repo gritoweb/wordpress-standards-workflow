@@ -241,6 +241,16 @@ function sidebarContent(slug) {
   return [...found];
 }
 
+// A background image attribute the canvas never draws: the editor shows a flat colour where the page shows a photo.
+function missingBackgroundPreview(slug) {
+  const dir = join('resources/blocks', slug);
+  if (!existsSync(join(dir, 'block.jsx')) || !existsSync(join(dir, 'block.json'))) return [];
+  const attrs = Object.keys(JSON.parse(readFileSync(join(dir, 'block.json'), 'utf8')).attributes || {});
+  const canvas = readFileSync(join(dir, 'block.jsx'), 'utf8').replace(/<InspectorControls>[\s\S]*?<\/InspectorControls>/g, '');
+  const previews = /useAttachmentUrls/.test(canvas) && /(<img\b|backgroundImage)/.test(canvas);
+  return attrs.filter((name) => /^(bg|background)\w*Id$/i.test(name) && !previews);
+}
+
 // --- Run ---------------------------------------------------------------------
 
 const { page, close } = await launchChrome();
@@ -320,6 +330,9 @@ try {
     if (!front[index]) return { block: block.slug, issues: [{ text: '(block)', diff: `no .${block.slug} root on the page (not rendered, or its root class is not the slug)` }], notes: [] };
     const result = compare(block, front[index]);
     const inSidebar = sidebarContent(block.slug);
+    for (const attr of missingBackgroundPreview(block.slug)) {
+      result.issues.unshift({ text: '(canvas)', diff: `background image "${attr}" is never previewed on the canvas — resolve it with useAttachmentUrls and draw it behind the content, as the page does` });
+    }
     if (inSidebar.length) {
       result.issues.unshift({ text: '(sidebar)', diff: `${inSidebar.join(', ')} inside <InspectorControls> — text, links and buttons are edited on the canvas, never in the sidebar` });
     }

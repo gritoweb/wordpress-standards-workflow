@@ -110,7 +110,7 @@ export function ActionEditor({
       className={
         stacked
           ? undefined
-          : 'mt-3 grid gap-3 rounded-lg bg-white p-4 shadow-sm sm:grid-cols-2'
+          : 'mt-3 grid gap-3 rounded-lg bg-white p-4 text-gray-900 shadow-sm sm:grid-cols-2'
       }
       style={stacked ? stackedStyles.group : undefined}
     >
@@ -118,7 +118,7 @@ export function ActionEditor({
         className={
           stacked
             ? undefined
-            : 'm-0 block text-xs font-bold text-[color:var(--color-ink)]'
+            : 'm-0 block text-xs font-bold text-[color:var(--color-ink,#1e1e1e)]'
         }
         style={stacked ? stackedStyles.label : undefined}
       >
