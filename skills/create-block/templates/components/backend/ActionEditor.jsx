@@ -2,18 +2,19 @@ import { __ } from '@wordpress/i18n';
 import { emptyLink } from './editorCanvas.js';
 import { LinkPicker } from './LinkPicker.jsx';
 
-/*
- * app/setup.php injects editor.css through the block_editor_settings_all
- * filter, and Gutenberg loads those styles into the canvas iframe only. The
- * inspector sidebar renders in the admin document, so no Tailwind utility and
- * no theme class reaches it. The stacked layout therefore ships inline.
- */
+// Inline so the panel never depends on a theme class; it matches the two-column panel (rounded-lg bg-white p-4 shadow-sm).
 export const stackedStyles = {
   group: {
     display: 'flex',
     flexDirection: 'column',
     gap: '16px',
     marginTop: '12px',
+    padding: '16px',
+    borderRadius: '8px',
+    background: '#fff',
+    boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+    color: '#1e1e1e',
+    textAlign: 'left',
   },
   label: {
     display: 'block',

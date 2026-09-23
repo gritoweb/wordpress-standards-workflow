@@ -30,6 +30,7 @@ block** by the `css-foundation-wizard` skill
 | `global/base.css` | How unclassed non-text tags look (`body` color/background, `a`, lists…) — **no type** |
 | `global/container.css` | Container width tokens + `.container` (an `@utility`) |
 | `components/button.css` | `.btn`, `.btn-primary`, `.btn-secondary` |
+| `components/card.css` | `.card` — the shared card/item/panel surface |
 
 If any is missing, run the wizard — don't hand-write a partial foundation.
 Token **names** are the wizard's contract (fixed across projects); values are
@@ -66,6 +67,7 @@ from the style guide:
 | `text-sm` / `text-base` / `text-lg` | `text-small` / `text-body` / `text-lead` |
 | `text-[10px]`, `leading-[0.95]`, `tracking-[-0.03em]` | a token, or a treatment class in `typography.css` |
 | a hand-styled CTA (`bg-… px-6 py-3 rounded-…`) | `btn btn-primary` / `btn btn-secondary` |
+| `rounded-card border border-border bg-light shadow-card` (a card re-typed) | `card` (+ the block's own layout: `card flex flex-col p-8`) |
 | `rounded-2xl`, `shadow-sm` | `rounded-card` / `rounded-button`, `shadow-card` |
 
 Tailwind's stock palette and type scale, `text-hN` utilities and arbitrary
@@ -172,8 +174,9 @@ libs are registered in `setup.php` and enqueued per block).
 .accordion__trigger { ... }
 ```
 
-- Never reuse generic class names (`.card`, `.box`, `.wrapper`) across
-  blocks.
+- Never give a block its own generic class name (`.card`, `.box`,
+  `.wrapper`) — block classes are prefixed (`.card-grid__card`). The shared
+  `.card` / `.btn` come from `components/` and are meant to be reused.
 - Tokens live in their foundation file (see **Theme CSS foundation**) —
   never redefine or re-type them in a block.
 - **Class order is automated** — `prettier-plugin-tailwindcss` sorts

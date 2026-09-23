@@ -2,6 +2,35 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-23 — One card class, no copied class strings in the examples
+
+A second agent test (vague prompt, 5 blocks) built every block on the style
+guide, but re-typed the card surface 8 times across 4 blocks, copied the
+wizard's example colors and fonts as the client's, and its card links opened
+fields with no panel around them.
+
+### Added
+- `components/card.css` (`.card`) in the wizard's contract; the check
+  requires it and refuses `rounded-card` / `shadow-card` / `border-border`
+  re-typed together outside it.
+- The wizard stops at Step 1 until the dev gives a style guide; its example
+  values are marked as format illustrations, never defaults.
+
+### Changed
+- `_docs/examples.md`: the six card surfaces use `card` (+ layout only);
+  canvas fields drop `w-full bg-transparent` (now in `AutoGrowingTextarea`
+  itself) and redundant `text-ink` (the body sets it once).
+- `ActionEditor` `stacked` draws the same white panel as the two-column mode
+  — it had no background, so a card's link fields sat bare on the card; the
+  card-grid example's wrapper lost its extra top margin.
+
+### Verified
+- Theme rebuilt from the wizard's code blocks + the examples: check exits 0;
+  Tailwind builds `.card` in the components layer with
+  `open:border-primary/30` after it; the only 3-class combos shared across
+  example blocks are layout/role (`card flex flex-col`, `flex gap-4
+  items-center`, `mt-4 text-body text-muted`).
+
 ## 2026-09-23 — Style guide foundation first, each value in one place
 
 Two test themes built from the kit had no `resources/css/global/` at all:

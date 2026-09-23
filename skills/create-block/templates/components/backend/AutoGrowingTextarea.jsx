@@ -12,7 +12,7 @@ export function AutoGrowingTextarea({
   className = '',
   style = {},
   rows = 1,
-  // A heading field: base.css styles [data-heading] like h1–h6, so the canvas matches the page.
+  // A heading field: typography.css styles [data-heading] like h1–h6, so the canvas matches the page.
   heading = false,
   ...props
 }) {
@@ -28,7 +28,7 @@ export function AutoGrowingTextarea({
       value={value ?? ''}
       onChange={handleChange}
       rows={rows}
-      className={`resize-none overflow-hidden outline-none ${className}`}
+      className={`w-full resize-none overflow-hidden bg-transparent outline-none ${className}`}
       style={{
         fieldSizing: 'content',
         resize: 'none',

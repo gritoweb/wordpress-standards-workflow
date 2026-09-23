@@ -169,7 +169,7 @@ echo view('blocks.accordion', [
   <div class="container grid grid-cols-1 items-start gap-10 lg:grid-cols-12">
     <div class="lg:col-span-5">
       @if ($title)
-        <h2 @entrancePart(0) class="heading-2 text-ink">{{ $title }}</h2>
+        <h2 @entrancePart(0) class="heading-2">{{ $title }}</h2>
       @endif
 
       @if ($description)
@@ -180,9 +180,9 @@ echo view('blocks.accordion', [
     <div class="space-y-3 lg:col-span-7">
       @foreach ($items as $item)
         <details name="{{ $group }}" @if ($loop->first) open @endif @entrancePart($loop->index + 2)
-          class="accordion__item group rounded-card border border-border bg-light shadow-card open:border-primary/30">
+          class="accordion__item group card open:border-primary/30">
           <summary
-            class="flex cursor-pointer list-none items-center justify-between gap-4 p-5 text-left heading-6 text-ink group-open:text-primary [&::-webkit-details-marker]:hidden">
+            class="flex cursor-pointer list-none items-center justify-between gap-4 p-5 text-left heading-6 group-open:text-primary [&::-webkit-details-marker]:hidden">
             <span>{{ $item['title'] }}</span>
             <svg class="h-5 w-5 shrink-0 text-muted transition-transform duration-300 group-open:rotate-180"
               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -322,7 +322,7 @@ registerBlockType(metadata, {
                 onChange={(value) => setAttributes({ title: value })}
                 heading
                 placeholder={__('Section title…', '<text-domain>')}
-                className="w-full bg-transparent heading-2 text-ink"
+                className="heading-2"
               />
               <div {...entrancePartProps(entrance, 1)}>
                 <RichText
@@ -343,7 +343,7 @@ registerBlockType(metadata, {
                   <div
                     key={index}
                     {...entrancePartProps(entrance, index + 2)}
-                    className={`rounded-card border bg-light shadow-card ${isOpen ? 'border-primary/30' : 'border-border'}`}
+                    className={`card ${isOpen ? 'border-primary/30' : ''}`}
                   >
                     <div
                       className="flex cursor-pointer items-center justify-between gap-4 p-5"
@@ -356,7 +356,7 @@ registerBlockType(metadata, {
                         }
                         onFocus={() => setActiveItem(index)}
                         placeholder={__('Question…', '<text-domain>')}
-                        className={`w-full bg-transparent heading-6 ${isOpen ? 'text-primary' : 'text-ink'}`}
+                        className={`heading-6 ${isOpen ? 'text-primary' : ''}`}
                       />
                       <svg
                         className={`h-5 w-5 shrink-0 text-muted transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
@@ -538,7 +538,7 @@ echo view('blocks.card-grid', [
     @if ($title || $description)
       <div class="mx-auto mb-12 max-w-2xl text-center">
         @if ($title)
-          <h2 @entrancePart(0) class="heading-2 text-ink">{{ $title }}</h2>
+          <h2 @entrancePart(0) class="heading-2">{{ $title }}</h2>
         @endif
 
         @if ($description)
@@ -550,7 +550,7 @@ echo view('blocks.card-grid', [
     <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
       @foreach ($cards as $card)
         <article @entrancePart($loop->index + 2)
-          class="card-grid__card flex flex-col overflow-hidden rounded-card border border-border bg-light shadow-card">
+          class="card-grid__card card flex flex-col overflow-hidden">
           @if ($card['imageId'])
             {!! wp_get_attachment_image($card['imageId'], 'large', false, [
                 'class' => 'aspect-[4/3] w-full object-cover',
@@ -561,7 +561,7 @@ echo view('blocks.card-grid', [
 
           <div class="flex flex-1 flex-col p-6">
             @if ($card['title'])
-              <h3 class="heading-5 text-ink">{{ $card['title'] }}</h3>
+              <h3 class="heading-5">{{ $card['title'] }}</h3>
             @endif
 
             @if ($card['body'])
@@ -707,7 +707,7 @@ registerBlockType(metadata, {
               onChange={(value) => setAttributes({ title: value })}
               heading
               placeholder={__('Section title…', '<text-domain>')}
-              className="w-full bg-transparent text-center heading-2 text-ink"
+              className="text-center heading-2"
             />
             <div {...entrancePartProps(entrance, 1)}>
               <RichText
@@ -725,7 +725,7 @@ registerBlockType(metadata, {
               <article
                 key={index}
                 {...entrancePartProps(entrance, index + 2)}
-                className="flex flex-col overflow-hidden rounded-card border border-border bg-light shadow-card"
+                className="card flex flex-col overflow-hidden"
               >
                 <AttachmentImageControl
                   imageId={card.imageId}
@@ -742,7 +742,7 @@ registerBlockType(metadata, {
                     onChange={(value) => updateCard(index, { title: value })}
                     heading
                     placeholder={__('Card title…', '<text-domain>')}
-                    className="w-full bg-transparent heading-5 text-ink"
+                    className="heading-5"
                   />
                   <RichText
                     tagName="div"
@@ -770,7 +770,7 @@ registerBlockType(metadata, {
                   </span>
 
                   {editingLink === index && (
-                    <div className="mt-3 text-left">
+                    <div className="w-full">
                       <ActionEditor
                         groupLabel={`${__('Card link', '<text-domain>')} ${index + 1}`}
                         label={__('Link text', '<text-domain>')}
@@ -939,7 +939,7 @@ echo view('blocks.testimonial-carousel', [
   @entrance($entrance)>
   <div class="container">
     @if ($title)
-      <h2 @entrancePart(0) class="mb-10 text-center heading-2 text-ink">{{ $title }}</h2>
+      <h2 @entrancePart(0) class="mb-10 text-center heading-2">{{ $title }}</h2>
     @endif
 
     @if ($items)
@@ -949,8 +949,8 @@ echo view('blocks.testimonial-carousel', [
         <div class="swiper-wrapper">
           @foreach ($items as $item)
             <figure class="swiper-slide !h-auto">
-              <div class="flex h-full flex-col rounded-card border border-border bg-light p-8 shadow-card">
-                <blockquote class="flex-1 text-lead text-ink">{!! $item['quote'] !!}</blockquote>
+              <div class="card flex h-full flex-col p-8">
+                <blockquote class="flex-1 text-lead">{!! $item['quote'] !!}</blockquote>
 
                 <figcaption class="mt-6 flex items-center gap-4">
                   @if ($item['avatarId'])
@@ -960,7 +960,7 @@ echo view('blocks.testimonial-carousel', [
                     ]) !!}
                   @endif
                   <span>
-                    <span class="block font-bold text-ink">{{ $item['author'] }}</span>
+                    <span class="block font-bold">{{ $item['author'] }}</span>
                     @if ($item['role'])
                       <span class="block text-small text-muted">{{ $item['role'] }}</span>
                     @endif
@@ -1140,7 +1140,7 @@ registerBlockType(metadata, {
             onChange={(value) => setAttributes({ title: value })}
             heading
             placeholder={__('Section title…', '<text-domain>')}
-            className="mb-10 w-full bg-transparent text-center heading-2 text-ink"
+            className="mb-10 text-center heading-2"
           />
 
           {/* The front end's carousel, driven by the bullets and the sidebar list instead of Swiper. */}
@@ -1155,7 +1155,7 @@ registerBlockType(metadata, {
               {items.map((item, index) => (
                 <figure
                   key={index}
-                  className="flex shrink-0 flex-col rounded-card border border-border bg-light p-8 shadow-card"
+                  className="card flex shrink-0 flex-col p-8"
                   style={{
                     width: `calc((100% - ${GAP * (PER_VIEW - 1)}px) / ${PER_VIEW})`,
                   }}
@@ -1166,7 +1166,7 @@ registerBlockType(metadata, {
                     value={item.quote}
                     onChange={(value) => updateItem(index, { quote: value })}
                     placeholder={__('Quote…', '<text-domain>')}
-                    className="flex-1 text-lead text-ink"
+                    className="flex-1 text-lead"
                   />
 
                   <figcaption className="mt-6 flex items-center gap-4">
@@ -1189,13 +1189,13 @@ registerBlockType(metadata, {
                           updateItem(index, { author: value })
                         }
                         placeholder={__('Name…', '<text-domain>')}
-                        className="w-full bg-transparent font-bold text-ink"
+                        className="font-bold"
                       />
                       <AutoGrowingTextarea
                         value={item.role}
                         onChange={(value) => updateItem(index, { role: value })}
                         placeholder={__('Role…', '<text-domain>')}
-                        className="w-full bg-transparent text-small text-muted"
+                        className="text-small text-muted"
                       />
                     </div>
                   </figcaption>

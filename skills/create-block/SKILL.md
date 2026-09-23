@@ -147,8 +147,8 @@ Infra templates live in **Templates** at the bottom of this doc.
 > **Styling: the style guide only.** Headings take `heading-1`…`heading-6`,
 > text takes `text-body` / `text-lead` / `text-small`, colors take the
 > contract tokens (`text-ink`, `text-muted`, `bg-light`, `bg-surface`,
-> `border-border`, `text-primary`), shapes take `rounded-card` /
-> `rounded-button` / `shadow-card` — on the canvas and in the Blade view alike.
+> `border-border`, `text-primary`), a card/item surface takes `card`, a CTA
+> takes `btn btn-primary` — on the canvas and in the Blade view alike.
 > Never Tailwind's stock palette or type scale. Full table: `css-standards` ›
 > **Style guide only**; check 0.21 enforces it.
 
@@ -182,8 +182,9 @@ titles) use `AutoGrowingTextarea` — no inline formatting to inject, clean
 placeholder, no accidental newlines.
 
 **Canvas fields look like the page.** Every text field sits on the canvas
-with the **same style guide classes as its Blade element** (`heading-2
-text-ink` on both) plus `w-full bg-transparent` — never a form wrapper, a
+with the **same style guide classes as its Blade element** (`heading-2` on
+both); `AutoGrowingTextarea` already carries the field reset (full width,
+transparent, no outline) — never a form wrapper, a
 white card, or a border around the field. That's how `_docs/examples.md`
 builds all three blocks.
 
@@ -191,8 +192,8 @@ builds all three blocks.
 
 | Dev's wording contains | Inferred type | Generated attribute(s) | Editor control |
 |---|---|---|---|
-| `title`, `heading`, `headline`, `name`, `label` | string | `<name>` | `<AutoGrowingTextarea heading className="w-full bg-transparent heading-N text-ink" />` on the canvas — same `heading-N` as the Blade `<hN>` |
-| `subtitle`, `subheading`, `tagline`, `eyebrow` | string | `<name>` | `<AutoGrowingTextarea className="w-full bg-transparent font-eyebrow text-primary" />` (eyebrow) or `… text-lead text-muted` (subtitle) — same classes as the page |
+| `title`, `heading`, `headline`, `name`, `label` | string | `<name>` | `<AutoGrowingTextarea heading className="heading-N" />` on the canvas — same `heading-N` as the Blade `<hN>` |
+| `subtitle`, `subheading`, `tagline`, `eyebrow` | string | `<name>` | `<AutoGrowingTextarea className="font-eyebrow text-primary" />` (eyebrow) or `… text-lead text-muted` (subtitle) — same classes as the page |
 | `description`, `body`, `content`, `paragraph`, `quote`, `excerpt`, `long text`, `copy` | string (multi-line / formatted) | `<name>` | `<RichText tagName="div" className="text-body text-muted" />` on the canvas — same classes as the page |
 | `image`, `photo`, `picture`, `thumbnail`, `cover` (foreground/inline) | image (ID-first) | `<name>Id` (number) | On the **canvas**: `<AttachmentImageControl imageId={...} onSelect={(media) => setAttributes({ <name>Id: media.id })} onRemove={() => setAttributes({ <name>Id: 0 })} />` — URL resolved at render via `useAttachmentUrls`. X button on hover to remove. |
 | `bg`/`background image`/`cover image` (fills the block behind other content) | image (ID-first) | `<name>Id` (number) | In the **sidebar**, inside a `PanelBody title="Background Media"`: `<AttachmentImageControl imageId={...} onSelect={...} onRemove={...} noStylesheet />` + `<ImagePositionControl />` right under it for the focal point. The canvas keeps only the **passive** full-bleed preview (`backgroundImage`/`<img>` with `focalCss(<name>Position)`) — no click target there. |
@@ -311,7 +312,7 @@ Title:    Hero
 Icon:     format-image
 Category: custom-blocks
 Attributes:
-  - heading           string             → AutoGrowingTextarea (heading-2 text-ink)
+  - heading           string             → AutoGrowingTextarea (heading-2)
   - subtitle          string             → AutoGrowingTextarea (text-lead text-muted)
   - bgImageId         image              → AttachmentImageControl (sidebar) + ImagePositionControl
   - ctaText/Link      button pair        → btn btn-primary preview + ActionEditor on click
@@ -497,7 +498,7 @@ The editor's `block.jsx` is the **only** block file Vite compiles (via the
 
 | Attribute type | `block.json` schema | `block.php` sanitization | `block.jsx` editor control |
 |---|---|---|---|
-| `string` (heading / label / simple short text) | `{"type":"string","default":""}` | `sanitize_text_field($attributes['<name>'] ?? '')` | `<AutoGrowingTextarea value={...} onChange={(value) => setAttributes({ <name>: value })} className="w-full bg-transparent <page classes>" />` on the canvas |
+| `string` (heading / label / simple short text) | `{"type":"string","default":""}` | `sanitize_text_field($attributes['<name>'] ?? '')` | `<AutoGrowingTextarea value={...} onChange={(value) => setAttributes({ <name>: value })} className="<page classes>" />` on the canvas |
 | `string` (description / long copy) | `{"type":"string","default":""}` | `wp_kses_post($attributes['<name>'] ?? '')` if formatting is allowed; otherwise `sanitize_text_field(...)` | `<RichText tagName="div" value={...} onChange={(value) => setAttributes({ <name>: value })} className="<page classes>" />` on the canvas |
 | `number` | `{"type":"number","default":0}` | `absint($attributes['<name>'] ?? 0)` (unsigned) — use `(int)` only if negatives are valid | `<TextControl type="number" ... />` or `<NumberControl ... />` |
 | `boolean` | `{"type":"boolean","default":false}` | `(bool) ($attributes['<name>'] ?? false)` | `<ToggleControl ... />` |

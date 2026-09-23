@@ -3,7 +3,7 @@ name: css-foundation-wizard
 description: >
   Interactively set up a Sage 11 theme's CSS foundation from the client's
   style guide — resources/css/global/{variables,typography,layout,base,container}.css
-  plus resources/css/components/button.css — then wire app.css / editor.css
+  plus resources/css/components/{button,card}.css — then wire app.css / editor.css
   and prove it with scripts/check-css-foundation.mjs. Use when starting a new
   theme (project-init Phase 1c), or whenever a project is missing any of those
   files. Runs before any block exists, so blocks are built once on the style
@@ -50,6 +50,7 @@ to day (`.claude/skills/css-standards/SKILL.md` › **Style guide only**).
 | `global/base.css` | How unclassed non-text tags look (`body` color/background, `a`, lists…) — **no type** |
 | `global/container.css` | Container width tokens + `.container` — **the only place the container is defined** |
 | `components/button.css` | `.btn`, `.btn-primary`, `.btn-secondary` |
+| `components/card.css` | `.card` — the one card surface every block shares |
 
 All paths under `resources/css/`. Never at the root of `resources/css/`
 (folder layout: `css-standards` › **CSS folder layout**).
@@ -62,7 +63,7 @@ All paths under `resources/css/`. Never at the root of `resources/css/`
 4. **Step 4** — `global/layout.css`
 5. **Step 5** — `global/base.css`
 6. **Step 6** — `global/container.css`
-7. **Step 7** — `components/button.css`
+7. **Step 7** — `components/button.css` and `components/card.css`
 8. **Step 8** — wiring: `app.css`, `editor.css`, Sage's `alert` component
 9. **Step 9** — copy and run `scripts/check-css-foundation.mjs`; must exit 0
 10. **Handoff**
@@ -90,13 +91,15 @@ silently falls back to browser defaults. The dev may add extra named colors
 | `typography.css` | Text | `--text-lead`, `--text-body`, `--text-small`, each with `--line-height` | `text-lead`, `text-body`, `text-small` |
 
 Plus the contract **classes**: `.heading-1` … `.heading-6` and `.font-eyebrow`
-(`typography.css`), `.btn`, `.btn-primary`, `.btn-secondary` (`button.css`).
+(`typography.css`), `.btn`, `.btn-primary`, `.btn-secondary` (`button.css`),
+`.card` (`card.css`).
 
 **How blocks use it:** a heading takes `heading-N` — one class that carries
 family, weight and the mobile → desktop size switch. Never `text-hN` (desktop
 size only, no family: the source of Bright Minds' `text-[2rem] md:text-h2`),
 never `text-3xl`. Text takes `text-lead` / `text-body` / `text-small`; color
-takes the tokens above; a CTA takes `btn btn-primary`. Never Tailwind's stock
+takes the tokens above; a CTA takes `btn btn-primary`; a card, item or panel
+surface takes `card` (plus its own layout: `flex`, `p-8`). Never Tailwind's stock
 palette (`slate-*`, `blue-*`, `white`), stock type scale (`text-sm`,
 `text-3xl`) or arbitrary sizes (`text-[2rem]`, `leading-[0.95]`). The check
 (Step 9) refuses all of them.
@@ -106,7 +109,14 @@ palette (`slate-*`, `blue-*`, `white`), stock type scale (`text-sm`,
 ## Step 1 — Style guide intake
 
 1. Ask, open-ended: **"Me passa o styleguide: cores, fontes, escala de texto
-   (Figma, PDF de marca ou texto)."**
+   (Figma, PDF de marca ou texto)."** — and **stop until the dev answers**.
+   No style guide in the request is not permission to proceed: the values in
+   this skill's code blocks are illustrations of the format, **never
+   defaults** — a theme shipped with them looks like every other kit test
+   (measured: an agent given a vague prompt copied `#1a73e8` / Poppins /
+   Inter verbatim). If the dev explicitly says to go on without one, use the
+   derived defaults below and list every value as **provisional** in the
+   Handoff.
 2. Map what it gives onto the **contract**: which color is the text (`ink`),
    the brand (`primary`), the page and alternate backgrounds (`light`,
    `surface`); which font is display vs. body; the type scale; radius,
@@ -428,7 +438,7 @@ gutters only — block classes live with each block. Ask **"ajustar algo
 
 ---
 
-## Step 7 — `components/button.css`
+## Step 7 — `components/button.css` and `components/card.css`
 
 Every CTA in every block is `btn btn-primary` or `btn btn-secondary`
 (`create-block`'s `ActionEditor` preview already renders `btn btn-primary`).
@@ -475,7 +485,28 @@ Size comes from padding + type, never a height (`css-standards` ›
 ```
 
 Add a variant only when the style guide has one (e.g. `.btn-light` for dark
-sections). Ask **"ajustar algo (padding, peso, variantes)?"** before writing.
+sections).
+
+`card.css` — the surface every repeater item, panel and highlighted box uses.
+Without it each block re-types `rounded-card border border-border bg-light
+shadow-card`: measured 8 copies across 4 blocks in a generated theme, the
+same duplication Bright Minds later extracted from 24 files. A block adds
+only its layout (`card flex flex-col p-8`); a state changes one property
+with a utility (`open:border-primary/30`), which wins over the components
+layer.
+
+```css
+@layer components {
+  .card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background-color: var(--color-light);
+    box-shadow: var(--shadow-card);
+  }
+}
+```
+
+Ask **"ajustar algo (padding, peso, variantes, card)?"** before writing.
 
 ---
 
@@ -501,9 +532,10 @@ foundation in this order:
 @import "./global/container.css";
 
 @import "./components/button.css";
+@import "./components/card.css";
 ```
 
-Later `components/` and `pages/` imports go below `button.css`.
+Later `components/` and `pages/` imports go below `card.css`.
 
 ### `resources/css/editor.css`
 
@@ -524,6 +556,7 @@ font on the page):
 @import "./global/container.css";
 
 @import "./components/button.css";
+@import "./components/card.css";
 
 @source "../blocks/**/*.{php,jsx,js}";
 @source "../components/**/*.{jsx,js}";
@@ -569,7 +602,7 @@ blocking check 0.21 and runs in the pre-commit hook.
 
 ## Handoff
 
-A table of the six files created, whether `app.css` / `editor.css` / `alert`
+A table of the seven files created, whether `app.css` / `editor.css` / `alert`
 were edited, where the fonts load from, the recurring-treatment classes
 added, and the check's output. Remind the dev to run `npm run build` (they
 run it — this skill doesn't).
@@ -590,8 +623,10 @@ run it — this skill doesn't).
 - **Every heading level written out** in the tokens and the `hN, .heading-N`
   rules — no "same for the rest" comments in a generated file.
 - **A repeated treatment is a class before it's a second block** — add it to
-  `typography.css` (text) or `components/` (UI piece), never paste it into
-  blocks.
+  `typography.css` (text) or `components/` (UI piece, like `.card`), never
+  paste it into blocks.
+- **Never ship this skill's example values** as the client's style guide —
+  ask first (Step 1).
 - **Ask before overwriting** any file that already exists.
 - **Only the foundation** — no plugin styles or one-off widgets here.
 

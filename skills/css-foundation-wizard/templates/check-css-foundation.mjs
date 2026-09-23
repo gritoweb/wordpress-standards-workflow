@@ -40,7 +40,10 @@ const TYPE_TOKENS = [
 const CLASSES = {
   [`${CSS}/global/typography.css`]: [...HEADINGS.map((n) => `heading-${n}`), 'font-eyebrow'],
   [`${CSS}/components/button.css`]: ['btn', 'btn-primary', 'btn-secondary'],
+  [`${CSS}/components/card.css`]: ['card'],
 };
+// Two or more of these on one element is the card surface re-typed instead of `card`.
+const CARD_PARTS = ['rounded-card', 'shadow-card', 'border-border'];
 
 const HUES = 'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose';
 const PREFIX = '(?<![\\w-])(?:[\\w-]+:)*';
@@ -65,7 +68,7 @@ const problems = [];
 const read = (path) => (existsSync(path) ? readFileSync(path, 'utf8') : '');
 const tokensIn = (path) => new Set([...read(path).matchAll(/--([\w-]+)\s*:/g)].map((m) => m[1]));
 
-for (const path of [...GLOBAL.map((name) => `${CSS}/global/${name}.css`), `${CSS}/components/button.css`]) {
+for (const path of [...GLOBAL.map((name) => `${CSS}/global/${name}.css`), ...Object.keys(CLASSES).filter((p) => p.includes('/components/'))]) {
   if (!existsSync(path)) problems.push(`${path} is missing — run the css-foundation-wizard skill`);
 }
 
@@ -87,7 +90,7 @@ for (const [path, classes] of Object.entries(CLASSES)) {
   if (css && missing.length) problems.push(`${path} lacks contract classes: ${missing.map((c) => `.${c}`).join(', ')}`);
 }
 
-const wiring = [...GLOBAL.map((name) => `global/${name}`), 'components/button'];
+const wiring = [...GLOBAL.map((name) => `global/${name}`), 'components/button', 'components/card'];
 for (const entry of ['app', 'editor']) {
   const file = `${CSS}/${entry}.css`;
   const found = [...read(file).matchAll(/@import\s+["']\.\/([\w/-]+)\.css["']/g)].map((m) => m[1]);
@@ -142,6 +145,8 @@ for (const file of siteFiles) {
     .forEach((line, i) => {
       const hits = line.match(OFF_GUIDE);
       if (hits) problems.push(`${relative('.', file)}:${i + 1} uses ${[...new Set(hits)].join(' ')} — use the style guide (heading-N, text-body/lead/small, text-ink, bg-surface, btn-primary…)`);
+      const cardParts = CARD_PARTS.filter((part) => new RegExp(`(?<![\\w-])${part}(?![\\w-])`).test(line));
+      if (cardParts.length >= 2) problems.push(`${relative('.', file)}:${i + 1} re-types the card surface (${cardParts.join(' ')}) — use the \`card\` class from components/card.css`);
     });
 }
 
