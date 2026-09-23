@@ -15,7 +15,7 @@ import {
 } from './entranceCanvas.js';
 
 // What Site Settings > Motion falls back to, shown greyed in an empty field.
-const SITE_DEFAULTS = { distance: 32, duration: 600, delay: 0, stagger: 120 };
+const SITE_DEFAULTS = { distance: 32, duration: 1000, delay: 250, stagger: 250 };
 
 // The values live in entranceCanvas.js; only the labels are the panel's own.
 const TYPE_LABELS = {

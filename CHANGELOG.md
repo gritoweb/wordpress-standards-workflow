@@ -2,6 +2,33 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-23 — Motion matches White Summers
+
+Blocks built by the kit animated differently from the White Summers
+reference: other global defaults, a sharper curve, one preset for every block
+and no hover options. Compared the two homes in the browser (computed
+transition timings, presets, body classes) and aligned the kit.
+
+### Changed
+- **Global defaults** now match the reference: duration 1000 ms, delay 250 ms,
+  stagger 250 ms, distance 32 px, easing `cubic-bezier(0.22, 0.61, 0.36, 1)`.
+  The curve is written literally — Tailwind v4 defines its own `--ease-out`
+  (`0, 0, .2, 1`), which the previous `var(--ease-out)` picked up.
+- **Per-block presets** — `create-block` now has the White Summers preset table
+  by block kind (hero, text section, card grid with `trigger: item`, highlights
+  row, logo wall), and every `block.json` declares its row.
+
+### Added
+- **Customize › Motion** gains Easing, Button hover effect (lift / fade /
+  none), Link hover effect (underline / fade / none) and Hover speed, the same
+  options White Summers has. New `hover.css` template; CTAs carry the `btn`
+  class and no Tailwind transition/scale utilities.
+
+### Fixed
+- **Preview skipped parts with their own transition** (e.g. Tailwind
+  `transition-all` on a canvas button): the replay's hidden state now sets
+  `transition: none`, so the part vanishes before replaying.
+
 ## 2026-09-23 — Working entrance animations and site header
 
 A project scaffolded with the kit shipped with dead entrance animations, a

@@ -1,0 +1,80 @@
+/*
+ * Hover effects picked in Customize > Motion (BlockMotion prints the body
+ * class). Unlayered on purpose: it must beat Tailwind's transition utilities.
+ * It only animates — colours stay on the button's own classes. Every CTA gets
+ * the `btn` class; plain content links get nothing.
+ */
+.btn {
+  transition:
+    color var(--hover-duration, 250ms) ease,
+    background-color var(--hover-duration, 250ms) ease,
+    border-color var(--hover-duration, 250ms) ease,
+    transform var(--hover-duration, 250ms) ease,
+    box-shadow var(--hover-duration, 250ms) ease;
+}
+
+.ws-hover-btn-lift
+  .btn:hover:not(:disabled, [aria-disabled='true'], [aria-busy='true']) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgb(15 23 42 / 0.15);
+}
+
+/* Fade is colour only, so movement leaves the transition. */
+.ws-hover-btn-fade .btn {
+  transition:
+    color var(--hover-duration, 250ms) ease,
+    background-color var(--hover-duration, 250ms) ease,
+    border-color var(--hover-duration, 250ms) ease;
+}
+
+.ws-hover-btn-fade .btn:hover,
+.ws-hover-btn-none .btn:hover {
+  transform: none;
+}
+
+.ws-hover-btn-none .btn {
+  transition: none;
+}
+
+/* Underline wipes in a full-strength rule over a faint one; the box never changes. */
+.ws-hover-link-underline :is(main a:not([class]), .link) {
+  text-decoration: none;
+  background:
+    linear-gradient(currentcolor, currentcolor) 0 100% / 0 1px no-repeat,
+    linear-gradient(
+        color-mix(in srgb, currentcolor 35%, transparent),
+        color-mix(in srgb, currentcolor 35%, transparent)
+      )
+      0 100% / 100% 1px no-repeat;
+  padding-block-end: 0.1em;
+  box-decoration-break: clone;
+  transition:
+    color var(--hover-duration, 250ms) ease,
+    background-size var(--hover-duration, 250ms) ease;
+}
+
+.ws-hover-link-underline :is(main a:not([class]), .link):hover {
+  background-size:
+    100% 1px,
+    100% 1px;
+}
+
+.ws-hover-link-fade :is(main a:not([class]), .link) {
+  transition: color var(--hover-duration, 250ms) ease;
+}
+
+.ws-hover-link-none :is(main a:not([class]), .link) {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-hover-btn-lift
+    .btn:hover:not(:disabled, [aria-disabled='true'], [aria-busy='true']) {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .ws-hover-link-underline :is(main a:not([class]), .link) {
+    transition: color var(--hover-duration, 250ms) ease;
+  }
+}

@@ -84,7 +84,7 @@ wrong domain/path into every file.
 | 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. Legacy components (`ImageUploadWithHover.jsx`, `RemoveButton.jsx`, `TabSelector.jsx`) also copied for backward compat. If missing: copy from `<skill>/templates/components/backend/*`, replacing `__TEXT_DOMAIN__` with `<text-domain>` and `__THEME_SLUG__` with `<theme-slug>` in every copied file. |
 | 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php`, `app/Blocks/BlockEntrance.php` and `app/Blocks/BlockMotion.php` exist. Templates at `<skill>/templates/`. `BlockEntrance.php` must expose `fromBlock()`, `root()` and `part()` — an older copy that only has `resolve()` (it prints `data-entrance-type`) is **incompatible** with `EntranceControl`/`entranceCanvas.js`: replace it. |
 | 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers three Blade directives: `paddingClasses` → `\App\Blocks\BlockPadding::resolve(...)`, `entrance` → `\App\Blocks\BlockEntrance::root(...)` and `entrancePart` → `\App\Blocks\BlockEntrance::part(...)` (see "Infra bootstrap templates"). |
-| 0.18 | `resources/css/components/entrance.css` exists (template `<skill>/templates/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). |
+| 0.18 | `resources/css/components/entrance.css` exists (template `<skill>/templates/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). `resources/css/components/hover.css` exists (template `<skill>/templates/hover.css`) and is `@import`ed by `resources/css/app.css` — **not** inside `@layer`, it must beat Tailwind's transition utilities. |
 | 0.19 | `resources/js/modules/entrance.js` exists (template `<skill>/templates/entrance.js`) and `resources/js/app.js` has `import { initEntrance } from './modules/entrance';` plus a top-level `initEntrance();` call (module scripts are deferred). Without it the front end never adds `data-entered` and the head script's 5s safety net is the only thing that un-hides the page. |
 
 ### Compatibility warnings (do NOT auto-fix)
@@ -535,6 +535,7 @@ End with a summary table listing every file created/modified.
 ├── BlockEntrance.php               → copied to app/Blocks/BlockEntrance.php (check 0.15)
 ├── BlockMotion.php                 → copied to app/Blocks/BlockMotion.php (check 0.15)
 ├── entrance.css                    → copied to resources/css/components/entrance.css (check 0.18)
+├── hover.css                       → copied to resources/css/components/hover.css (check 0.18)
 ├── entrance.js                     → copied to resources/js/modules/entrance.js (check 0.19)
 ├── blocks.php                      → copied to app/blocks.php (check 0.6)
 ├── preview.svg                     → copied per block (with __BLOCK_TITLE__ substituted)
@@ -609,6 +610,11 @@ presentational block omits both lines.
         "isPreview": {
             "type": "boolean",
             "default": false
+        },
+        // Preset: copy the row for this block's kind from "Entrance animation wiring".
+        "entrance": {
+            "type": "object",
+            "default": { "type": "fade-slide", "direction": "up", "distance": null, "unit": "px", "duration": null, "delay": null, "stagger": 100 }
         }
         // Expand from Phase 1 attributes. Examples:
         // "heading": { "type": "string", "default": "" },
@@ -948,6 +954,9 @@ one is missing (no console error, just no animation):
 ```css
 /* resources/css/app.css AND resources/css/editor.css */
 @import './components/entrance.css';
+
+/* resources/css/app.css only */
+@import './components/hover.css';
 ```
 
 ```js
@@ -959,10 +968,23 @@ initEntrance();
 ```
 
 `BlockMotion::register()` is called from `app/blocks.php` (template already
-does it). It adds **Appearance › Customize › Motion** (the site-wide
-duration / delay / stagger / distance that every block field left empty
-inherits), the `html.ws-entrance` head script, and the same `--e-*` values
-inside the editor canvas.
+does it). It adds **Appearance › Customize › Motion** — the same options and
+defaults as the White Summers reference — plus the `html.ws-entrance` head
+script and the same values inside the editor canvas:
+
+| Option | Default | Prints |
+|---|---|---|
+| Animation duration | 1000 ms | `--e-duration` |
+| Start delay | 250 ms | `--e-delay` |
+| Delay between items | 250 ms | `--e-stagger` |
+| Travel distance + unit | 32 px (`px` / `vw`) | `--e-distance` |
+| Easing | Ease out = `cubic-bezier(0.22, 0.61, 0.36, 1)` (`ease-out` / `ease-in-out` / `ease`) | `--e-ease` |
+| Button hover effect | Fade (`lift` / `fade` / `none`) | `body.ws-hover-btn-*` |
+| Link hover effect | Underline (`underline` / `fade` / `none`) | `body.ws-hover-link-*` |
+| Hover speed | 250 ms | `--hover-duration` |
+
+Never hard-code these values in a block — a block field left empty inherits
+them, so changing the Customizer changes the whole site.
 
 #### Entrance animation wiring (every block)
 
@@ -983,14 +1005,37 @@ The contract is shared by `BlockEntrance.php`, `entranceCanvas.js`,
   attribute. Placed after the `>` it becomes a spread *child*; React then
   tries to iterate the object and the whole block dies with
   `TypeError: … is not iterable` / "This block has encountered an error".
-- Numbers left `null` inherit Customizer › Motion. Defaults come from
-  `BlockManager::globalAttributes()['entrance']`; a block may override the
-  preset with its own `"entrance"` attribute in `block.json` — `type` /
-  `direction` / `trigger` only. A number written there overrides the global
-  Motion setting for that block forever, so leave numbers out.
+- **Every block declares its preset** in `block.json` → `attributes.entrance`
+  (`"type": "object"`, `"default": {…}`), picked from this table by what the
+  block *is* — copy the row, don't invent numbers. `null` = inherit
+  Customizer › Motion. These are the White Summers presets:
+
+  | Block kind | `default` |
+  |---|---|
+  | Home / page hero (big heading over media) | `{"type":"fade","direction":"up","distance":24,"unit":"px","duration":700,"delay":null,"stagger":150}` |
+  | Text sections — intro, text+media split, statement, CTA/banner, news, contact | `{"type":"fade-slide","direction":"up","distance":null,"unit":"px","duration":null,"delay":null,"stagger":100}` |
+  | Grid of cards / team / features / testimonials (a repeater) | `{"type":"fade-slide","direction":"up","distance":null,"unit":"px","duration":null,"delay":null,"stagger":100,"trigger":"item"}` |
+  | Horizontal highlights row | `{"type":"fade-slide","direction":"right","distance":48,"unit":"px","duration":600,"delay":null,"stagger":150,"trigger":"item"}` |
+  | Logo wall (many small items) | `{"type":"fade","direction":"up","distance":null,"unit":"px","duration":500,"delay":null,"stagger":60}` |
+
+  With `"trigger":"item"` each part animates as **it** scrolls in. Unsure →
+  the "Text sections" row.
+- **What is a part** (gets `@entrancePart` / `entrancePartProps`): the
+  eyebrow, the heading, the body copy, **each** button/CTA row, each image or
+  `<figure>`, and **each** repeater item. Never the section, a background, a
+  decorative blob, or a wrapper that contains other parts.
+- **Buttons:** every CTA `<a>` gets the `btn` class next to its Tailwind
+  classes, and **no** `transition-*`, `duration-*`, `hover:scale-*` or
+  `hover:-translate-*` utilities — the hover motion comes from `hover.css`
+  (Customize › Motion › Button hover effect). Colour changes on hover
+  (`hover:bg-*`) stay on the button.
 - Only the values in `entranceCanvas.js` exist: types `none | fade | slide |
-  fade-slide`, triggers `section | item`. Anything else (`load`, `scroll`,
-  `zoom`…) is silently replaced by the default.
+  fade-slide`, directions `up | down | left | right`, units `px | vw`,
+  triggers `section | item`. Anything else (`load`, `scroll`, `zoom`…) is
+  silently replaced by the default.
+- **Don't save entrance values while building a page** (WP-CLI post content,
+  or clicking fields in the panel): the block.json preset is the default and
+  a saved object freezes that block against future preset changes.
 - **Verify** before calling the block done, after `npm run build`: open the
   page in the editor — no block shows "This block has encountered an error"
   (console clean); clicking the sidebar **Preview** hides and replays the

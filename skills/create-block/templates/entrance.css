@@ -13,11 +13,12 @@
  * values still animate. BlockMotion.php overrides them with html:root.
  */
 :root {
-  --e-duration: 600ms;
-  --e-delay: 0ms;
-  --e-stagger: 120ms;
+  --e-duration: 1000ms;
+  --e-delay: 250ms;
+  --e-stagger: 250ms;
   --e-distance: 32px;
-  --e-ease: var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+  /* Literal, not var(--ease-out): Tailwind v4 defines its own --ease-out. */
+  --e-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 [data-entrance] {
@@ -108,6 +109,9 @@ html.ws-entrance
   [data-entrance-part]:not([data-entered]) {
   opacity: var(--e-from-opacity);
   transform: translate(var(--e-from-x), var(--e-from-y));
+  /* The replay hides and reveals in one frame; a part's own transition (a
+     Tailwind transition-all) would animate the hide and it would never vanish. */
+  transition: none;
 }
 
 /*
