@@ -164,27 +164,27 @@ echo view('blocks.accordion', [
 @endphp
 
 <section @if ($anchor) id="{{ $anchor }}" @endif
-  class="accordion @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop) bg-slate-50"
+  class="accordion @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop) bg-surface"
   @entrance($entrance)>
-  <div class="site-container grid grid-cols-1 items-start gap-10 lg:grid-cols-12">
+  <div class="container grid grid-cols-1 items-start gap-10 lg:grid-cols-12">
     <div class="lg:col-span-5">
       @if ($title)
-        <h2 @entrancePart(0) class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{{ $title }}</h2>
+        <h2 @entrancePart(0) class="heading-2 text-ink">{{ $title }}</h2>
       @endif
 
       @if ($description)
-        <div @entrancePart(1) class="mt-4 text-base leading-relaxed text-slate-600">{!! $description !!}</div>
+        <div @entrancePart(1) class="mt-4 text-body text-muted">{!! $description !!}</div>
       @endif
     </div>
 
     <div class="space-y-3 lg:col-span-7">
       @foreach ($items as $item)
         <details name="{{ $group }}" @if ($loop->first) open @endif @entrancePart($loop->index + 2)
-          class="accordion__item group rounded-2xl border border-slate-200 bg-white shadow-sm open:border-blue-200">
+          class="accordion__item group rounded-card border border-border bg-light shadow-card open:border-primary/30">
           <summary
-            class="flex cursor-pointer list-none items-center justify-between gap-4 p-5 text-left font-bold text-slate-900 group-open:text-blue-700 [&::-webkit-details-marker]:hidden">
+            class="flex cursor-pointer list-none items-center justify-between gap-4 p-5 text-left heading-6 text-ink group-open:text-primary [&::-webkit-details-marker]:hidden">
             <span>{{ $item['title'] }}</span>
-            <svg class="h-5 w-5 shrink-0 text-slate-400 transition-transform duration-300 group-open:rotate-180"
+            <svg class="h-5 w-5 shrink-0 text-muted transition-transform duration-300 group-open:rotate-180"
               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round" aria-hidden="true">
               <path d="m6 9 6 6 6-6" />
@@ -192,7 +192,7 @@ echo view('blocks.accordion', [
           </summary>
 
           @if ($item['body'])
-            <div class="border-t border-slate-100 px-5 pb-5 pt-3 text-sm leading-relaxed text-slate-600">{!! $item['body'] !!}</div>
+            <div class="border-t border-border px-5 pb-5 pt-3 text-small text-muted">{!! $item['body'] !!}</div>
           @endif
         </details>
       @endforeach
@@ -307,7 +307,7 @@ registerBlockType(metadata, {
         <section
           {...blockProps}
           {...rootEntrance}
-          className={`${blockProps.className} accordion bg-slate-50 ${EDITOR_BLOCK_FRAME}`}
+          className={`${blockProps.className} accordion bg-surface ${EDITOR_BLOCK_FRAME}`}
           style={{
             ...blockProps.style,
             ...editorPaddingStyle(attributes),
@@ -322,7 +322,7 @@ registerBlockType(metadata, {
                 onChange={(value) => setAttributes({ title: value })}
                 heading
                 placeholder={__('Section title…', '<text-domain>')}
-                className="w-full bg-transparent text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl"
+                className="w-full bg-transparent heading-2 text-ink"
               />
               <div {...entrancePartProps(entrance, 1)}>
                 <RichText
@@ -330,7 +330,7 @@ registerBlockType(metadata, {
                   value={description}
                   onChange={(value) => setAttributes({ description: value })}
                   placeholder={__('Short description…', '<text-domain>')}
-                  className="mt-4 text-base leading-relaxed text-slate-600"
+                  className="mt-4 text-body text-muted"
                 />
               </div>
             </div>
@@ -343,7 +343,7 @@ registerBlockType(metadata, {
                   <div
                     key={index}
                     {...entrancePartProps(entrance, index + 2)}
-                    className={`rounded-2xl border bg-white shadow-sm ${isOpen ? 'border-blue-200' : 'border-slate-200'}`}
+                    className={`rounded-card border bg-light shadow-card ${isOpen ? 'border-primary/30' : 'border-border'}`}
                   >
                     <div
                       className="flex cursor-pointer items-center justify-between gap-4 p-5"
@@ -356,10 +356,10 @@ registerBlockType(metadata, {
                         }
                         onFocus={() => setActiveItem(index)}
                         placeholder={__('Question…', '<text-domain>')}
-                        className={`w-full bg-transparent font-bold ${isOpen ? 'text-blue-700' : 'text-slate-900'}`}
+                        className={`w-full bg-transparent heading-6 ${isOpen ? 'text-primary' : 'text-ink'}`}
                       />
                       <svg
-                        className={`h-5 w-5 shrink-0 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                        className={`h-5 w-5 shrink-0 text-muted transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -378,7 +378,7 @@ registerBlockType(metadata, {
                         value={item.body}
                         onChange={(value) => updateItem(index, { body: value })}
                         placeholder={__('Answer…', '<text-domain>')}
-                        className="border-t border-slate-100 px-5 pt-3 pb-5 text-sm leading-relaxed text-slate-600"
+                        className="border-t border-border px-5 pt-3 pb-5 text-small text-muted"
                       />
                     )}
                   </div>
@@ -532,17 +532,17 @@ echo view('blocks.card-grid', [
 
 ```blade
 <section @if ($anchor) id="{{ $anchor }}" @endif
-  class="card-grid @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop) bg-white"
+  class="card-grid @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop) bg-light"
   @entrance($entrance)>
-  <div class="site-container">
+  <div class="container">
     @if ($title || $description)
       <div class="mx-auto mb-12 max-w-2xl text-center">
         @if ($title)
-          <h2 @entrancePart(0) class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{{ $title }}</h2>
+          <h2 @entrancePart(0) class="heading-2 text-ink">{{ $title }}</h2>
         @endif
 
         @if ($description)
-          <div @entrancePart(1) class="mt-4 text-base leading-relaxed text-slate-600">{!! $description !!}</div>
+          <div @entrancePart(1) class="mt-4 text-body text-muted">{!! $description !!}</div>
         @endif
       </div>
     @endif
@@ -550,7 +550,7 @@ echo view('blocks.card-grid', [
     <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
       @foreach ($cards as $card)
         <article @entrancePart($loop->index + 2)
-          class="card-grid__card flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          class="card-grid__card flex flex-col overflow-hidden rounded-card border border-border bg-light shadow-card">
           @if ($card['imageId'])
             {!! wp_get_attachment_image($card['imageId'], 'large', false, [
                 'class' => 'aspect-[4/3] w-full object-cover',
@@ -561,16 +561,16 @@ echo view('blocks.card-grid', [
 
           <div class="flex flex-1 flex-col p-6">
             @if ($card['title'])
-              <h3 class="text-xl font-bold tracking-tight text-slate-900">{{ $card['title'] }}</h3>
+              <h3 class="heading-5 text-ink">{{ $card['title'] }}</h3>
             @endif
 
             @if ($card['body'])
-              <div class="mt-3 text-sm leading-relaxed text-slate-600">{!! $card['body'] !!}</div>
+              <div class="mt-3 text-small text-muted">{!! $card['body'] !!}</div>
             @endif
 
             @if ($card['linkText'] && $card['linkUrl'])
               <a href="{{ esc_url($card['linkUrl']) }}" @if ($card['linkNew']) target="_blank" @endif
-                class="link mt-auto inline-flex pt-5 text-sm font-semibold text-blue-600 hover:text-blue-700">{{ $card['linkText'] }}</a>
+                class="link mt-auto inline-flex pt-5 text-small font-semibold text-primary hover:underline">{{ $card['linkText'] }}</a>
             @endif
           </div>
         </article>
@@ -693,7 +693,7 @@ registerBlockType(metadata, {
         <section
           {...blockProps}
           {...rootEntrance}
-          className={`${blockProps.className} card-grid bg-white ${EDITOR_BLOCK_FRAME}`}
+          className={`${blockProps.className} card-grid bg-light ${EDITOR_BLOCK_FRAME}`}
           style={{
             ...blockProps.style,
             ...editorPaddingStyle(attributes),
@@ -707,7 +707,7 @@ registerBlockType(metadata, {
               onChange={(value) => setAttributes({ title: value })}
               heading
               placeholder={__('Section title…', '<text-domain>')}
-              className="w-full bg-transparent text-center text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl"
+              className="w-full bg-transparent text-center heading-2 text-ink"
             />
             <div {...entrancePartProps(entrance, 1)}>
               <RichText
@@ -715,7 +715,7 @@ registerBlockType(metadata, {
                 value={attributes.description}
                 onChange={(value) => setAttributes({ description: value })}
                 placeholder={__('Optional description…', '<text-domain>')}
-                className="mt-4 text-base leading-relaxed text-slate-600"
+                className="mt-4 text-body text-muted"
               />
             </div>
           </div>
@@ -725,7 +725,7 @@ registerBlockType(metadata, {
               <article
                 key={index}
                 {...entrancePartProps(entrance, index + 2)}
-                className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                className="flex flex-col overflow-hidden rounded-card border border-border bg-light shadow-card"
               >
                 <AttachmentImageControl
                   imageId={card.imageId}
@@ -742,20 +742,20 @@ registerBlockType(metadata, {
                     onChange={(value) => updateCard(index, { title: value })}
                     heading
                     placeholder={__('Card title…', '<text-domain>')}
-                    className="w-full bg-transparent text-xl font-bold tracking-tight text-slate-900"
+                    className="w-full bg-transparent heading-5 text-ink"
                   />
                   <RichText
                     tagName="div"
                     value={card.body}
                     onChange={(value) => updateCard(index, { body: value })}
                     placeholder={__('Card text…', '<text-domain>')}
-                    className="mt-3 text-sm leading-relaxed text-slate-600"
+                    className="mt-3 text-small text-muted"
                   />
 
                   <span
                     role="button"
                     tabIndex={0}
-                    className="mt-auto inline-flex cursor-pointer pt-5 text-sm font-semibold text-blue-600"
+                    className="mt-auto inline-flex cursor-pointer pt-5 text-small font-semibold text-primary"
                     onClick={() =>
                       setEditingLink(editingLink === index ? null : index)
                     }
@@ -935,11 +935,11 @@ echo view('blocks.testimonial-carousel', [
 
 ```blade
 <section @if ($anchor) id="{{ $anchor }}" @endif
-  class="testimonial-carousel @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop) bg-slate-50"
+  class="testimonial-carousel @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop) bg-surface"
   @entrance($entrance)>
-  <div class="site-container">
+  <div class="container">
     @if ($title)
-      <h2 @entrancePart(0) class="mb-10 text-center text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{{ $title }}</h2>
+      <h2 @entrancePart(0) class="mb-10 text-center heading-2 text-ink">{{ $title }}</h2>
     @endif
 
     @if ($items)
@@ -949,8 +949,8 @@ echo view('blocks.testimonial-carousel', [
         <div class="swiper-wrapper">
           @foreach ($items as $item)
             <figure class="swiper-slide !h-auto">
-              <div class="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-                <blockquote class="flex-1 text-lg leading-relaxed text-slate-700">{!! $item['quote'] !!}</blockquote>
+              <div class="flex h-full flex-col rounded-card border border-border bg-light p-8 shadow-card">
+                <blockquote class="flex-1 text-lead text-ink">{!! $item['quote'] !!}</blockquote>
 
                 <figcaption class="mt-6 flex items-center gap-4">
                   @if ($item['avatarId'])
@@ -960,9 +960,9 @@ echo view('blocks.testimonial-carousel', [
                     ]) !!}
                   @endif
                   <span>
-                    <span class="block font-bold text-slate-900">{{ $item['author'] }}</span>
+                    <span class="block font-bold text-ink">{{ $item['author'] }}</span>
                     @if ($item['role'])
-                      <span class="block text-sm text-slate-500">{{ $item['role'] }}</span>
+                      <span class="block text-small text-muted">{{ $item['role'] }}</span>
                     @endif
                   </span>
                 </figcaption>
@@ -1127,7 +1127,7 @@ registerBlockType(metadata, {
         <section
           {...blockProps}
           {...rootEntrance}
-          className={`${blockProps.className} testimonial-carousel bg-slate-50 ${EDITOR_BLOCK_FRAME}`}
+          className={`${blockProps.className} testimonial-carousel bg-surface ${EDITOR_BLOCK_FRAME}`}
           style={{
             ...blockProps.style,
             ...editorPaddingStyle(attributes),
@@ -1140,7 +1140,7 @@ registerBlockType(metadata, {
             onChange={(value) => setAttributes({ title: value })}
             heading
             placeholder={__('Section title…', '<text-domain>')}
-            className="mb-10 w-full bg-transparent text-center text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl"
+            className="mb-10 w-full bg-transparent text-center heading-2 text-ink"
           />
 
           {/* The front end's carousel, driven by the bullets and the sidebar list instead of Swiper. */}
@@ -1155,7 +1155,7 @@ registerBlockType(metadata, {
               {items.map((item, index) => (
                 <figure
                   key={index}
-                  className="flex shrink-0 flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
+                  className="flex shrink-0 flex-col rounded-card border border-border bg-light p-8 shadow-card"
                   style={{
                     width: `calc((100% - ${GAP * (PER_VIEW - 1)}px) / ${PER_VIEW})`,
                   }}
@@ -1166,7 +1166,7 @@ registerBlockType(metadata, {
                     value={item.quote}
                     onChange={(value) => updateItem(index, { quote: value })}
                     placeholder={__('Quote…', '<text-domain>')}
-                    className="flex-1 text-lg leading-relaxed text-slate-700"
+                    className="flex-1 text-lead text-ink"
                   />
 
                   <figcaption className="mt-6 flex items-center gap-4">
@@ -1189,13 +1189,13 @@ registerBlockType(metadata, {
                           updateItem(index, { author: value })
                         }
                         placeholder={__('Name…', '<text-domain>')}
-                        className="w-full bg-transparent font-bold text-slate-900"
+                        className="w-full bg-transparent font-bold text-ink"
                       />
                       <AutoGrowingTextarea
                         value={item.role}
                         onChange={(value) => updateItem(index, { role: value })}
                         placeholder={__('Role…', '<text-domain>')}
-                        className="w-full bg-transparent text-sm text-slate-500"
+                        className="w-full bg-transparent text-small text-muted"
                       />
                     </div>
                   </figcaption>
@@ -1217,8 +1217,8 @@ registerBlockType(metadata, {
                   style={{
                     background:
                       index === page
-                        ? 'var(--color-primary, #2563eb)'
-                        : 'rgb(0 0 0 / 0.2)',
+                        ? 'var(--color-primary)'
+                        : 'var(--color-border)',
                   }}
                 />
               ))}
@@ -1270,8 +1270,13 @@ document.addEventListener('DOMContentLoaded', () => {
 ### `resources/blocks/testimonial-carousel/block.css`
 
 ```css
+.testimonial-carousel .swiper-pagination-bullet {
+  background-color: var(--color-border);
+  opacity: 1;
+}
+
 .testimonial-carousel .swiper-pagination-bullet-active {
-  background-color: var(--color-primary, #2563eb);
+  background-color: var(--color-primary);
 }
 ```
 

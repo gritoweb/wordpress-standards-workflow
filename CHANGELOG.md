@@ -2,6 +2,68 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-23 — Style guide foundation first, each value in one place
+
+Two test themes built from the kit had no `resources/css/global/` at all:
+`project-init` copied `css-foundation-wizard` but never ran it, `create-block`
+didn't require it, and `_docs/examples.md` styled every block with Tailwind's
+stock palette and scale (`text-slate-900`, `text-3xl`). Bright Minds and
+Nourish, built without a complete foundation, reworked blocks afterwards (34 +
+24 files; 5 commits "to match design tokens").
+
+### Added
+- **Token contract** in `css-foundation-wizard`: fixed names, the client's
+  values. `variables.css` — colors (`ink`, `muted`, `light`, `surface`,
+  `border`, `primary`, `primary-light`, `success`, `warning`, `danger`),
+  radius, shadow. `typography.css` — fonts, `--text-h1…h6` with `-mobile`
+  pairs, `lead`, `body`, `small`, and `h1, .heading-1` … `h6, .heading-6`
+  (tag and class share one rule, mobile → desktop at `lg`), `.font-eyebrow`,
+  body text. `container.css` — its own tokens + `@utility container`.
+- **`components/button.css`** (`.btn`, `.btn-primary`, `.btn-secondary`) —
+  `create-block` already rendered `btn btn-primary`, but nothing defined it.
+- Font loading (self-hosted `@font-face`, or a web-font `@import` on the first
+  line of `app.css`/`editor.css`), Sage's `alert` component on state tokens,
+  and "a repeated treatment is a class before it's a second block".
+- **`scripts/check-css-foundation.mjs`**: exits 1 when a foundation file,
+  contract token or class is missing, a token sits in the wrong file, an
+  entrypoint doesn't import the foundation, a raw color / font size / family
+  or a token fallback appears outside its owner file, or a view/block uses
+  the stock palette or scale, `text-hN` or an arbitrary size. Runs at the end
+  of the wizard, as blocking check 0.21 in `create-block`, and in the
+  pre-commit hook (fails closed when the script is missing).
+- `project-init` Phase 1b runs the wizard before the header and any block;
+  Theme assets adds the `prepare` script, `lint-staged` key and dev
+  dependencies (without them the hook never installed).
+
+### Changed
+- The three example blocks and `create-block`'s attribute table use
+  `heading-N`, `text-ink/muted/primary`, `bg-light/surface`,
+  `border-border`, `rounded-card`, `shadow-card`, `text-body/small/lead`;
+  canvas fields carry the page's classes instead of a white-card form wrapper.
+- `header.css` reads the tokens with no fallback copies (`--color-ink` instead
+  of the duplicate `--color-dark`); `hover.css` derives its shadow from ink.
+- `layout.css` uses `overflow-x: clip` (hidden broke the sticky header) and
+  `container` is an `@utility` (a plain class lost to Tailwind's: 1536px
+  instead of 80rem).
+
+### Verified
+- A theme built only from the wizard's own code blocks plus the three example
+  blocks, header, hover and entrance CSS: check exits 0; Tailwind 4.3.3 builds
+  `app.css` and `editor.css` with all 20 style guide classes, `h2, .heading-2`
+  as one rule with the `lg` switch, and no stock palette class.
+- The check exits 1 on each of: a color token in `typography.css`, type or
+  container tokens in `variables.css`, a hex in a `block.css`, a raw
+  `font-size` in `components/`, a `var(--color-ink, #111)` fallback,
+  `text-[2rem] md:text-h2 leading-[0.95]` in a view, a missing
+  `.btn-secondary`; `text-[length:var(--text-small)]` passes.
+- A Sonnet agent built `test-skill2` from the kit with no hints: all three
+  blocks were written once, on the style guide; check, editor-fidelity and
+  `npm run build` exit 0. Its two rework loops (web-font import placement,
+  missing `prepare`/`lint-staged`) are the gaps fixed above. The Vite build
+  keeps a first-line web-font `@import` first in the output CSS.
+- Pre-commit hook in a throwaway repo: clean theme commits; a stock class or
+  a missing script blocks the commit.
+
 ## 2026-09-23 — Sidebar rule up front
 
 ### Changed

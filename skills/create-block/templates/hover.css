@@ -16,7 +16,7 @@
 .ws-hover-btn-lift
   .btn:hover:not(:disabled, [aria-disabled='true'], [aria-busy='true']) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgb(15 23 42 / 0.15);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--color-ink) 15%, transparent);
 }
 
 /* Fade is colour only, so movement leaves the transition. */

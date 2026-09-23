@@ -97,6 +97,7 @@ wrong domain/path into every file.
 | 0.18 | `resources/css/components/entrance.css` exists (template `<skill>/templates/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). `resources/css/components/hover.css` exists (template `<skill>/templates/hover.css`) and is `@import`ed by `resources/css/app.css` — **not** inside `@layer`, it must beat Tailwind's transition utilities. |
 | 0.19 | `resources/js/modules/entrance.js` exists (template `<skill>/templates/entrance.js`) and `resources/js/app.js` has `import { initEntrance } from './modules/entrance';` plus a top-level `initEntrance();` call (module scripts are deferred). Without it the front end never adds `data-entered` and the head script's 5s safety net is the only thing that un-hides the page. |
 | 0.20 | `scripts/editor-fidelity.mjs` exists (template `<skill>/templates/editor-fidelity.mjs`). It is a report-only dev tool — see "Editor fidelity report". |
+| 0.21 | **CSS foundation — blocking.** `node scripts/check-css-foundation.mjs` exits 0. If the script is missing, or `resources/css/global/` is missing, **stop and run the `css-foundation-wizard` skill first** — never create a block on a theme without the style guide foundation (every block would fall back to browser fonts and Tailwind's stock palette). Exit 1 on an existing theme: show the listed problems and fix them before Phase 1. |
 
 ### Compatibility warnings (do NOT auto-fix)
 
@@ -108,7 +109,7 @@ wrong domain/path into every file.
 
 ### Bootstrap UX
 
-If any check 0.1–0.20 (incl. 0.6.1) fails:
+If any check 0.1–0.20 (incl. 0.6.1) fails (0.21 is not bootstrapped here — it hands off to `css-foundation-wizard`):
 
 1. Show the dev a status table of failed checks.
 2. Split fixes into **(A) Creations** (new files/folders) and **(B) Modifications** (edits to `functions.php`, `editor.js`, `app.css`). `package.json` is not edited — tell the dev to run `npm install --save-dev react@^18.0.0 react-dom@^18.0.0` themselves.
@@ -143,6 +144,14 @@ Infra templates live in **Templates** at the bottom of this doc.
 > agent copied an earlier test theme's blocks and shipped its stale canvas
 > spacing, carousel and panel order.
 
+> **Styling: the style guide only.** Headings take `heading-1`…`heading-6`,
+> text takes `text-body` / `text-lead` / `text-small`, colors take the
+> contract tokens (`text-ink`, `text-muted`, `bg-light`, `bg-surface`,
+> `border-border`, `text-primary`), shapes take `rounded-card` /
+> `rounded-button` / `shadow-card` — on the canvas and in the Blade view alike.
+> Never Tailwind's stock palette or type scale. Full table: `css-standards` ›
+> **Style guide only**; check 0.21 enforces it.
+
 ### How the skill asks
 
 1. **Pre-extract** title, slug, attribute names from the user's initial request.
@@ -168,23 +177,27 @@ below. Output feeds Phase 2 directly.
 
 **Rich text vs plain text rule.** `RichText` is for **long copy** —
 paragraphs, descriptions, quotes, anything where bold/italic/links matter
-inline. **Headings, labels, simple short text** (subtitles, button labels,
-item titles) use a **plain `<input type="text">`** in the white-card
-wrapper. A heading or button label with inline formatting invites bold/link
-injection where it doesn't belong; a single-line `<input>` also has cleaner
-placeholder + accidental-newline behavior than RichText.
+inline. **Headings, labels, simple short text** (subtitles, eyebrows, item
+titles) use `AutoGrowingTextarea` — no inline formatting to inject, clean
+placeholder, no accidental newlines.
+
+**Canvas fields look like the page.** Every text field sits on the canvas
+with the **same style guide classes as its Blade element** (`heading-2
+text-ink` on both) plus `w-full bg-transparent` — never a form wrapper, a
+white card, or a border around the field. That's how `_docs/examples.md`
+builds all three blocks.
 
 #### Keyword lookup table
 
 | Dev's wording contains | Inferred type | Generated attribute(s) | Editor control |
 |---|---|---|---|
-| `title`, `heading`, `headline`, `name`, `label` | string | `<name>` | **plain input** in white-card wrapper (`<div className="p-3 border border-gray-300 rounded bg-white"><input type="text" ... /></div>`) |
-| `subtitle`, `subheading`, `tagline`, `eyebrow` | string | `<name>` | **plain input** (same wrapper) |
-| `description`, `body`, `content`, `paragraph`, `quote`, `excerpt`, `long text`, `copy` | string (multi-line / formatted) | `<name>` | `<RichText tagName="p" className="!m-0 min-h-[80px]">` in white-card wrapper |
+| `title`, `heading`, `headline`, `name`, `label` | string | `<name>` | `<AutoGrowingTextarea heading className="w-full bg-transparent heading-N text-ink" />` on the canvas — same `heading-N` as the Blade `<hN>` |
+| `subtitle`, `subheading`, `tagline`, `eyebrow` | string | `<name>` | `<AutoGrowingTextarea className="w-full bg-transparent font-eyebrow text-primary" />` (eyebrow) or `… text-lead text-muted` (subtitle) — same classes as the page |
+| `description`, `body`, `content`, `paragraph`, `quote`, `excerpt`, `long text`, `copy` | string (multi-line / formatted) | `<name>` | `<RichText tagName="div" className="text-body text-muted" />` on the canvas — same classes as the page |
 | `image`, `photo`, `picture`, `thumbnail`, `cover` (foreground/inline) | image (ID-first) | `<name>Id` (number) | On the **canvas**: `<AttachmentImageControl imageId={...} onSelect={(media) => setAttributes({ <name>Id: media.id })} onRemove={() => setAttributes({ <name>Id: 0 })} />` — URL resolved at render via `useAttachmentUrls`. X button on hover to remove. |
 | `bg`/`background image`/`cover image` (fills the block behind other content) | image (ID-first) | `<name>Id` (number) | In the **sidebar**, inside a `PanelBody title="Background Media"`: `<AttachmentImageControl imageId={...} onSelect={...} onRemove={...} noStylesheet />` + `<ImagePositionControl />` right under it for the focal point. The canvas keeps only the **passive** full-bleed preview (`backgroundImage`/`<img>` with `focalCss(<name>Position)`) — no click target there. |
 | `icon` | string (Dashicon slug or arbitrary name) | `<name>` | `<TextControl>` (or `<IconPicker>` if the project ships one) |
-| `link`, `url`, `cta link`, `href` | link (Gutenberg `LinkControl` object: `{url, opensInNewTab}`) | `<name>` | `<LinkPicker label="..." value={...} onChange={...} />` — sized to match the white-card input height so it lines up next to a sibling text field |
+| `link`, `url`, `cta link`, `href` | link (Gutenberg `LinkControl` object: `{url, opensInNewTab}`) | `<name>` | `<LinkPicker label="..." value={...} onChange={...} />` — inside `ActionEditor` for a button, never in the sidebar |
 | `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor>` inline**, directly below the button — always on canvas, never in the sidebar, never a floating `Popover`. `stacked={false}` (two-column layout) for a full-width/single CTA; `stacked={true}` (single vertical column) when the trigger sits inside a narrow per-item container (grid card, list item) — see the "Buttons / CTAs" rule below. **`ActionEditor` and `LinkPicker` never go inside `<InspectorControls>`.** |
 | `color`, `bg color`, `text color` | string (hex / palette slug) | `<name>` | `<ColorPalette>` or `<PanelColorSettings>` |
 | `size`, `width`, `height`, `count`, `amount`, plain `number` | number (unsigned) | `<name>` | `<TextControl type="number">` or `<RangeControl>` |
@@ -298,10 +311,10 @@ Title:    Hero
 Icon:     format-image
 Category: custom-blocks
 Attributes:
-  - heading           string             → plain input (heading)
-  - subtitle          string             → plain input (simple text)
+  - heading           string             → AutoGrowingTextarea (heading-2 text-ink)
+  - subtitle          string             → AutoGrowingTextarea (text-lead text-muted)
   - bgImageId         image              → AttachmentImageControl (sidebar) + ImagePositionControl
-  - ctaText/Link      button pair        → plain input + LinkPicker (flex row)
+  - ctaText/Link      button pair        → btn btn-primary preview + ActionEditor on click
 ```
 
 ### What the skill picks itself (no question)
@@ -484,8 +497,8 @@ The editor's `block.jsx` is the **only** block file Vite compiles (via the
 
 | Attribute type | `block.json` schema | `block.php` sanitization | `block.jsx` editor control |
 |---|---|---|---|
-| `string` (heading / label / simple short text) | `{"type":"string","default":""}` | `sanitize_text_field($attributes['<name>'] ?? '')` | Plain `<input type="text" value={...} onChange={(e) => setAttributes({ <name>: e.target.value })} />` in the white-card wrapper |
-| `string` (description / long copy) | `{"type":"string","default":""}` | `wp_kses_post($attributes['<name>'] ?? '')` if formatting is allowed; otherwise `sanitize_text_field(...)` | `<RichText tagName="p" value={...} onChange={(value) => setAttributes({ <name>: value })} className="!m-0 min-h-[80px]" />` in the white-card wrapper |
+| `string` (heading / label / simple short text) | `{"type":"string","default":""}` | `sanitize_text_field($attributes['<name>'] ?? '')` | `<AutoGrowingTextarea value={...} onChange={(value) => setAttributes({ <name>: value })} className="w-full bg-transparent <page classes>" />` on the canvas |
+| `string` (description / long copy) | `{"type":"string","default":""}` | `wp_kses_post($attributes['<name>'] ?? '')` if formatting is allowed; otherwise `sanitize_text_field(...)` | `<RichText tagName="div" value={...} onChange={(value) => setAttributes({ <name>: value })} className="<page classes>" />` on the canvas |
 | `number` | `{"type":"number","default":0}` | `absint($attributes['<name>'] ?? 0)` (unsigned) — use `(int)` only if negatives are valid | `<TextControl type="number" ... />` or `<NumberControl ... />` |
 | `boolean` | `{"type":"boolean","default":false}` | `(bool) ($attributes['<name>'] ?? false)` | `<ToggleControl ... />` |
 | `array` | `{"type":"array","default":[]}` | `foreach` over the array, skipping non-array items, with per-field sanitization | **`<ItemList>` in the sidebar** + canvas items in array order (see **Repeaters**) |
@@ -1112,8 +1125,10 @@ The contract is shared by `BlockEntrance.php`, `entranceCanvas.js`,
   or clicking fields in the panel): the block.json preset is the default and
   a saved object freezes that block against future preset changes.
 - **Verify** before calling the block done, after `npm run build`: run
-  `scripts/editor-fidelity.mjs` for the block (see "Editor fidelity report")
-  and fix what it lists; open the page in the editor — no block shows "This
+  `node scripts/check-css-foundation.mjs` (exit 0 — the block uses only the
+  style guide's tokens and `heading-*` classes, never `slate-*`/`text-3xl`)
+  and `scripts/editor-fidelity.mjs` for the block (see "Editor fidelity
+  report") and fix what they list; open the page in the editor — no block shows "This
   block has encountered an error" (console clean); clicking the sidebar **Preview** hides and replays the
   parts; on the front end the section has `data-entrance` and gains
   `data-entered` on scroll.
@@ -1139,11 +1154,11 @@ padding. The draft is deleted at the end. Output, per block:
 
 ```
 ✗ vision-accordion
-   "How the kit is built": color rgba(15, 23, 42, 255) → rgba(231, 0, 11, 255)   (editor → page)
-      page class:   text-3xl font-extrabold tracking-tight text-red-600 sm:text-4xl
-      editor class: … text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl
+   "How the kit is built": color rgba(31, 35, 40, 255) → rgba(26, 115, 232, 255)   (editor → page)
+      page class:   heading-2 text-primary
+      editor class: … heading-2 text-ink
    "Frequently asked": shown on the page, missing in the editor
-      page class:   text-xs font-bold uppercase text-blue-600
+      page class:   font-eyebrow text-primary
 ```
 
 - **Run it** after creating or changing a block, before calling it done, and

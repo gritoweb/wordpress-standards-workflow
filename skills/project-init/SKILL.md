@@ -40,10 +40,12 @@ that themselves. Never writes to a remote or production environment.
 1. **Phase 0** — Ask which scenario applies (only to know what to tell
    the dev to run next).
 2. **Phase 1** — Copy kit files into the target theme (`wp-content/themes/<theme>/`).
-3. **Phase 1b** — Replace Sage's bare header with the kit's responsive
-   header + primary navigation (once the Sage theme exists).
-4. **Phase 2** — Offer the global (user-level) skills.
-5. **Phase 3** — Hand off the manual steps for the chosen scenario.
+3. **Phase 1b** — Run `css-foundation-wizard`: the style guide foundation
+   (`resources/css/global/`) — **required**, before the header and any block.
+4. **Phase 1c** — Replace Sage's bare header with the kit's responsive
+   header + primary navigation, on the foundation's tokens.
+5. **Phase 2** — Offer the global (user-level) skills.
+6. **Phase 3** — Hand off the manual steps for the chosen scenario.
 
 ---
 
@@ -102,13 +104,36 @@ After copying, show a summary table of what was created vs. skipped
 
 ---
 
-## Phase 1b — Header & primary navigation (theme code)
+## Phase 1b — CSS foundation from the style guide (required)
+
+Copying `skills/css-foundation-wizard/` only installs the skill; nothing runs
+it by itself. A theme that skips this step ships with the browser's default
+font and Tailwind's stock palette in every block (verified 2026-09-23: two
+test themes built from the kit had no `resources/css/global/` at all). So,
+as soon as the Sage theme exists (Scenario B: after step 5; Scenario A:
+after step 4), before the header:
+
+1. **Run the `css-foundation-wizard` skill** in the theme root. It asks for
+   the client's style guide and writes `resources/css/global/` and
+   `components/button.css` with every token of its contract, wires
+   `app.css`/`editor.css` and copies `scripts/check-css-foundation.mjs`.
+2. **Gate:** `node scripts/check-css-foundation.mjs` exits 0. Don't create
+   blocks, the Home page or the first commit before it does — `create-block`
+   (check 0.21) and the pre-commit hook both refuse a theme that fails it.
+3. No style guide yet? Ask the dev for one (Figma link, brand PDF, or colors
+   + fonts in plain text). Don't invent a palette — the wizard offers
+   defaults only for the gaps.
+
+---
+
+## Phase 1c — Header & primary navigation (theme code)
 
 Sage ships `resources/views/sections/header.blade.php` as an unstyled brand
 link + a `<nav>` that renders **only when a menu is assigned** — a fresh site
 comes out with no menu, and assigning one gives an unstyled bullet list with
-no mobile toggle. Never leave that in place. Runs as soon as the Sage theme
-exists (Scenario B: after step 5; Scenario A: after step 4).
+no mobile toggle. Never leave that in place. Runs right after Phase 1b —
+`header.css` reads the style guide tokens with no fallback, so the
+foundation must exist first.
 
 | From (`<skill>/templates/`) | To (`<theme>/`) | Rule |
 |---|---|---|
@@ -226,7 +251,8 @@ Phase 0 answer. Do not run any of these commands.
 7. `lando wp theme activate <theme>`.
 8. Optionally `git init` + an initial commit inside `wp-content/themes/<theme>` — local only, never push without permission.
 9. Build theme assets (Step below).
-10. **Creating Home Page with Sample Blocks** (when requested by user prompt):
+10. **Creating Home Page with Sample Blocks** (when requested by user prompt) —
+    only after Phase 1b's check exits 0:
     - Scaffold blocks in `<theme>/resources/blocks/<name>/` using `create-block` patterns (`EDITOR_BLOCK_FRAME` for White Summers dashed border, `AutoGrowingTextarea` without inline height clamping, and `AttachmentImageControl` with `×` remove button on hover).
     - Run `npm run build` in `<theme>`.
     - Create the "Home" page in WordPress with the blocks serialized:
@@ -240,7 +266,7 @@ Phase 0 answer. Do not run any of these commands.
       lando wp option update page_on_front "$HOME_ID"
       ```
 11. **Primary menu** — create it and assign it to Sage's location, so the
-    Phase 1b header shows a real menu (add every page the site has):
+    Phase 1c header shows a real menu (add every page the site has):
     ```bash
     lando wp menu create "Primary"
     lando wp menu item add-post primary "$HOME_ID" --title="Home"
@@ -259,7 +285,7 @@ Phase 0 answer. Do not run any of these commands.
       | xargs -r -I{} lando wp post update {} --comment_status=closed --ping_status=closed
     ```
 13. **Smoke check before handing off** — open the home at desktop and mobile
-    width: header menu works (Phase 1b), nothing renders under the content
+    width: header menu works (Phase 1c), nothing renders under the content
     but the footer you built (no stray widgets), and each block with an
     entrance animation gains `data-entered` on scroll (`create-block` ›
     "Entrance animation wiring"). In the editor: no block shows "This block
@@ -269,9 +295,23 @@ Phase 0 answer. Do not run any of these commands.
 
 ### Theme assets (both scenarios)
 
+Sage's stock `package.json` has no `prepare` script and no `lint-staged` key,
+so the hook copied in Phase 1 never installs unless both are added. Add to
+the theme's `package.json` (merge into the existing `scripts`):
+
+```json
+{
+  "scripts": { "prepare": "node ./scripts/install-git-hooks.mjs" },
+  "lint-staged": {
+    "{app,resources}/**/*.{css,blade.php,js,jsx}": "prettier --write"
+  }
+}
+```
+
 ```bash
 cd wp-content/themes/<theme>
-npm install       # also installs the pre-commit hook via the `prepare` script
+npm i -D prettier prettier-plugin-tailwindcss @shufo/prettier-plugin-blade lint-staged
+npm install       # runs `prepare` → installs the pre-commit hook (format + CSS foundation check)
 npm run dev       # development (HMR) — or:
 npm run build     # production build
 ```
@@ -286,8 +326,10 @@ npm run build     # production build
 
 End with:
 1. A table of every file copied/skipped (from Phase 1).
-2. Whether `commit-rules` was installed (Phase 2).
-3. The ordered manual-step checklist for the chosen scenario (Phase 3),
+2. The output of `node scripts/check-css-foundation.mjs` (Phase 1b) — exit 0,
+   or say plainly that the foundation is still pending and blocks can't start.
+3. Whether `commit-rules` was installed (Phase 2).
+4. The ordered manual-step checklist for the chosen scenario (Phase 3),
    so the dev has one place to follow through to a running site.
 
 ---
