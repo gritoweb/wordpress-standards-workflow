@@ -1,6 +1,8 @@
 import { Button } from '@wordpress/components';
 import { useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { RemoveButton } from './RemoveButton.jsx';
+import { chevronDown, chevronUp, dragHandle, image } from './coreIcons.jsx';
 
 /**
  * List editor for an array attribute.
@@ -56,7 +58,7 @@ import { __ } from '@wordpress/i18n';
  * @param {number}   [props.minItems]      Remove is disabled at this count.
  * @param {string}   [props.addButtonLabel]
  * @param {string}   [props.itemLabelPrefix]
- * @param {string}   [props.removeConfirm] Null skips the confirm.
+ * @param {string}   [props.removeConfirm] A confirm message; null (default) removes at once, like core — Ctrl+Z undoes it.
  */
 
 const S = {
@@ -90,12 +92,15 @@ const S = {
    */
   rowOverAbove: { boxShadow: 'inset 0 2px 0 #1e1e1e' },
   rowOverBelow: { boxShadow: 'inset 0 -2px 0 #1e1e1e' },
+  // Same 32px square as the compact Buttons, so every control in a row is one size.
   handle: {
     flex: 'none',
-    padding: '0 2px',
-    fontSize: '14px',
-    lineHeight: 1,
-    color: '#949494',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '32px',
+    height: '32px',
+    color: '#757575',
     cursor: 'grab',
     userSelect: 'none',
   },
@@ -112,7 +117,7 @@ const S = {
     background: '#f6f7f7',
   },
   thumbImg: { maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' },
-  thumbEmpty: { fontSize: '10px', color: '#ccc' },
+  thumbEmpty: { display: 'flex', width: '20px', color: '#c3c4c7' },
   labelWrap: {
     minWidth: 0,
     flex: '1 1 auto',
@@ -156,18 +161,6 @@ const S = {
     color: '#949494',
   },
   actions: { flex: 'none', display: 'flex', alignItems: 'center', gap: '0' },
-  btn: {
-    padding: '2px 4px',
-    border: 0,
-    borderRadius: '2px',
-    background: 'none',
-    fontSize: '11px',
-    lineHeight: 1,
-    color: '#757575',
-    cursor: 'pointer',
-  },
-  btnDisabled: { color: '#ddd', cursor: 'default' },
-  btnRemove: { color: '#949494' },
 };
 
 export function ItemList({
@@ -184,7 +177,7 @@ export function ItemList({
   minItems = 1,
   addButtonLabel = __('+ Add item', '__TEXT_DOMAIN__'),
   itemLabelPrefix = __('Item', '__TEXT_DOMAIN__'),
-  removeConfirm = __('Remove this item?', '__TEXT_DOMAIN__'),
+  removeConfirm = null,
 }) {
   // `dragging` is the row in flight; `over` is where it would land.
   const [dragging, setDragging] = useState(null);
@@ -344,16 +337,19 @@ export function ItemList({
                     cursor: dragging === index ? 'grabbing' : 'grab',
                   }}
                 >
-                  ⠿
+                  {dragHandle}
                 </span>
 
-                <span style={S.thumb}>
-                  {thumb ? (
-                    <img src={thumb} alt="" style={S.thumbImg} />
-                  ) : (
-                    <span style={S.thumbEmpty}>—</span>
-                  )}
-                </span>
+                {/* No thumbnail column at all for items that have no image. */}
+                {getThumb && (
+                  <span style={S.thumb}>
+                    {thumb ? (
+                      <img src={thumb} alt="" style={S.thumbImg} />
+                    ) : (
+                      <span style={S.thumbEmpty}>{image}</span>
+                    )}
+                  </span>
+                )}
 
                 {selectable ? (
                   <button
@@ -377,41 +373,31 @@ export function ItemList({
                 )}
 
                 <span style={S.actions}>
-                  <button
-                    type="button"
-                    onClick={() => move(index, index - 1)}
+                  <Button
+                    icon={chevronUp}
+                    size="compact"
+                    label={`${__('Move up', '__TEXT_DOMAIN__')}: ${label(item, index)}`}
+                    showTooltip
                     disabled={first}
-                    aria-label={`${__('Move up', '__TEXT_DOMAIN__')}: ${label(item, index)}`}
-                    style={{ ...S.btn, ...(first ? S.btnDisabled : null) }}
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => move(index, index + 1)}
+                    onClick={() => move(index, index - 1)}
+                  />
+                  <Button
+                    icon={chevronDown}
+                    size="compact"
+                    label={`${__('Move down', '__TEXT_DOMAIN__')}: ${label(item, index)}`}
+                    showTooltip
                     disabled={last}
-                    aria-label={`${__('Move down', '__TEXT_DOMAIN__')}: ${label(item, index)}`}
-                    style={{ ...S.btn, ...(last ? S.btnDisabled : null) }}
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
+                    onClick={() => move(index, index + 1)}
+                  />
+                  <RemoveButton
+                    label={`${__('Remove', '__TEXT_DOMAIN__')}: ${label(item, index)}`}
+                    disabled={!canRemove}
                     onClick={() => {
                       if (!removeConfirm || window.confirm(removeConfirm)) {
                         onRemove(index);
                       }
                     }}
-                    disabled={!canRemove}
-                    aria-label={`${__('Remove', '__TEXT_DOMAIN__')}: ${label(item, index)}`}
-                    style={{
-                      ...S.btn,
-                      ...S.btnRemove,
-                      ...(canRemove ? null : S.btnDisabled),
-                    }}
-                  >
-                    ✕
-                  </button>
+                  />
                 </span>
               </div>
             </li>

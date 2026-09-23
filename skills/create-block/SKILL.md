@@ -78,10 +78,10 @@ wrong domain/path into every file.
 | 0.6 | `app/blocks.php` is the **central block-bootstrap file** — must (a) exist, (b) contain top-level `BlockCategories::register();` and `BlockMotion::register();`, (c) contain `add_action('init', function () { (new BlockManager())->register(); });`, (d) be loaded by `functions.php`'s `collect([...])` array (see 0.6.1). Template at `<skill>/templates/blocks.php`. |
 | 0.6.1 | `functions.php`'s `collect([...])` array includes `'blocks'`. Without it, `app/blocks.php` never loads. If `functions.php` doesn't use the `collect([...])` pattern at all, **bail out** — needs manual wiring. |
 | 0.8 | `resources/js/editor.js` calls `import.meta.glob('../blocks/*/block.jsx', { eager: true });` (Vite compiles the **editor** JSX only — front-end `block.js`/`block.css` are served from source via `file:`, see "Block asset loading") |
-| 0.9 | `resources/css/app.css` has `@source "../blocks/**/*.{php,jsx}";` |
+| 0.9 | `resources/css/app.css` has `@source "../blocks/**/*.{php,jsx}";` **and** scans `app/` (`@source "../../app/";` — Sage's stock line). The padding / image-position classes are literals in `app/Blocks/*.php`; without that source Tailwind never generates them and Spacing silently does nothing. |
 | 0.10 | `package.json` `devDependencies` has `react@^18` AND `react-dom@^18`. **React pinned to ^18, not ^19** — React 19 breaks Gutenberg (element-symbol mismatch with WP's React 18). |
 | 0.11 | `app/Blocks/BlockCategories.php` exists. Template at `<skill>/templates/BlockCategories.php`. **First-run only**: ask `"Vou criar uma categoria pros seus blocos. Quer chamar de 'Custom Blocks' (default) ou outro nome?"`, copy template, edit `TITLE` and `SLUG` (lowercase + hyphens) if dev picked a different name. The actual `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). Subsequent runs: grep `const SLUG = '...'` from the existing file. |
-| 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. Legacy components (`ImageUploadWithHover.jsx`, `RemoveButton.jsx`, `TabSelector.jsx`) also copied for backward compat. If missing: copy from `<skill>/templates/components/backend/*`, replacing `__TEXT_DOMAIN__` with `<text-domain>` and `__THEME_SLUG__` with `<theme-slug>` in every copied file. |
+| 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `RemoveButton.jsx`, `RemoveImageButton.jsx`, `coreIcons.jsx`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. If missing: copy from `<skill>/templates/components/backend/*`, replacing `__TEXT_DOMAIN__` with `<text-domain>` and `__THEME_SLUG__` with `<theme-slug>` in every copied file. |
 | 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php`, `app/Blocks/BlockEntrance.php` and `app/Blocks/BlockMotion.php` exist. Templates at `<skill>/templates/`. `BlockEntrance.php` must expose `fromBlock()`, `root()` and `part()` — an older copy that only has `resolve()` (it prints `data-entrance-type`) is **incompatible** with `EntranceControl`/`entranceCanvas.js`: replace it. |
 | 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers three Blade directives: `paddingClasses` → `\App\Blocks\BlockPadding::resolve(...)`, `entrance` → `\App\Blocks\BlockEntrance::root(...)` and `entrancePart` → `\App\Blocks\BlockEntrance::part(...)` (see "Infra bootstrap templates"). |
 | 0.18 | `resources/css/components/entrance.css` exists (template `<skill>/templates/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). `resources/css/components/hover.css` exists (template `<skill>/templates/hover.css`) and is `@import`ed by `resources/css/app.css` — **not** inside `@layer`, it must beat Tailwind's transition utilities. |
@@ -163,7 +163,7 @@ placeholder + accidental-newline behavior than RichText.
 | `title`, `heading`, `headline`, `name`, `label` | string | `<name>` | **plain input** in white-card wrapper (`<div className="p-3 border border-gray-300 rounded bg-white"><input type="text" ... /></div>`) |
 | `subtitle`, `subheading`, `tagline`, `eyebrow` | string | `<name>` | **plain input** (same wrapper) |
 | `description`, `body`, `content`, `paragraph`, `quote`, `excerpt`, `long text`, `copy` | string (multi-line / formatted) | `<name>` | `<RichText tagName="p" className="!m-0 min-h-[80px]">` in white-card wrapper |
-| `image`, `photo`, `picture`, `thumbnail`, `cover` (foreground/inline) | image (ID-first) | `<name>Id` (number) | On the **canvas**: `<AttachmentImageControl imageId={...} onSelect={(media) => setAttributes({ <name>Id: media.id })} onRemove={() => setAttributes({ <name>Id: 0 })} />` — URL resolved at render via `useAttachmentUrls`. × on hover to remove. |
+| `image`, `photo`, `picture`, `thumbnail`, `cover` (foreground/inline) | image (ID-first) | `<name>Id` (number) | On the **canvas**: `<AttachmentImageControl imageId={...} onSelect={(media) => setAttributes({ <name>Id: media.id })} onRemove={() => setAttributes({ <name>Id: 0 })} />` — URL resolved at render via `useAttachmentUrls`. X button on hover to remove. |
 | `bg`/`background image`/`cover image` (fills the block behind other content) | image (ID-first) | `<name>Id` (number) | In the **sidebar**, inside a `PanelBody title="Background Media"`: `<AttachmentImageControl imageId={...} onSelect={...} onRemove={...} noStylesheet />` + `<ImagePositionControl />` right under it for the focal point. The canvas keeps only the **passive** full-bleed preview (`backgroundImage`/`<img>` with `focalCss(<name>Position)`) — no click target there. |
 | `icon` | string (Dashicon slug or arbitrary name) | `<name>` | `<TextControl>` (or `<IconPicker>` if the project ships one) |
 | `link`, `url`, `cta link`, `href` | link (Gutenberg `LinkControl` object: `{url, opensInNewTab}`) | `<name>` | `<LinkPicker label="..." value={...} onChange={...} />` — sized to match the white-card input height so it lines up next to a sibling text field |
@@ -171,7 +171,7 @@ placeholder + accidental-newline behavior than RichText.
 | `color`, `bg color`, `text color` | string (hex / palette slug) | `<name>` | `<ColorPalette>` or `<PanelColorSettings>` |
 | `size`, `width`, `height`, `count`, `amount`, plain `number` | number (unsigned) | `<name>` | `<TextControl type="number">` or `<RangeControl>` |
 | `show X`, `enable X`, `visible`, `active`, `toggle`, "is X" boolean | boolean | `<name>` | `<ToggleControl>` |
-| `list of X`, `X list`, `items`, `slides`, `cards`, `testimonials`, `features`, `points`, `steps`, `accordion items` | array | `<name>` (`items` is the conventional default for the array attr) | `<TabSelector>` + `useState(0)` for active index + per-item form (recurse: infer sub-field types from the same table) |
+| `list of X`, `X list`, `items`, `slides`, `cards`, `testimonials`, `features`, `points`, `steps`, `accordion items`, `tabs`, carousel | array | `<name>` (`items` is the conventional default for the array attr) | **`<ItemList>` in the sidebar** (reorder, delete, add) + the items rendered on the canvas in array order, each sub-field edited inline (recurse: infer sub-field types from the same table). See **Repeaters** below — no other pattern exists. |
 | `video` + url/embed | string (URL) | `<name>Url` | `<TextControl type="url">` |
 | `alignment`, `align`, `text alignment` | string enum | `<name>` (default `"left"`) | `<AlignmentToolbar>` or `<SelectControl>` |
 | `layout`, `variant`, `style` + descriptor (e.g. "compact/full") | string enum | `<name>` | `<SelectControl options={...}>` (config — put in `InspectorControls`) |
@@ -182,7 +182,7 @@ placeholder + accidental-newline behavior than RichText.
    attribute** — `<name>Id` (number). The URL is resolved at render time
    via the `useAttachmentUrls` hook (calls `@wordpress/data`'s `getMedia`)
    — no stale URL stored in the block. Render via `<AttachmentImageControl>`
-   (× on hover to remove, Spinner while loading, "unavailable" state when
+   (X button on hover to remove, Spinner while loading, "unavailable" state when
    attachment is deleted). **Foreground/inline image → canvas.**
    **Background/cover image → sidebar** (`<AttachmentImageControl
    noStylesheet />` inside `PanelBody title="Background Media"`), and if
@@ -272,7 +272,7 @@ Category: custom-blocks
 Attributes:
   - heading           string             → plain input (heading)
   - subtitle          string             → plain input (simple text)
-  - bgImageId/Url     image pair         → ImageUploadWithHover + ImagePositionControl
+  - bgImageId         image              → AttachmentImageControl (sidebar) + ImagePositionControl
   - ctaText/Link      button pair        → plain input + LinkPicker (flex row)
 ```
 
@@ -310,7 +310,7 @@ Attributes:
   - **Headings / subtitles:** `<AutoGrowingTextarea>` styled with
     `EDITOR_TYPE` tokens, positioned where the text appears visually.
   - **Body copy:** `<ParagraphsField>` or `<RichText>`, inline.
-  - **Inline Images (foreground):** `<AttachmentImageControl>` with **× on hover** (top-right
+  - **Inline Images (foreground):** `<AttachmentImageControl>` with the **X button on hover** (top-right
     corner) to remove. Clicking the image opens Media Library in browse mode.
   - **Background Media (hero, banner, cards):** the canvas shows only the
     **passive** full-bleed preview — `<img>` or `backgroundImage` with
@@ -329,36 +329,50 @@ Attributes:
     - CTA inside a repeater item (grid card, list item) → `stacked={true}`
       (the same single-column layout `ActionEditor` already has for
       sidebar use) — fits a narrow column without leaving the canvas.
-  - **Repeaters / lists:** `<ItemList>` (sidebar) with drag handles +
-    keyboard arrows (up/down), driven by `onMove` calling `moveItem(items,
-    from, to)`. The image inside each item still follows the media rule
-    above and stays on the **canvas** (`<AttachmentImageControl>` per item,
-    in array order) — only the item's non-media fields (name, link,
-    reorder) live in the sidebar list.
-    - **CRITICAL — array position must be the ONLY source of order.** Do
-      not also store a per-item `order`/`row`/`position` number unless the
-      block genuinely needs independent layout tuning (custom width/height/
-      gap per row, the way a logo-wall-style block might). If it does, the
-      `onMove` callback MUST update that field on every affected item in the
-      same call, or reordering silently stops changing anything: both the
-      canvas render and `block.php` will keep sorting by the stored field
-      and ignore the array `ItemList` just spliced. **Verified against a
-      live post** (a sibling project's logo-wall block, post 154): every
-      item already carried an explicit `desktop.order`, so dragging a row
-      in the sidebar changed the `logos[]` array while the rendered order —
-      editor and front end alike — never moved. `<ItemList>` and
-      `moveItem.js` are not the bug; a second, unsynced order field
-      layered on top of them is. Simplest fix for a new block: don't add
-      that field at all.
-  - **Paginated one-at-a-time editing (`<TabSelector>` + `<RemoveButton>`):
-    legacy for generic repeaters** (superseded by `<ItemList>` above,
-    which shows every row and lets you reorder without leaving the sidebar).
-    Still the right call for a block whose **front end is itself a
-    one-active-item widget** — real tabs, an accordion, a slider — where
-    "which item is being edited" is naturally the same question as "which
-    item is showing." There the front end needs its own interactive
-    `block.js` (plain vanilla, ARIA `tablist`/`tab`/`tabpanel` or
-    equivalent) in addition to the `<TabSelector>`-driven canvas.
+  - **Repeaters (any array: cards, slides, accordion items, tabs, logos,
+    team…) — ONE pattern, no exceptions:**
+    - **Sidebar:** a `PanelBody` ("Items" / "Slides" / "Cards") holding
+      `<ItemList>` — every item listed in array order with the drag handle,
+      move up / move down and the trash button (all WordPress core icons,
+      one 32px size), plus "+ Add". **Reordering, deleting and adding
+      happen only here.**
+    - **Canvas:** the block as it looks on the page, items in array order,
+      each sub-field edited inline (`AutoGrowingTextarea`, `RichText`,
+      `AttachmentImageControl`, `ActionEditor stacked`). **No delete, add or
+      reorder buttons on the canvas** — no `✕`, no "Delete" pill.
+    - **One-open-at-a-time widgets** (accordion, tabs): pass `activeItem` /
+      `setActiveItem` to `ItemList`; the canvas opens that item and clicking
+      an item on the canvas selects it. The front end uses native
+      `<details name="<group>">` so opening one closes the others — no JS.
+    - **Carousels:** the canvas shows every slide side by side (horizontal
+      scroll) so a reorder is visible at once; the slider library runs only
+      on the front end (`block.js`).
+    - Every write is **one** `setAttributes` built from the current array
+      (`items.map(...)` with a patch object). Two `setAttributes` calls in a
+      row both start from the same stale array and the second erases the
+      first (e.g. `imageId` then `imageUrl`).
+    - **CRITICAL — array position must be the ONLY source of order.** Never
+      store a per-item `order` / `position` number: `ItemList` reorders the
+      array, and a second order field makes the sidebar move nothing on the
+      canvas or the page (verified on a sibling project's logo wall, where
+      `desktop.order` froze the render while the array moved).
+    - `TabSelector` and the red "Delete Item" pill were **removed from the
+      kit**: one-item-at-a-time editing hid the order and made reordering
+      impossible. If an old project still has them, migrate the block to
+      `ItemList`.
+    - Reference code, tested end to end: `_docs/examples.md` (accordion,
+      card grid, carousel).
+  - **Editor controls are components, never hand-written:**
+    - **Removing an image** is `<RemoveImageButton>` — core's close ("X")
+      icon in a dark round button that reads over any photo.
+      `AttachmentImageControl` already shows it on hover.
+    - **Deleting anything else** (an item, a row, a field's content) is
+      `<RemoveButton>` — core's trash icon, `isDestructive`.
+    - Both are `size="compact"` (32px), like every other icon button. Every icon comes from `coreIcons.jsx` (core's own SVGs); never
+    type a glyph (`×`, `✕`, `↑`, `⠿`) or paste an SVG into a block. Every
+    icon button in the editor is a WordPress `<Button size="compact">`, so
+    they are all one size. Swapping an icon is a one-line change in
+    `coreIcons.jsx`.
 
 ### What the skill does NOT ask
 
@@ -437,18 +451,23 @@ The editor's `block.jsx` is the **only** block file Vite compiles (via the
 | `string` (description / long copy) | `{"type":"string","default":""}` | `wp_kses_post($attributes['<name>'] ?? '')` if formatting is allowed; otherwise `sanitize_text_field(...)` | `<RichText tagName="p" value={...} onChange={(value) => setAttributes({ <name>: value })} className="!m-0 min-h-[80px]" />` in the white-card wrapper |
 | `number` | `{"type":"number","default":0}` | `absint($attributes['<name>'] ?? 0)` (unsigned) — use `(int)` only if negatives are valid | `<TextControl type="number" ... />` or `<NumberControl ... />` |
 | `boolean` | `{"type":"boolean","default":false}` | `(bool) ($attributes['<name>'] ?? false)` | `<ToggleControl ... />` |
-| `array` | `{"type":"array","default":[]}` | `array_map(...)` with per-item sanitization | **List repeater**: `<ItemList>` with drag handles + keyboard arrows for reordering. Alternative (legacy): `<TabSelector>` + `<RemoveButton>` |
-| image (ID-first) | `{"<name>Id":{"type":"number","default":0}}` | `absint($attributes['<name>Id'] ?? 0)` — URL resolved at render via `wp_get_attachment_url()` or `wp_get_attachment_image()` | `<AttachmentImageControl imageId={...<name>Id} onSelect={(media) => setAttributes({ <name>Id: media.id })} onRemove={() => setAttributes({ <name>Id: 0 })} />` — × on hover to remove, Spinner while loading, `useAttachmentUrls` resolves URL in the editor |
+| `array` | `{"type":"array","default":[]}` | `foreach` over the array, skipping non-array items, with per-field sanitization | **`<ItemList>` in the sidebar** + canvas items in array order (see **Repeaters**) |
+| image (ID-first) | `{"<name>Id":{"type":"number","default":0}}` | `absint($attributes['<name>Id'] ?? 0)` — URL resolved at render via `wp_get_attachment_url()` or `wp_get_attachment_image()` | `<AttachmentImageControl imageId={...<name>Id} onSelect={(media) => setAttributes({ <name>Id: media.id })} onRemove={() => setAttributes({ <name>Id: 0 })} />` — X button on hover to remove, Spinner while loading, `useAttachmentUrls` resolves URL in the editor. X button on hover to remove |
 | link (Gutenberg `LinkControl` object) | `{"type":"object","default":{"url":"","opensInNewTab":false}}` | `esc_url($attributes['<name>']['url'] ?? '')` + `(bool) ($attributes['<name>']['opensInNewTab'] ?? false)` | `<LinkPicker label="..." value={attributes.<name>} onChange={(value) => setAttributes({ <name>: value })} />`. Blade emits `target="_blank"` only when the flag is true; **don't hardcode `rel="noopener"`** — WP's `wp_targeted_link_rel()` filter (priority 15 on `the_content`) adds it automatically |
 
-**Always include the 4 global padding attrs** in `block.php`'s `view(...)` data array, even if the block doesn't use them visually — they're injected by `BlockManager::globalAttributes()` and should be available to Blade:
+**Spacing works in three places, and all three are required** (the attrs
+come from `BlockManager::globalAttributes()`):
 
-```php
-'paddingVertDesktop' => absint($attributes['paddingVertDesktop'] ?? 112),
-'paddingVertMobile'  => absint($attributes['paddingVertMobile']  ?? 56),
-'paddingXDesktop'    => (bool) ($attributes['paddingXDesktop']   ?? true),
-'paddingXMobile'     => (bool) ($attributes['paddingXMobile']    ?? true),
-```
+1. `block.php` passes the four values to the view:
+   `...\App\Blocks\BlockPadding::fromAttributes($attributes),`
+2. The Blade root puts the directive **inside** `class="…"`:
+   `class="<slug> @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop)"`
+3. `block.jsx` previews it on the canvas root:
+   `style={{ ...blockProps.style, ...editorPaddingStyle(attributes), ...rootEntrance.style }}`
+
+Verify on the rendered HTML, not by reading the Blade: the `<section>`'s
+`class` attribute must contain `py-… md:py-… px-… lg:px-…`, and changing
+Spacing in the sidebar must move the canvas at once.
 
 ### Anchor support (every block)
 
@@ -540,7 +559,7 @@ End with a summary table listing every file created/modified.
 ├── blocks.php                      → copied to app/blocks.php (check 0.6)
 ├── preview.svg                     → copied per block (with __BLOCK_TITLE__ substituted)
 └── components/backend/             → copied to resources/blocks/components/backend/ (check 0.12)
-    ├── AttachmentImageControl.jsx   ← default image control (× on hover)
+    ├── AttachmentImageControl.jsx   ← default image control (X on hover, image icon when empty)
     ├── useAttachmentUrls.js         ← hook for resolving attachment URLs
     ├── ActionEditor.jsx             ← CTA label + link editor (canvas popover)
     ├── AutoGrowingTextarea.jsx      ← inline heading/subtitle editor
@@ -551,10 +570,10 @@ End with a summary table listing every file created/modified.
     ├── ItemList.jsx                 ← list repeater with drag + keyboard
     ├── moveItem.js                  ← reorder helper for ItemList
     ├── ParagraphsField.jsx          ← multi-paragraph RichText editor
-    ├── ImageUploadWithHover.jsx     ← legacy (kept for backward compat)
     ├── LinkPicker.jsx
-    ├── RemoveButton.jsx             ← legacy (kept for backward compat)
-    ├── TabSelector.jsx              ← legacy (kept for backward compat)
+    ├── RemoveButton.jsx             ← deletes an item/row (core trash icon, isDestructive)
+    ├── RemoveImageButton.jsx        ← removes an image (core close icon, dark round)
+    ├── coreIcons.jsx                ← core icons inlined (trash, close, chevrons, drag handle, image)
     ├── PaddingControls.jsx
     ├── padding-presets.js
     ├── ImagePositionControl.jsx
@@ -567,7 +586,7 @@ Copied infra files carry placeholders that must be replaced on copy — none may
 |---|---|---|
 | `__BLOCK_TITLE__` | `preview.svg` | the block's `<Title>` |
 | `__BLOCK_NAMESPACE__` | `BlockManager.php` | the namespace confirmed in check 0.1 |
-| `__TEXT_DOMAIN__` | `RemoveButton.jsx`, `ImageUploadWithHover.jsx`, `BlockMotion.php` | `<text-domain>` |
+| `__TEXT_DOMAIN__` | every copied component that calls `__()`, and `BlockMotion.php` | `<text-domain>` |
 | `__THEME_SLUG__` | `IconPicker.jsx` | `<theme-slug>` |
 
 Every generated `block.jsx` imports `PaddingControls`; image / link / array blocks add the matching imports as needed.
@@ -656,11 +675,8 @@ echo view('blocks.<slug>', [
     // by @entrance / @entrancePart in the view (see "Entrance animation wiring").
     'entrance' => \App\Blocks\BlockEntrance::fromBlock($attributes, __DIR__),
 
-    // Always include the global padding attrs.
-    'paddingVertDesktop' => absint($attributes['paddingVertDesktop'] ?? 112),
-    'paddingVertMobile'  => absint($attributes['paddingVertMobile']  ?? 56),
-    'paddingXDesktop'    => (bool) ($attributes['paddingXDesktop']   ?? true),
-    'paddingXMobile'     => (bool) ($attributes['paddingXMobile']    ?? true),
+    // Always include the global padding attrs ($paddingVertMobile, … in the view).
+    ...\App\Blocks\BlockPadding::fromAttributes($attributes),
 ])->render();
 ```
 
@@ -672,6 +688,7 @@ import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { PaddingControls } from '../components/backend/PaddingControls.jsx';
+import { editorPaddingStyle } from '../components/backend/padding-presets.js';
 import { EntranceControl } from '../components/backend/EntranceControl.jsx';
 import { resolveEntrance, entranceRootProps, entrancePartProps } from '../components/backend/entranceCanvas.js';
 // Uncomment the imports your attributes actually need:
@@ -681,6 +698,7 @@ import { resolveEntrance, entranceRootProps, entrancePartProps } from '../compon
 // import { AutoGrowingTextarea }     from '../components/backend/AutoGrowingTextarea.jsx';
 // import { ParagraphsField }         from '../components/backend/ParagraphsField.jsx';
 // import { ItemList }                from '../components/backend/ItemList.jsx';
+// import { moveItem }                from '../components/backend/moveItem.js';
 // import { ImagePositionControl }    from '../components/backend/ImagePositionControl.jsx';
 // import { DividerControl }          from '../components/backend/DividerControl.jsx';
 // import { LinkPicker }              from '../components/backend/LinkPicker.jsx';
@@ -730,6 +748,19 @@ registerBlockType(metadata, {
                     </PanelBody>
                     */}
 
+                    {/* Repeater — only if the block has an array attribute (see "Repeaters"):
+                    <PanelBody title={__('Items', '<text-domain>')} initialOpen>
+                        <ItemList
+                            items={items}
+                            selectable={false}
+                            onAdd={() => setAttributes({ items: [...items, emptyItem()] })}
+                            onRemove={(index) => setAttributes({ items: items.filter((_, i) => i !== index) })}
+                            onMove={(from, to) => setAttributes({ items: moveItem(items, from, to) })}
+                            getLabel={(item) => item.title}
+                        />
+                    </PanelBody>
+                    */}
+
                     <PaddingControls attributes={attributes} setAttributes={setAttributes} />
                     {/* clientId is REQUIRED: Preview finds this block's canvas root by it. */}
                     <EntranceControl attributes={attributes} setAttributes={setAttributes} clientId={clientId} />
@@ -747,7 +778,7 @@ registerBlockType(metadata, {
                     {...blockProps}
                     {...rootEntrance}
                     className={`${blockProps.className || ''} <slug>-editor ${EDITOR_BLOCK_FRAME}`}
-                    style={{ ...blockProps.style, ...rootEntrance.style }}
+                    style={{ ...blockProps.style, ...editorPaddingStyle(attributes), ...rootEntrance.style }}
                 >
                     {/* Every visible part (heading, subtitle, body, CTA row, each
                         repeater item) spreads entrancePartProps with a running
@@ -775,7 +806,7 @@ registerBlockType(metadata, {
                     />
                     */}
 
-                    {/* Inline Image — AttachmentImageControl with × on hover:
+                    {/* Inline Image — AttachmentImageControl (X on hover):
                     <AttachmentImageControl
                         imageId={imageId}
                         onSelect={(media) => setAttributes({ imageId: media.id })}
@@ -902,10 +933,14 @@ vendor lib's internals, scoped under the block's root class:
 #### `resources/views/blocks/<slug>.blade.php`
 
 ```blade
-<section @if ($anchor) id="{{ $anchor }}" @endif class="<slug> py-16" @entrance($entrance)>
-    {{-- @entrance prints its own style="" — never put a second style attribute
-         on this element. Each visible part gets @entrancePart(<running index>),
-         in the same order block.jsx uses (see "Entrance animation wiring"). --}}
+<section @if ($anchor) id="{{ $anchor }}" @endif
+    class="<slug> @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop)"
+    @entrance($entrance)>
+    {{-- @paddingClasses prints bare class names, so it goes INSIDE class="…"
+         (outside, the browser ignores it and Spacing does nothing). @entrance
+         prints its own style="" — never add a second style attribute here.
+         Each visible part gets @entrancePart(<running index>), in the same
+         order block.jsx uses (see "Entrance animation wiring"). --}}
     {{-- Anchor id stays on this <section>; any dynamic/unique id (e.g. a Swiper
          instance id) goes on an INNER element so it can't collide — see
          "Anchor support". This note is guidance: keep it only if the block

@@ -2,6 +2,41 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-23 — Repeaters, remove controls and tested reference blocks
+
+A second project built with the kit (Gemini) came out with an accordion and
+card grid that could not reorder items, a red "Delete" pill and a `✕` on the
+canvas, a form-like canvas, and Spacing classes printed outside `class`. The
+agent's transcript shows it copied `_docs/examples.md`, which still taught the
+pre-refactor patterns (`TabSelector`, "no trash icon", labelled canvas
+fields); `SKILL.md` repeated `TabSelector` for accordions and sliders.
+
+### Changed
+- **One repeater pattern:** `ItemList` in the sidebar reorders, deletes and
+  adds; the canvas renders items in array order and edits them inline;
+  one-open-at-a-time widgets share `activeItem` with the list.
+- **`_docs/examples.md` rewritten** from three blocks tested end to end on a
+  live site: accordion (`<details name>` — opening one closes the others, no
+  JS), card grid, and a Swiper testimonial carousel (vendor lib registered in
+  `setup.php`, enqueued only by its `block.php`).
+- **Remove controls are components:** `RemoveImageButton` (core close icon)
+  removes an image; `RemoveButton` (core trash, `isDestructive`) deletes
+  anything else. `ItemList` arrows and drag handle use core icons. Every
+  editor icon button is `size="compact"` (32px). Icons live in
+  `coreIcons.jsx`, copied from core so no extra npm package is needed.
+- `AttachmentImageControl` shows core's image icon when empty (no text).
+- **Spacing:** `BlockPadding::resolve()` also accepts the attributes array,
+  `fromAttributes()` feeds the view, the Blade template shows the directive
+  inside `class`, the canvas previews it (`editorPaddingStyle`), and check
+  0.9 requires Tailwind to scan `app/`.
+
+### Removed
+- `TabSelector.jsx` and `ImageUploadWithHover.jsx` templates.
+
+### Fixed
+- Two `setAttributes` calls in a row (e.g. `imageId` then `imageUrl`) lost
+  the first write; the rule and the examples now use one patch per change.
+
 ## 2026-09-23 — Motion matches White Summers
 
 Blocks built by the kit animated differently from the White Summers

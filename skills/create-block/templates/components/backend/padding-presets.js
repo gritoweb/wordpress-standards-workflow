@@ -21,3 +21,16 @@ export const PADDING_PRESETS = {
     mobile: 20,
   },
 };
+
+// Canvas preview of the Spacing panel at desktop values — the same numbers BlockPadding prints.
+export function editorPaddingStyle(attributes) {
+  const vertical = attributes.paddingVertDesktop ?? 112;
+  const side = (attributes.paddingXDesktop ?? true) ? PADDING_PRESETS.horizontal.desktop : 0;
+
+  return {
+    paddingTop: `${vertical}px`,
+    paddingBottom: `${vertical}px`,
+    paddingLeft: `${side}px`,
+    paddingRight: `${side}px`,
+  };
+}

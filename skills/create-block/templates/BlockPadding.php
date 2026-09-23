@@ -10,17 +10,40 @@ class BlockPadding
     private const PX_MOBILE  = [false => 'px-0',    true => 'px-5'];
     private const PX_DESKTOP = [false => 'lg:px-0', true => 'lg:px-[6rem]'];
 
+    /**
+     * Tailwind classes for the Spacing panel. Takes the block's $attributes
+     * array, or the four values separately.
+     */
     public static function resolve(
-        int  $vertMobile,
-        int  $vertDesktop,
-        bool $horizMobile,
-        bool $horizDesktop
+        int|array $vertMobile,
+        ?int $vertDesktop = null,
+        ?bool $horizMobile = null,
+        ?bool $horizDesktop = null
     ): string {
+        if (is_array($vertMobile)) {
+            [$vertMobile, $vertDesktop, $horizMobile, $horizDesktop] = array_values(self::fromAttributes($vertMobile));
+        }
+
         return implode(' ', [
-            self::PY_MOBILE[$vertMobile]    ?? 'py-14',
-            self::PY_DESKTOP[$vertDesktop]  ?? 'md:py-28',
-            self::PX_MOBILE[$horizMobile]   ?? 'px-0',
-            self::PX_DESKTOP[$horizDesktop] ?? 'md:px-0',
+            self::PY_MOBILE[$vertMobile]           ?? 'py-14',
+            self::PY_DESKTOP[$vertDesktop ?? 112]  ?? 'md:py-28',
+            self::PX_MOBILE[$horizMobile ?? true]  ?? 'px-5',
+            self::PX_DESKTOP[$horizDesktop ?? true] ?? 'lg:px-[6rem]',
         ]);
+    }
+
+    /**
+     * The four padding values, with the BlockManager defaults.
+     *
+     * @return array{paddingVertMobile: int, paddingVertDesktop: int, paddingXMobile: bool, paddingXDesktop: bool}
+     */
+    public static function fromAttributes(array $attributes): array
+    {
+        return [
+            'paddingVertMobile'  => absint($attributes['paddingVertMobile'] ?? 56),
+            'paddingVertDesktop' => absint($attributes['paddingVertDesktop'] ?? 112),
+            'paddingXMobile'     => (bool) ($attributes['paddingXMobile'] ?? true),
+            'paddingXDesktop'    => (bool) ($attributes['paddingXDesktop'] ?? true),
+        ];
     }
 }

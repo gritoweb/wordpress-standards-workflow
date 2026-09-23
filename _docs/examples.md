@@ -1,394 +1,870 @@
 # Code Examples — AI Context
 
-Concrete, canonical patterns that put the [`CLAUDE.md`](./CLAUDE.md) rules
-together **in context**. Point the AI here + at `CLAUDE.md` before generating
-code. The rule-level snippets live in `CLAUDE.md`; this file is the *composed*
-reference: three complete Gutenberg blocks (Sage 11 + Acorn + Vite),
-each demonstrating a different pattern (repeater with media, icon-driven
-repeater with a zero-JS accordion, fixed-array card grid with a zero-JS
-reveal), plus the theme-level glue that registers blocks, resolves
-padding/image-position attributes to CSS, and loads vendored libs on
-demand.
+Three complete Gutenberg blocks for the kit's Sage 11 + Acorn + Vite setup.
+**Copy these, not older code**: every file below was run on a live site
+(2026-09-23) — editor (no block errors, sidebar list reorders / deletes /
+adds with the canvas updating at once, Spacing and entrance Preview visible)
+and front end (padding classes inside `class`, accordion exclusive, Swiper
+initialised only where the block renders, console clean).
 
-This is the **canonical layout** — the team's `create-block` skill should
-generate folders that match this shape.
+Placeholders, same as the `create-block` templates: `<namespace>` (block
+namespace), `<text-domain>`, `<category>`. Theme infrastructure
+(`BlockManager`, `BlockPadding`, `BlockEntrance`, `BlockMotion`, the shared
+components) is **not** repeated here — it comes from
+`skills/create-block/templates/`.
 
-## Folder layout
+## Rules every block follows
 
-```
-app/
-  Blocks/
-    BlockManager.php                 # blocks list + globalAttributes (minimal)
-    BlockCategories.php              # registers the custom block category in Gutenberg
-    BlockPadding.php                 # resolves padding attrs → Tailwind class string (@paddingClasses)
-    BlockImagePosition.php           # resolves imagePosition attr → Tailwind object-* class / CSS value
-  blocks.php                         # block bootstrap (BlockCategories::register + BlockManager init action)
-  setup.php                          # theme supports + vendor libs (vanilla Sage role; no block code here)
-  filters.php                        # WP filters (vanilla Sage role)
-  Providers/
-    ThemeServiceProvider.php         # registers the `@paddingClasses` Blade directive (Sage's own scaffolded provider)
-
-resources/
-  blocks/
-    testimonial-carousel/            # folder name = block slug
-      block.json                     # metadata; `render` points to block.php
-      block.php                      # data prep + view(...)->render()
-      block.jsx                      # editor (React, server-rendered save: null)
-      block.js                       # frontend behavior (e.g. init Swiper)
-      block.css                      # styles scoped under .testimonial-carousel
-      preview.svg                    # inserter-hover preview (placeholder; swap for .webp/.png if you want)
-    components/
-      backend/                       # shared JSX components used across blocks
-        ImageUploadWithHover.jsx
-        LinkPicker.jsx
-        RemoveButton.jsx
-        TabSelector.jsx
-        PaddingControls.jsx
-        padding-presets.js
-        ImagePositionControl.jsx
-        IconPicker.jsx
-  views/
-    blocks/
-      testimonial-carousel.blade.php # view-only Blade
-  js/
-    vendor/
-      swiper-bundle.min.js           # pre-built distributable
-  css/
-    vendor/
-      swiper-bundle.min.css
-
-vite.config.js                       # discoverBlockAssets() makes block.js/.css Vite entries
-```
-
-## Responsibilities
-
-| Concern | Owned by |
-|---|---|
-| List of blocks the theme exposes | `BlockManager::$blocks` (manual list, on purpose) |
-| Attributes injected into every block (e.g. padding presets) | `BlockManager::globalAttributes()` |
-| Calling `register_block_type` for each block | `BlockManager::registerSingleBlock()` |
-| Block bootstrap (centralizes block-related wiring) | `app/blocks.php` — calls `BlockCategories::register()` and the BlockManager `init` action. Loaded by `functions.php` via `collect(['setup', 'filters', 'blocks'])` (Sage's "categorically named theme files" mechanism). |
-| Custom block category (so the team's blocks group together in the inserter) | `app/Blocks/BlockCategories.php` (class with consts `SLUG`/`TITLE` + static `register()` that hooks `block_categories_all`). Called from `app/blocks.php`. |
-| Shared editor components (image picker, link picker, repeater tabs, delete button, padding panel, etc.) | `resources/blocks/components/backend/` (re-used by every `block.jsx`) |
-| Vendor libs registration (URL + version) | `app/setup.php` (`wp_register_script`/`wp_register_style` on `init`) |
-| Vendor libs enqueue (per-block, conditional) | `block.php` of each block that needs the lib (`wp_enqueue_script`/`wp_enqueue_style`) |
-| Per-block local assets (`block.js`, `block.css`) | Vite (`discoverBlockAssets()` in `vite.config.js`) + `@roots/vite-plugin` |
-| Data preparation/sanitization for a block | `<block>/block.php` |
-| Rendering markup | `resources/views/blocks/<slug>.blade.php` (Blade is view-only) |
-| Editor UI (Gutenberg) | `<block>/block.jsx` |
-| Padding attrs → Tailwind class string | `App\Blocks\BlockPadding::resolve()`, via the `@paddingClasses(...)` Blade directive registered in `app/Providers/ThemeServiceProvider.php` |
-| `imagePosition` attr → Tailwind `object-*` class (or raw CSS value) | `App\Blocks\BlockImagePosition::objectClass()` / `::cssValue()` |
-
-## How to read this reference
-
-- **Blade is view-only.** Data is shaped/sanitized in `block.php`; the Blade
-  view loops over already-prepared data and only decides *how* it looks.
-- **`{{ }}` auto-escapes** (≈ `esc_html`). The one raw output is
-  `{!! wp_get_attachment_image(...) !!}` — trusted HTML from WP core.
-- **Vendor libs are downloaded into `resources/{js,css}/vendor/`** as
-  pre-built distributables. `wp_register_script`/`wp_register_style` lives
-  in `app/setup.php` (centralized inventory of URL + version). Each
-  `block.php` that needs a lib calls `wp_enqueue_script`/`wp_enqueue_style`
-  for the handle, so libs only load on pages that have those blocks.
-- **Block-local assets (`block.js`/`block.css`) are NOT in `block.json`.**
-  They are discovered by `vite.config.js` and wired by `@roots/vite-plugin`.
-- **`block.json` uses `"render": "file:./block.php"`** — WP 6.1+ runs that PHP
-  as the block's render. No `render_callback` is passed to `register_block_type`.
-- **Every block has a unique root class** matching its slug
-  (`.testimonial-carousel`) — encapsulation scope for the styles.
-- **Shared editor components live in `resources/blocks/components/backend/`** — every
-  `block.jsx` imports `PaddingControls` from there (renders the spacing panel in
-  the sidebar); blocks with images use `ImageUploadWithHover` +
-  `ImagePositionControl`, blocks with internal/external links use `LinkPicker`
-  (a thin Popover wrapper around Gutenberg's `<LinkControl>` — the link
-  attribute is stored as the **native LinkControl object** `{url, opensInNewTab}`,
-  not a stringly-typed marker), blocks with array attributes use
-  `TabSelector` + `RemoveButton` for the tab-style repeater. These ship with
-  the team's `create-block` skill — see `skills/create-block/templates/`.
-- **Editor layout pattern**: every block.jsx renders `<PaddingControls />`
-  (sidebar config) outside the wrapper, then a `<section>` with the dashed
-  border + bg color + `mb-10` margin to separate blocks visually. Inside the
-  section, content fields go in labeled white cards
-  (`<div className="p-3 border border-gray-300 rounded bg-white">`).
-- **Field control rule**: long copy (descriptions, paragraphs, quotes)
-  uses `<RichText>` so inline bold/italic/links work; **headings,
-  labels and short single-line text use a plain `<input type="text">`**
-  inside the same white-card wrapper. Mixing bold/links into a heading
-  or button label is almost always wrong, and a single-line `<input>`
-  is friendlier for placeholder + accidental-newline behavior than
-  `RichText`. The `LinkPicker` button is sized to match that white-card
-  input height so a CTA text + CTA link pair lines up in a `flex` row.
-- **Repeater delete UI**: array repeaters using `<TabSelector>` place
-  `<RemoveButton />` (red pill — same visual style as the
-  `ImageUploadWithHover` "Remove image" button: white text on `#dc2626`,
-  4×8 padding, 4px radius; default label "Delete Item") in a
-  `<div className="flex justify-end">` at the **top of the active
-  item's panel**, gated by `items.length > 1`. No trash icon, no
-  inline-with-fields placement.
-- **Padding is never rendered ad hoc.** Every block receives the four
-  global padding attributes (see Responsibilities above); the Blade view
-  applies them with `@paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop)`
-  on its root wrapper — see this block's Blade view below. A block that
-  renders an `imagePosition` attribute (a background/cover image) maps it
-  to a class with `App\Blocks\BlockImagePosition::objectClass($imagePosition)`
-  rather than hardcoding one — see **Reference block 2** and
-  **Reference block 3** below, since this block doesn't render a
-  positioned background image itself.
+- **`block.php` shapes and sanitizes; Blade only prints.** Arrays are read
+  with `foreach`, skipping non-array items; every field has its own
+  sanitizer (`sanitize_text_field`, `wp_kses_post`, `absint`, `esc_url_raw`).
+- **Canvas = the page.** Text is edited where it shows
+  (`AutoGrowingTextarea` for short text, `RichText` for copy), images with
+  `AttachmentImageControl`, links with `ActionEditor`. No labelled form
+  fields on the canvas.
+- **Sidebar = configuration**: the item list, Spacing, Entrance animation,
+  background media. Never text fields.
+- **Repeaters:** `ItemList` in a sidebar `PanelBody` is the only place to
+  reorder, delete and add items. Array order is the only order. No item
+  delete / add / reorder buttons on the canvas.
+- **Remove controls are components:** `RemoveImageButton` (core "X") removes
+  an image — `AttachmentImageControl` shows it on hover; `RemoveButton`
+  (core trash) deletes anything else. Icons come from `coreIcons.jsx`; every
+  editor icon button is `size="compact"` (32px). Never type `×` / `✕`.
+- **One `setAttributes` per change**, built from the current array with a
+  patch object — two calls in a row lose the first write.
+- **Hooks before any early return** (`useState`, `useAttachmentUrls`), so
+  the preview branch never changes the hook order.
+- **Spacing in three places**: `...BlockPadding::fromAttributes($attributes)`
+  in `block.php`, `@paddingClasses(...)` **inside** the root `class`, and
+  `editorPaddingStyle(attributes)` on the canvas root.
+- **Entrance**: preset in `block.json` (from the `create-block` preset
+  table), `@entrance` on the root, `@entrancePart(n)` on each part, the same
+  indexes in `block.jsx`.
+- **Assets**: a block's own JS/CSS is plain, declared in `block.json`
+  (`file:./block.js` / `file:./block.css`) and served from source. Vendor
+  libraries are registered in `app/setup.php` and enqueued in the
+  `block.php` that needs them — never globally.
 
 ---
 
-## `app/Blocks/BlockManager.php`
+## Reference block: Accordion (one open at a time) — `accordion`
 
-Minimal manager: a flat list of block slugs, global attributes merged into
-each block at registration, nothing else. Vendor libs and their enqueue
-behavior live elsewhere (`app/setup.php` registers; `block.php` enqueues).
-Adding a new block = create the folder + add the slug to the `$blocks` array.
+An array of question/answer items. Demonstrates the **one-open-at-a-time** repeater: `ItemList` in the sidebar shares `activeItem` with the canvas, and the front end uses native `<details name>` so opening one item closes the others — no JavaScript.
 
-```php
-<?php
-
-namespace App\Blocks;
-
-class BlockManager
-{
-    /**
-     * Folders under resources/blocks/ (each must contain a block.json).
-     */
-    protected array $blocks = [
-        'testimonial-carousel',
-        // 'hero',
-        // 'split-banner',
-    ];
-
-    /**
-     * Gutenberg block namespace — the prefix used in each block's `block.json`
-     * `name` field (e.g., "acme/<slug>"). Not used internally by BlockManager;
-     * exposed via getNamespace() so external tooling (the `create-block` skill)
-     * knows what prefix to put in new block.json files.
-     *
-     * Not the same as:
-     *   - PHP namespace `App\` (composer PSR-4 autoload, in composer.json)
-     *   - Text domain (the `Text Domain` header in style.css, used by __() calls)
-     */
-    protected string $namespace = 'acme';
-
-    /**
-     * Global attributes injected into every block at registration time.
-     * Change defaults here; per-block attributes (in block.json) take precedence.
-     */
-    protected function globalAttributes(): array
-    {
-        return [
-            'paddingVertDesktop' => ['type' => 'number',  'default' => 112],
-            'paddingVertMobile'  => ['type' => 'number',  'default' => 56],
-            'paddingXDesktop'    => ['type' => 'boolean', 'default' => true],
-            'paddingXMobile'     => ['type' => 'boolean', 'default' => true],
-        ];
-    }
-
-    public function register(): void
-    {
-        foreach ($this->blocks as $blockName) {
-            $this->registerSingleBlock($blockName);
-        }
-    }
-
-    protected function registerSingleBlock(string $blockName): void
-    {
-        $blockPath = get_template_directory() . "/resources/blocks/{$blockName}";
-        $blockJson = "{$blockPath}/block.json";
-
-        if (!is_dir($blockPath) || !file_exists($blockJson)) {
-            return;
-        }
-
-        $metadata   = json_decode(file_get_contents($blockJson), true);
-        $blockAttrs = $metadata['attributes'] ?? [];
-
-        // Global attributes are the base; block-level attributes take precedence.
-        $mergedAttributes = array_merge($this->globalAttributes(), $blockAttrs);
-
-        register_block_type($blockPath, ['attributes' => $mergedAttributes]);
-    }
-
-    public function addBlock(string $blockName): void
-    {
-        if (!in_array($blockName, $this->blocks, true)) {
-            $this->blocks[] = $blockName;
-        }
-    }
-
-    public function getBlocks(): array
-    {
-        return $this->blocks;
-    }
-
-    public function getNamespace(): string
-    {
-        return $this->namespace;
-    }
-}
-```
-
-## `app/blocks.php` (block bootstrap)
-
-Central block-bootstrap file. Loaded by `functions.php` via Sage's
-`collect([...])` mechanism — keeps `setup.php`/`filters.php` vanilla
-and makes the block lifecycle discoverable in one place.
-
-```php
-<?php
-
-namespace App;
-
-use App\Blocks\BlockCategories;
-use App\Blocks\BlockManager;
-
-// Register the custom block category (filter — fires before init).
-BlockCategories::register();
-
-// Register all blocks once WP is ready.
-add_action('init', function () {
-    (new BlockManager())->register();
-});
-```
-
-For this file to load, `functions.php` must include `'blocks'` in its
-`collect([...])` array:
-
-```diff
--collect(['setup', 'filters'])
-+collect(['setup', 'filters', 'blocks'])
-     ->each(function ($file) {
-         if (! locate_template($file = "app/{$file}.php", true, true)) {
-             // ...
-         }
-     });
-```
-
-Without `'blocks'` in the array, the file is never required and no
-blocks register.
-
-## `app/setup.php` (vendor libs — vanilla Sage role)
-
-`setup.php` keeps its stock Sage role: theme supports, nav menus,
-sidebars, and theme-level asset registration. **No block-related code
-here** — block bootstrap moved to `app/blocks.php`. Vendor libs still
-live in `setup.php` since they're theme-level (registered globally,
-enqueued per-block):
-
-```php
-/**
- * Register vendor libs. Registration != enqueue — nothing loads here.
- * Each block's block.php that needs a lib calls wp_enqueue_script/style
- * for the handle when it renders, so libs only load on pages that have
- * those blocks.
- */
-add_action('init', function () {
-    wp_register_script('swiper',
-        get_theme_file_uri('resources/js/vendor/swiper-bundle.min.js'),
-        [], '11.0', true);
-    wp_register_style('swiper',
-        get_theme_file_uri('resources/css/vendor/swiper-bundle.min.css'),
-        [], '11.0');
-});
-```
-
-## `vite.config.js` — block asset discovery
-
-`block.js` / `block.css` for each block become Vite entries automatically by
-folder convention — no manual list to keep in sync.
-
-```js
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
-import { wordpressPlugin } from '@roots/vite-plugin';
-import fs from 'fs';
-import path from 'path';
-
-function discoverBlockAssets() {
-  const entries = [];
-  const blocksDir = 'resources/blocks';
-  if (!fs.existsSync(blocksDir)) return entries;
-
-  for (const dirent of fs.readdirSync(blocksDir, { withFileTypes: true })) {
-    if (!dirent.isDirectory()) continue;
-    const blockPath = path.join(blocksDir, dirent.name);
-    for (const file of ['block.js', 'block.css']) {
-      const p = path.join(blockPath, file);
-      if (fs.existsSync(p)) entries.push(p);
-    }
-  }
-  return entries;
-}
-
-export default defineConfig({
-  plugins: [
-    laravel({
-      input: [
-        'resources/css/app.css',
-        'resources/js/app.js',
-        ...discoverBlockAssets(),
-      ],
-      refresh: true,
-    }),
-    wordpressPlugin(),
-  ],
-});
-```
-
----
-
-## Reference block: `testimonial-carousel`
-
-A Swiper-based carousel. Demonstrates conditional vendor enqueue, view-only
-Blade, sanitization at the boundary, and BEM-scoped styles.
-
-### `resources/blocks/testimonial-carousel/block.json`
-
-No `viewScript`/`style`/`editorScript` keys — those local assets are wired
-by Vite + `@roots/vite-plugin`. `render` points to the per-block PHP.
+### `resources/blocks/accordion/block.json`
 
 ```json
 {
   "apiVersion": 3,
-  "name": "acme/testimonial-carousel",
-  "title": "Testimonial Carousel",
-  "category": "custom-blocks",
-  "icon": "format-quote",
-  "description": "A Swiper-based testimonials carousel.",
-  "keywords": ["testimonial", "quote", "carousel"],
-  "textdomain": "acme-2026",
+  "name": "<namespace>/accordion",
+  "title": "Accordion",
+  "category": "<category>",
+  "icon": "list-view",
+  "description": "Heading and questions; one answer open at a time.",
+  "textdomain": "<text-domain>",
   "render": "file:./block.php",
+  "supports": {
+    "anchor": true
+  },
   "attributes": {
     "isPreview": {
       "type": "boolean",
       "default": false
     },
-    "heading": {
+    "title": {
       "type": "string",
-      "default": ""
+      "default": "How the kit is built"
     },
-    "bgImageId": {
-      "type": "number",
-      "default": 0
-    },
-    "bgImageUrl": {
+    "description": {
       "type": "string",
-      "default": ""
-    },
-    "bgImagePosition": {
-      "type": "string",
-      "default": "center"
+      "default": "Open one question — the one that was open closes."
     },
     "items": {
       "type": "array",
-      "default": []
+      "default": [
+        {
+          "title": "Where does data get cleaned?",
+          "body": "In block.php, with WordPress sanitization functions. The Blade view only prints."
+        },
+        {
+          "title": "How does the accordion open?",
+          "body": "Native details elements that share a name, so opening one closes the others. No JavaScript."
+        },
+        {
+          "title": "How do I reorder the items?",
+          "body": "Drag them, or use the arrows, in the Items list in the block sidebar."
+        }
+      ]
+    },
+    "entrance": {
+      "type": "object",
+      "default": {
+        "type": "fade-slide",
+        "direction": "up",
+        "distance": null,
+        "unit": "px",
+        "duration": null,
+        "delay": null,
+        "stagger": 100
+      }
     }
   },
+  "example": {
+    "attributes": {
+      "isPreview": true
+    }
+  }
+}
+```
+
+### `resources/blocks/accordion/block.php`
+
+```php
+<?php
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+$attributes = $attributes ?? [];
+
+// Array order is the only order: the sidebar ItemList reorders the array itself.
+$items = [];
+foreach (is_array($attributes['items'] ?? null) ? $attributes['items'] : [] as $item) {
+    if (!is_array($item)) {
+        continue;
+    }
+    $title = sanitize_text_field($item['title'] ?? '');
+    if ($title === '') {
+        continue;
+    }
+    $items[] = [
+        'title' => $title,
+        'body'  => wp_kses_post($item['body'] ?? ''),
+    ];
+}
+
+echo view('blocks.accordion', [
+    'anchor'      => sanitize_html_class($attributes['anchor'] ?? ''),
+    'title'       => sanitize_text_field($attributes['title'] ?? ''),
+    'description' => wp_kses_post($attributes['description'] ?? ''),
+    'items'       => $items,
+    'entrance'    => \App\Blocks\BlockEntrance::fromBlock($attributes, __DIR__),
+    ...\App\Blocks\BlockPadding::fromAttributes($attributes),
+])->render();
+```
+
+### `resources/views/blocks/accordion.blade.php`
+
+```blade
+@php
+  // Details that share a name form an exclusive group: opening one closes the others.
+  $group = 'accordion-' . wp_unique_id();
+@endphp
+
+<section @if ($anchor) id="{{ $anchor }}" @endif
+  class="accordion @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop) bg-slate-50"
+  @entrance($entrance)>
+  <div class="site-container grid grid-cols-1 items-start gap-10 lg:grid-cols-12">
+    <div class="lg:col-span-5">
+      @if ($title)
+        <h2 @entrancePart(0) class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{{ $title }}</h2>
+      @endif
+
+      @if ($description)
+        <div @entrancePart(1) class="mt-4 text-base leading-relaxed text-slate-600">{!! $description !!}</div>
+      @endif
+    </div>
+
+    <div class="space-y-3 lg:col-span-7">
+      @foreach ($items as $item)
+        <details name="{{ $group }}" @if ($loop->first) open @endif @entrancePart($loop->index + 2)
+          class="accordion__item group rounded-2xl border border-slate-200 bg-white shadow-sm open:border-blue-200">
+          <summary
+            class="flex cursor-pointer list-none items-center justify-between gap-4 p-5 text-left font-bold text-slate-900 group-open:text-blue-700 [&::-webkit-details-marker]:hidden">
+            <span>{{ $item['title'] }}</span>
+            <svg class="h-5 w-5 shrink-0 text-slate-400 transition-transform duration-300 group-open:rotate-180"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </summary>
+
+          @if ($item['body'])
+            <div class="border-t border-slate-100 px-5 pb-5 pt-3 text-sm leading-relaxed text-slate-600">{!! $item['body'] !!}</div>
+          @endif
+        </details>
+      @endforeach
+    </div>
+  </div>
+</section>
+```
+
+### `resources/blocks/accordion/block.jsx`
+
+```jsx
+import { registerBlockType } from '@wordpress/blocks';
+import {
+  useBlockProps,
+  InspectorControls,
+  RichText,
+} from '@wordpress/block-editor';
+import { PanelBody } from '@wordpress/components';
+import { useState } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
+import { AutoGrowingTextarea } from '../components/backend/AutoGrowingTextarea.jsx';
+import { ItemList } from '../components/backend/ItemList.jsx';
+import { moveItem } from '../components/backend/moveItem.js';
+import { PaddingControls } from '../components/backend/PaddingControls.jsx';
+import { editorPaddingStyle } from '../components/backend/padding-presets.js';
+import { EntranceControl } from '../components/backend/EntranceControl.jsx';
+import {
+  resolveEntrance,
+  entranceRootProps,
+  entrancePartProps,
+} from '../components/backend/entranceCanvas.js';
+import { EDITOR_BLOCK_FRAME } from '../components/backend/editorCanvas.js';
+import previewImage from './preview.svg';
+import metadata from './block.json';
+
+const emptyItem = () => ({ title: '', body: '' });
+
+registerBlockType(metadata, {
+  edit({ attributes, setAttributes, clientId }) {
+    // Hooks run before the preview return, so their order never changes.
+    const [activeItem, setActiveItem] = useState(0);
+    const blockProps = useBlockProps();
+    const { isPreview, title, description } = attributes;
+    const items = Array.isArray(attributes.items) ? attributes.items : [];
+
+    if (isPreview) {
+      return (
+        <div {...blockProps}>
+          <img
+            src={previewImage}
+            alt={__('Accordion preview', '<text-domain>')}
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
+        </div>
+      );
+    }
+
+    const entrance = resolveEntrance(
+      attributes.entrance,
+      metadata.attributes.entrance.default,
+    );
+    const rootEntrance = entranceRootProps(entrance);
+    // The open item on the canvas is the one selected in the sidebar list.
+    const open = Math.min(activeItem, Math.max(items.length - 1, 0));
+
+    const updateItem = (index, patch) =>
+      setAttributes({
+        items: items.map((item, i) =>
+          i === index ? { ...item, ...patch } : item,
+        ),
+      });
+    const addItem = () => {
+      setAttributes({ items: [...items, emptyItem()] });
+      setActiveItem(items.length);
+    };
+    const removeItem = (index) => {
+      setAttributes({ items: items.filter((_, i) => i !== index) });
+      setActiveItem((current) =>
+        Math.max(0, current > index ? current - 1 : current),
+      );
+    };
+
+    return (
+      <>
+        <InspectorControls>
+          <PanelBody title={__('Items', '<text-domain>')} initialOpen>
+            <ItemList
+              items={items}
+              activeItem={open}
+              setActiveItem={setActiveItem}
+              onAdd={addItem}
+              onRemove={removeItem}
+              onMove={(from, to) =>
+                setAttributes({ items: moveItem(items, from, to) })
+              }
+              getLabel={(item) => item.title}
+              addButtonLabel={__('+ Add question', '<text-domain>')}
+              itemLabelPrefix={__('Question', '<text-domain>')}
+            />
+          </PanelBody>
+          <PaddingControls
+            attributes={attributes}
+            setAttributes={setAttributes}
+          />
+          <EntranceControl
+            attributes={attributes}
+            setAttributes={setAttributes}
+            clientId={clientId}
+          />
+        </InspectorControls>
+
+        <section
+          {...blockProps}
+          {...rootEntrance}
+          className={`${blockProps.className} accordion bg-slate-50 ${EDITOR_BLOCK_FRAME}`}
+          style={{
+            ...blockProps.style,
+            ...editorPaddingStyle(attributes),
+            ...rootEntrance.style,
+          }}
+        >
+          <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-12">
+            <div className="lg:col-span-5">
+              <AutoGrowingTextarea
+                {...entrancePartProps(entrance, 0)}
+                value={title}
+                onChange={(value) => setAttributes({ title: value })}
+                placeholder={__('Section title…', '<text-domain>')}
+                className="w-full bg-transparent text-3xl font-extrabold tracking-tight text-slate-900"
+              />
+              <div {...entrancePartProps(entrance, 1)}>
+                <RichText
+                  tagName="div"
+                  value={description}
+                  onChange={(value) => setAttributes({ description: value })}
+                  placeholder={__('Short description…', '<text-domain>')}
+                  className="mt-4 text-base leading-relaxed text-slate-600"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3 lg:col-span-7">
+              {items.map((item, index) => {
+                const isOpen = index === open;
+
+                return (
+                  <div
+                    key={index}
+                    {...entrancePartProps(entrance, index + 2)}
+                    className={`rounded-2xl border bg-white shadow-sm ${isOpen ? 'border-blue-200' : 'border-slate-200'}`}
+                  >
+                    <div
+                      className="flex cursor-pointer items-center justify-between gap-4 p-5"
+                      onClick={() => setActiveItem(index)}
+                    >
+                      <AutoGrowingTextarea
+                        value={item.title}
+                        onChange={(value) =>
+                          updateItem(index, { title: value })
+                        }
+                        onFocus={() => setActiveItem(index)}
+                        placeholder={__('Question…', '<text-domain>')}
+                        className={`w-full bg-transparent font-bold ${isOpen ? 'text-blue-700' : 'text-slate-900'}`}
+                      />
+                      <svg
+                        className={`h-5 w-5 shrink-0 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </div>
+
+                    {isOpen && (
+                      <RichText
+                        tagName="div"
+                        value={item.body}
+                        onChange={(value) => updateItem(index, { body: value })}
+                        placeholder={__('Answer…', '<text-domain>')}
+                        className="border-t border-slate-100 px-5 pt-3 pb-5 text-sm leading-relaxed text-slate-600"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      </>
+    );
+  },
+
+  save: () => null,
+});
+```
+
+---
+
+## Reference block: Card grid — `card-grid`
+
+An array of cards with image, title, text and an optional link. Demonstrates the **all-visible** repeater (`selectable={false}`), per-card images on the canvas, a per-card link edited inline with `ActionEditor stacked`, a single `setAttributes` per change, and the `trigger: "item"` entrance preset.
+
+### `resources/blocks/card-grid/block.json`
+
+```json
+{
+  "apiVersion": 3,
+  "name": "<namespace>/card-grid",
+  "title": "Card Grid",
+  "category": "<category>",
+  "icon": "grid-view",
+  "description": "Cards with image, title, text and an optional link.",
+  "textdomain": "<text-domain>",
+  "render": "file:./block.php",
   "supports": {
-    "html": false,
-    "align": ["wide", "full"]
+    "anchor": true
+  },
+  "attributes": {
+    "isPreview": {
+      "type": "boolean",
+      "default": false
+    },
+    "title": {
+      "type": "string",
+      "default": "What the kit gives you"
+    },
+    "description": {
+      "type": "string",
+      "default": ""
+    },
+    "cards": {
+      "type": "array",
+      "default": [
+        {
+          "title": "Sidebar item list",
+          "body": "Reorder, add and delete cards from the block sidebar.",
+          "imageId": 0,
+          "linkText": "",
+          "link": {
+            "url": "",
+            "opensInNewTab": false
+          }
+        },
+        {
+          "title": "Inline editing",
+          "body": "Every text on the canvas is edited where it shows on the page.",
+          "imageId": 0,
+          "linkText": "",
+          "link": {
+            "url": "",
+            "opensInNewTab": false
+          }
+        },
+        {
+          "title": "Entrance per card",
+          "body": "Each card animates as it scrolls into view.",
+          "imageId": 0,
+          "linkText": "",
+          "link": {
+            "url": "",
+            "opensInNewTab": false
+          }
+        }
+      ]
+    },
+    "entrance": {
+      "type": "object",
+      "default": {
+        "type": "fade-slide",
+        "direction": "up",
+        "distance": null,
+        "unit": "px",
+        "duration": null,
+        "delay": null,
+        "stagger": 100,
+        "trigger": "item"
+      }
+    }
+  },
+  "example": {
+    "attributes": {
+      "isPreview": true
+    }
+  }
+}
+```
+
+### `resources/blocks/card-grid/block.php`
+
+```php
+<?php
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+$attributes = $attributes ?? [];
+
+// Array order is the only order: the sidebar ItemList reorders the array itself.
+$cards = [];
+foreach (is_array($attributes['cards'] ?? null) ? $attributes['cards'] : [] as $card) {
+    if (!is_array($card)) {
+        continue;
+    }
+    $title = sanitize_text_field($card['title'] ?? '');
+    $imageId = absint($card['imageId'] ?? 0);
+    if ($title === '' && $imageId === 0) {
+        continue;
+    }
+    $cards[] = [
+        'title'    => $title,
+        'body'     => wp_kses_post($card['body'] ?? ''),
+        'imageId'  => $imageId,
+        'linkText' => sanitize_text_field($card['linkText'] ?? ''),
+        'linkUrl'  => esc_url_raw($card['link']['url'] ?? ''),
+        'linkNew'  => (bool) ($card['link']['opensInNewTab'] ?? false),
+    ];
+}
+
+echo view('blocks.card-grid', [
+    'anchor'      => sanitize_html_class($attributes['anchor'] ?? ''),
+    'title'       => sanitize_text_field($attributes['title'] ?? ''),
+    'description' => wp_kses_post($attributes['description'] ?? ''),
+    'cards'       => $cards,
+    'entrance'    => \App\Blocks\BlockEntrance::fromBlock($attributes, __DIR__),
+    ...\App\Blocks\BlockPadding::fromAttributes($attributes),
+])->render();
+```
+
+### `resources/views/blocks/card-grid.blade.php`
+
+```blade
+<section @if ($anchor) id="{{ $anchor }}" @endif
+  class="card-grid @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop) bg-white"
+  @entrance($entrance)>
+  <div class="site-container">
+    @if ($title || $description)
+      <div class="mx-auto mb-12 max-w-2xl text-center">
+        @if ($title)
+          <h2 @entrancePart(0) class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{{ $title }}</h2>
+        @endif
+
+        @if ($description)
+          <div @entrancePart(1) class="mt-4 text-base leading-relaxed text-slate-600">{!! $description !!}</div>
+        @endif
+      </div>
+    @endif
+
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+      @foreach ($cards as $card)
+        <article @entrancePart($loop->index + 2)
+          class="card-grid__card flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          @if ($card['imageId'])
+            {!! wp_get_attachment_image($card['imageId'], 'large', false, [
+                'class' => 'aspect-[4/3] w-full object-cover',
+                'loading' => 'lazy',
+                'decoding' => 'async',
+            ]) !!}
+          @endif
+
+          <div class="flex flex-1 flex-col p-6">
+            @if ($card['title'])
+              <h3 class="text-xl font-bold tracking-tight text-slate-900">{{ $card['title'] }}</h3>
+            @endif
+
+            @if ($card['body'])
+              <div class="mt-3 text-sm leading-relaxed text-slate-600">{!! $card['body'] !!}</div>
+            @endif
+
+            @if ($card['linkText'] && $card['linkUrl'])
+              <a href="{{ esc_url($card['linkUrl']) }}" @if ($card['linkNew']) target="_blank" @endif
+                class="link mt-auto inline-flex pt-5 text-sm font-semibold text-blue-600 hover:text-blue-700">{{ $card['linkText'] }}</a>
+            @endif
+          </div>
+        </article>
+      @endforeach
+    </div>
+  </div>
+</section>
+```
+
+### `resources/blocks/card-grid/block.jsx`
+
+```jsx
+import { registerBlockType } from '@wordpress/blocks';
+import {
+  useBlockProps,
+  InspectorControls,
+  RichText,
+} from '@wordpress/block-editor';
+import { PanelBody } from '@wordpress/components';
+import { useState } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
+import { AutoGrowingTextarea } from '../components/backend/AutoGrowingTextarea.jsx';
+import { AttachmentImageControl } from '../components/backend/AttachmentImageControl.jsx';
+import { ActionEditor } from '../components/backend/ActionEditor.jsx';
+import { ItemList } from '../components/backend/ItemList.jsx';
+import { moveItem } from '../components/backend/moveItem.js';
+import { useAttachmentUrls } from '../components/backend/useAttachmentUrls.js';
+import { PaddingControls } from '../components/backend/PaddingControls.jsx';
+import { editorPaddingStyle } from '../components/backend/padding-presets.js';
+import { EntranceControl } from '../components/backend/EntranceControl.jsx';
+import {
+  resolveEntrance,
+  entranceRootProps,
+  entrancePartProps,
+} from '../components/backend/entranceCanvas.js';
+import {
+  EDITOR_BLOCK_FRAME,
+  emptyLink,
+} from '../components/backend/editorCanvas.js';
+import previewImage from './preview.svg';
+import metadata from './block.json';
+
+const emptyCard = () => ({
+  title: '',
+  body: '',
+  imageId: 0,
+  linkText: '',
+  link: emptyLink(),
+});
+
+registerBlockType(metadata, {
+  edit({ attributes, setAttributes, clientId }) {
+    // Hooks run before the preview return, so their order never changes.
+    const [editingLink, setEditingLink] = useState(null);
+    const blockProps = useBlockProps();
+    const cards = Array.isArray(attributes.cards) ? attributes.cards : [];
+    const thumbs = useAttachmentUrls(
+      cards.map((card) => Number(card.imageId) || 0),
+    );
+
+    if (attributes.isPreview) {
+      return (
+        <div {...blockProps}>
+          <img
+            src={previewImage}
+            alt={__('Card Grid preview', '<text-domain>')}
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
+        </div>
+      );
+    }
+
+    const entrance = resolveEntrance(
+      attributes.entrance,
+      metadata.attributes.entrance.default,
+    );
+    const rootEntrance = entranceRootProps(entrance);
+
+    // One write per change: two calls in a row would both start from the stale array.
+    const updateCard = (index, patch) =>
+      setAttributes({
+        cards: cards.map((card, i) =>
+          i === index ? { ...card, ...patch } : card,
+        ),
+      });
+    const removeCard = (index) => {
+      setAttributes({ cards: cards.filter((_, i) => i !== index) });
+      setEditingLink(null);
+    };
+
+    return (
+      <>
+        <InspectorControls>
+          <PanelBody title={__('Cards', '<text-domain>')} initialOpen>
+            <ItemList
+              items={cards}
+              selectable={false}
+              onAdd={() => setAttributes({ cards: [...cards, emptyCard()] })}
+              onRemove={removeCard}
+              onMove={(from, to) =>
+                setAttributes({ cards: moveItem(cards, from, to) })
+              }
+              getLabel={(card) => card.title}
+              getThumb={(card) => thumbs[Number(card.imageId)] || ''}
+              addButtonLabel={__('+ Add card', '<text-domain>')}
+              itemLabelPrefix={__('Card', '<text-domain>')}
+            />
+          </PanelBody>
+          <PaddingControls
+            attributes={attributes}
+            setAttributes={setAttributes}
+          />
+          <EntranceControl
+            attributes={attributes}
+            setAttributes={setAttributes}
+            clientId={clientId}
+          />
+        </InspectorControls>
+
+        <section
+          {...blockProps}
+          {...rootEntrance}
+          className={`${blockProps.className} card-grid bg-white ${EDITOR_BLOCK_FRAME}`}
+          style={{
+            ...blockProps.style,
+            ...editorPaddingStyle(attributes),
+            ...rootEntrance.style,
+          }}
+        >
+          <div className="mx-auto mb-12 max-w-2xl text-center">
+            <AutoGrowingTextarea
+              {...entrancePartProps(entrance, 0)}
+              value={attributes.title}
+              onChange={(value) => setAttributes({ title: value })}
+              placeholder={__('Section title…', '<text-domain>')}
+              className="w-full bg-transparent text-center text-3xl font-extrabold tracking-tight text-slate-900"
+            />
+            <div {...entrancePartProps(entrance, 1)}>
+              <RichText
+                tagName="div"
+                value={attributes.description}
+                onChange={(value) => setAttributes({ description: value })}
+                placeholder={__('Optional description…', '<text-domain>')}
+                className="mt-4 text-base leading-relaxed text-slate-600"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {cards.map((card, index) => (
+              <article
+                key={index}
+                {...entrancePartProps(entrance, index + 2)}
+                className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+              >
+                <AttachmentImageControl
+                  imageId={card.imageId}
+                  onSelect={(media) =>
+                    updateCard(index, { imageId: Number(media.id) || 0 })
+                  }
+                  onRemove={() => updateCard(index, { imageId: 0 })}
+                  height="220px"
+                />
+
+                <div className="flex flex-1 flex-col p-6">
+                  <AutoGrowingTextarea
+                    value={card.title}
+                    onChange={(value) => updateCard(index, { title: value })}
+                    placeholder={__('Card title…', '<text-domain>')}
+                    className="w-full bg-transparent text-xl font-bold tracking-tight text-slate-900"
+                  />
+                  <RichText
+                    tagName="div"
+                    value={card.body}
+                    onChange={(value) => updateCard(index, { body: value })}
+                    placeholder={__('Card text…', '<text-domain>')}
+                    className="mt-3 text-sm leading-relaxed text-slate-600"
+                  />
+
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className="mt-auto inline-flex cursor-pointer pt-5 text-sm font-semibold text-blue-600"
+                    onClick={() =>
+                      setEditingLink(editingLink === index ? null : index)
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setEditingLink(editingLink === index ? null : index);
+                      }
+                    }}
+                  >
+                    {card.linkText || __('+ Add link', '<text-domain>')}
+                  </span>
+
+                  {editingLink === index && (
+                    <div className="mt-3 text-left">
+                      <ActionEditor
+                        groupLabel={`${__('Card link', '<text-domain>')} ${index + 1}`}
+                        label={__('Link text', '<text-domain>')}
+                        linkLabel={__('Link destination', '<text-domain>')}
+                        text={card.linkText}
+                        link={card.link}
+                        stacked
+                        onTextChange={(value) =>
+                          updateCard(index, { linkText: value })
+                        }
+                        onLinkChange={(value) =>
+                          updateCard(index, { link: value })
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </>
+    );
+  },
+
+  save: () => null,
+});
+```
+
+---
+
+## Reference block: Testimonial carousel (vendor library) — `testimonial-carousel`
+
+An array of quotes in a Swiper carousel. Demonstrates the **vendor library** rule (file in `resources/{js,css}/vendor/`, registered in `app/setup.php`, enqueued only in this `block.php`), a plain `block.js`/`block.css` served from source through `block.json`, and a canvas that shows every slide side by side so a reorder is visible at once.
+
+### `resources/blocks/testimonial-carousel/block.json`
+
+```json
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "<namespace>/testimonial-carousel",
+  "title": "Testimonial Carousel",
+  "category": "<category>",
+  "icon": "format-quote",
+  "description": "Quotes in a carousel; reorder and delete them from the sidebar.",
+  "textdomain": "<text-domain>",
+  "render": "file:./block.php",
+  "viewScript": "file:./block.js",
+  "viewStyle": "file:./block.css",
+  "supports": {
+    "anchor": true
+  },
+  "attributes": {
+    "isPreview": {
+      "type": "boolean",
+      "default": false
+    },
+    "title": {
+      "type": "string",
+      "default": "What teams say"
+    },
+    "items": {
+      "type": "array",
+      "default": [
+        {
+          "quote": "The sidebar list made reordering slides a two-second job.",
+          "author": "Ana Lima",
+          "role": "Content editor",
+          "avatarId": 0
+        },
+        {
+          "quote": "Every text is edited right where it shows on the page.",
+          "author": "Bruno Costa",
+          "role": "Marketing lead",
+          "avatarId": 0
+        },
+        {
+          "quote": "Deleting a slide works like everything else in WordPress.",
+          "author": "Carla Dias",
+          "role": "Site owner",
+          "avatarId": 0
+        }
+      ]
+    },
+    "entrance": {
+      "type": "object",
+      "default": {
+        "type": "fade-slide",
+        "direction": "up",
+        "distance": null,
+        "unit": "px",
+        "duration": null,
+        "delay": null,
+        "stagger": 100
+      }
+    }
   },
   "example": {
     "attributes": {
@@ -400,9 +876,6 @@ by Vite + `@roots/vite-plugin`. `render` points to the per-block PHP.
 
 ### `resources/blocks/testimonial-carousel/block.php`
 
-Runs as the block's render (via `block.json` `render` key). Shapes/sanitizes
-data, then hands off to Blade. Blade never touches raw attributes.
-
 ```php
 <?php
 
@@ -410,1130 +883,295 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Swiper was registered in app/setup.php; enqueue it here so it only loads
-// on pages where this block is actually rendered.
+// Vendor lib registered in app/setup.php; enqueued here so it loads only where this block renders.
 wp_enqueue_script('swiper');
 wp_enqueue_style('swiper');
 
-/**
- * Item shape (one entry of the `items` attribute):
- *   [ 'quote' => string, 'author' => string, 'role' => string, 'imageId' => int ]
- */
 $attributes = $attributes ?? [];
 
-$items = array_map(static function (array $item): array {
-    return [
-        'quote'    => sanitize_text_field($item['quote']  ?? ''),
+// Array order is the only order: the sidebar ItemList reorders the array itself.
+$items = [];
+foreach (is_array($attributes['items'] ?? null) ? $attributes['items'] : [] as $item) {
+    if (!is_array($item)) {
+        continue;
+    }
+    $quote = wp_kses_post($item['quote'] ?? '');
+    if ($quote === '') {
+        continue;
+    }
+    $items[] = [
+        'quote'    => $quote,
         'author'   => sanitize_text_field($item['author'] ?? ''),
-        'role'     => sanitize_text_field($item['role']   ?? ''),
-        // Editor input — coerce on the way in.
-        'image_id' => isset($item['imageId']) ? absint($item['imageId']) : 0,
+        'role'     => sanitize_text_field($item['role'] ?? ''),
+        'avatarId' => absint($item['avatarId'] ?? 0),
     ];
-}, $attributes['items'] ?? []);
+}
 
 echo view('blocks.testimonial-carousel', [
-    'heading'         => sanitize_text_field($attributes['heading'] ?? ''),
-    'bgImageId'       => absint($attributes['bgImageId'] ?? 0),
-    'bgImageUrl'      => esc_url_raw($attributes['bgImageUrl'] ?? ''),
-    'bgImagePosition' => sanitize_text_field($attributes['bgImagePosition'] ?? 'center'),
-    'items'           => $items,
-    // Global padding attributes injected by BlockManager::globalAttributes().
-    'paddingVertDesktop' => absint($attributes['paddingVertDesktop'] ?? 112),
-    'paddingVertMobile'  => absint($attributes['paddingVertMobile']  ?? 56),
-    'paddingXDesktop'    => (bool) ($attributes['paddingXDesktop']   ?? true),
-    'paddingXMobile'     => (bool) ($attributes['paddingXMobile']    ?? true),
+    'anchor'   => sanitize_html_class($attributes['anchor'] ?? ''),
+    'title'    => sanitize_text_field($attributes['title'] ?? ''),
+    'items'    => $items,
+    'entrance' => \App\Blocks\BlockEntrance::fromBlock($attributes, __DIR__),
+    ...\App\Blocks\BlockPadding::fromAttributes($attributes),
 ])->render();
+```
+
+### `resources/views/blocks/testimonial-carousel.blade.php`
+
+```blade
+<section @if ($anchor) id="{{ $anchor }}" @endif
+  class="testimonial-carousel @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop) bg-slate-50"
+  @entrance($entrance)>
+  <div class="site-container">
+    @if ($title)
+      <h2 @entrancePart(0) class="mb-10 text-center text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">{{ $title }}</h2>
+    @endif
+
+    @if ($items)
+      {{-- The anchor id stays on the section; Swiper only needs the data hook. --}}
+      <div @entrancePart(1) class="testimonial-carousel__slider swiper" data-testimonial-carousel>
+        <div class="swiper-wrapper">
+          @foreach ($items as $item)
+            <figure class="swiper-slide !h-auto">
+              <div class="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+                <blockquote class="flex-1 text-lg leading-relaxed text-slate-700">{!! $item['quote'] !!}</blockquote>
+
+                <figcaption class="mt-6 flex items-center gap-4">
+                  @if ($item['avatarId'])
+                    {!! wp_get_attachment_image($item['avatarId'], 'thumbnail', false, [
+                        'class' => 'h-12 w-12 rounded-full object-cover',
+                        'loading' => 'lazy',
+                    ]) !!}
+                  @endif
+                  <span>
+                    <span class="block font-bold text-slate-900">{{ $item['author'] }}</span>
+                    @if ($item['role'])
+                      <span class="block text-sm text-slate-500">{{ $item['role'] }}</span>
+                    @endif
+                  </span>
+                </figcaption>
+              </div>
+            </figure>
+          @endforeach
+        </div>
+
+        <div class="testimonial-carousel__pagination swiper-pagination !relative mt-8"></div>
+      </div>
+    @endif
+  </div>
+</section>
 ```
 
 ### `resources/blocks/testimonial-carousel/block.jsx`
 
-Editor side (Gutenberg). `save: () => null` because rendering is server-side.
-
 ```jsx
 import { registerBlockType } from '@wordpress/blocks';
 import {
-    useBlockProps,
-    MediaUpload,
-    MediaUploadCheck,
-    RichText,
+  useBlockProps,
+  InspectorControls,
+  RichText,
 } from '@wordpress/block-editor';
-import { useState } from '@wordpress/element';
+import { PanelBody } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { PaddingControls }       from '../components/backend/PaddingControls.jsx';
-import { ImageUploadWithHover }  from '../components/backend/ImageUploadWithHover.jsx';
-import { ImagePositionControl }  from '../components/backend/ImagePositionControl.jsx';
-import { TabSelector }           from '../components/backend/TabSelector.jsx';
-import { RemoveButton }          from '../components/backend/RemoveButton.jsx';
+import { AutoGrowingTextarea } from '../components/backend/AutoGrowingTextarea.jsx';
+import { AttachmentImageControl } from '../components/backend/AttachmentImageControl.jsx';
+import { ItemList } from '../components/backend/ItemList.jsx';
+import { moveItem } from '../components/backend/moveItem.js';
+import { useAttachmentUrls } from '../components/backend/useAttachmentUrls.js';
+import { PaddingControls } from '../components/backend/PaddingControls.jsx';
+import { editorPaddingStyle } from '../components/backend/padding-presets.js';
+import { EntranceControl } from '../components/backend/EntranceControl.jsx';
+import {
+  resolveEntrance,
+  entranceRootProps,
+  entrancePartProps,
+} from '../components/backend/entranceCanvas.js';
+import { EDITOR_BLOCK_FRAME } from '../components/backend/editorCanvas.js';
 import previewImage from './preview.svg';
 import metadata from './block.json';
 
+const emptyItem = () => ({ quote: '', author: '', role: '', avatarId: 0 });
+
 registerBlockType(metadata, {
-    edit({ attributes, setAttributes }) {
-        const blockProps = useBlockProps();
-        const { isPreview, heading, bgImageId, bgImageUrl, bgImagePosition, items } = attributes;
+  edit({ attributes, setAttributes, clientId }) {
+    const blockProps = useBlockProps();
+    const items = Array.isArray(attributes.items) ? attributes.items : [];
+    const avatars = useAttachmentUrls(
+      items.map((item) => Number(item.avatarId) || 0),
+    );
 
-        // Static preview for the Gutenberg inserter hover panel.
-        if (isPreview) {
-            return (
-                <div {...blockProps}>
-                    <img
-                        src={previewImage}
-                        alt={__('Testimonial Carousel preview', 'acme-2026')}
-                        style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '8px' }}
+    if (attributes.isPreview) {
+      return (
+        <div {...blockProps}>
+          <img
+            src={previewImage}
+            alt={__('Testimonial Carousel preview', '<text-domain>')}
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
+        </div>
+      );
+    }
+
+    const entrance = resolveEntrance(
+      attributes.entrance,
+      metadata.attributes.entrance.default,
+    );
+    const rootEntrance = entranceRootProps(entrance);
+
+    const updateItem = (index, patch) =>
+      setAttributes({
+        items: items.map((item, i) =>
+          i === index ? { ...item, ...patch } : item,
+        ),
+      });
+
+    return (
+      <>
+        <InspectorControls>
+          <PanelBody title={__('Slides', '<text-domain>')} initialOpen>
+            <ItemList
+              items={items}
+              selectable={false}
+              onAdd={() => setAttributes({ items: [...items, emptyItem()] })}
+              onRemove={(index) =>
+                setAttributes({ items: items.filter((_, i) => i !== index) })
+              }
+              onMove={(from, to) =>
+                setAttributes({ items: moveItem(items, from, to) })
+              }
+              getLabel={(item) => item.author}
+              getThumb={(item) => avatars[Number(item.avatarId)] || ''}
+              addButtonLabel={__('+ Add slide', '<text-domain>')}
+              itemLabelPrefix={__('Slide', '<text-domain>')}
+            />
+          </PanelBody>
+          <PaddingControls
+            attributes={attributes}
+            setAttributes={setAttributes}
+          />
+          <EntranceControl
+            attributes={attributes}
+            setAttributes={setAttributes}
+            clientId={clientId}
+          />
+        </InspectorControls>
+
+        <section
+          {...blockProps}
+          {...rootEntrance}
+          className={`${blockProps.className} testimonial-carousel bg-slate-50 ${EDITOR_BLOCK_FRAME}`}
+          style={{
+            ...blockProps.style,
+            ...editorPaddingStyle(attributes),
+            ...rootEntrance.style,
+          }}
+        >
+          <AutoGrowingTextarea
+            {...entrancePartProps(entrance, 0)}
+            value={attributes.title}
+            onChange={(value) => setAttributes({ title: value })}
+            placeholder={__('Section title…', '<text-domain>')}
+            className="mb-10 w-full bg-transparent text-center text-3xl font-extrabold tracking-tight text-slate-900"
+          />
+
+          {/* Every slide side by side, in array order, so a reorder shows at once. */}
+          <div
+            {...entrancePartProps(entrance, 1)}
+            className="flex snap-x gap-6 overflow-x-auto pb-4"
+          >
+            {items.map((item, index) => (
+              <figure
+                key={index}
+                className="flex w-[calc(50%-12px)] shrink-0 snap-start flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
+              >
+                <RichText
+                  tagName="blockquote"
+                  value={item.quote}
+                  onChange={(value) => updateItem(index, { quote: value })}
+                  placeholder={__('Quote…', '<text-domain>')}
+                  className="flex-1 text-lg leading-relaxed text-slate-700"
+                />
+
+                <figcaption className="mt-6 flex items-center gap-4">
+                  <div className="w-16 shrink-0">
+                    <AttachmentImageControl
+                      imageId={item.avatarId}
+                      onSelect={(media) =>
+                        updateItem(index, { avatarId: Number(media.id) || 0 })
+                      }
+                      onRemove={() => updateItem(index, { avatarId: 0 })}
+                      height="64px"
+                      emptyLabel={__('Photo', '<text-domain>')}
                     />
-                </div>
-            );
-        }
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <AutoGrowingTextarea
+                      value={item.author}
+                      onChange={(value) => updateItem(index, { author: value })}
+                      placeholder={__('Name…', '<text-domain>')}
+                      className="w-full bg-transparent font-bold text-slate-900"
+                    />
+                    <AutoGrowingTextarea
+                      value={item.role}
+                      onChange={(value) => updateItem(index, { role: value })}
+                      placeholder={__('Role…', '<text-domain>')}
+                      className="w-full bg-transparent text-sm text-slate-500"
+                    />
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      </>
+    );
+  },
 
-        // Repeater helpers — see Phase 2 of the create-block skill for the canonical pattern.
-        const [activeIdx, setActiveIdx] = useState(0);
-        const safeItems = items || [];
-        const updateItem = (index, patch) =>
-            setAttributes({ items: safeItems.map((it, i) => i === index ? { ...it, ...patch } : it) });
-        const removeItem = (index) => {
-            setAttributes({ items: safeItems.filter((_, i) => i !== index) });
-            setActiveIdx(Math.max(0, index - 1));
-        };
-        const addItem = () => {
-            const next = [...safeItems, { quote: '', author: '', role: '', imageId: 0, imageUrl: '' }];
-            setAttributes({ items: next });
-            setActiveIdx(next.length - 1);
-        };
-
-        const active = safeItems[activeIdx];
-
-        return (
-            <>
-                {/* Sidebar (InspectorControls) — config only. */}
-                <PaddingControls attributes={attributes} setAttributes={setAttributes} />
-
-                {/* Editor body — content in the dashed wrapper. */}
-                <section
-                    {...blockProps}
-                    className={`${blockProps.className} mb-10 bg-gray-50 border-2 border-dashed border-gray-600 rounded-lg p-6 relative overflow-hidden`}
-                >
-                    <h3 className="text-base font-sans! font-bold mb-8 uppercase tracking-widest text-gray-500 relative z-10">
-                        Testimonial Carousel Preview
-                    </h3>
-
-                    <div className="space-y-6 relative z-10">
-                        {/* Heading — short text → plain input */}
-                        <div>
-                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Heading</label>
-                            <div className="p-3 border border-gray-300 rounded bg-white">
-                                <input
-                                    type="text"
-                                    value={heading}
-                                    onChange={(e) => setAttributes({ heading: e.target.value })}
-                                    placeholder={__('Section heading…', 'acme-2026')}
-                                    className="w-full border-0 outline-none m-0 p-0 bg-transparent text-base text-gray-900 placeholder:text-gray-400"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Background image (optional) */}
-                        <div className="p-4 bg-white/50 rounded-lg border border-gray-200">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-2">Background</label>
-                            <MediaUploadCheck>
-                                <ImageUploadWithHover
-                                    imageId={bgImageId}
-                                    imageUrl={bgImageUrl}
-                                    MediaUpload={MediaUpload}
-                                    onSelect={(media) => setAttributes({ bgImageId: media.id, bgImageUrl: media.url })}
-                                    onRemove={() => setAttributes({ bgImageId: 0, bgImageUrl: '' })}
-                                    height="200px"
-                                />
-                            </MediaUploadCheck>
-                            <ImagePositionControl
-                                value={bgImagePosition}
-                                onChange={(val) => setAttributes({ bgImagePosition: val })}
-                            />
-                        </div>
-
-                        {/* Slides repeater — tabs pattern */}
-                        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                            <TabSelector
-                                items={safeItems}
-                                activeItem={activeIdx}
-                                setActiveItem={setActiveIdx}
-                                addItem={addItem}
-                                itemLabelPrefix={__('Slide', 'acme-2026')}
-                            />
-
-                            {active && (
-                                <div className="space-y-4">
-                                    {/* Delete pill (same style as the ImageUploadWithHover "Remove image" button) — top-right of the active item's panel */}
-                                    {safeItems.length > 1 && (
-                                        <div className="flex justify-end">
-                                            <RemoveButton
-                                                confirmMessage={__('Remove this slide?', 'acme-2026')}
-                                                onClick={() => removeItem(activeIdx)}
-                                            />
-                                        </div>
-                                    )}
-
-                                    {/* Quote — long copy → RichText */}
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Quote</label>
-                                        <div className="p-3 border border-gray-300 rounded bg-white">
-                                            <RichText
-                                                tagName="p"
-                                                value={active.quote}
-                                                onChange={(value) => updateItem(activeIdx, { quote: value })}
-                                                className="!m-0 min-h-[80px]"
-                                                placeholder={__('Enter testimonial quote…', 'acme-2026')}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Author — short text → plain input */}
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Author</label>
-                                        <div className="p-3 border border-gray-300 rounded bg-white">
-                                            <input
-                                                type="text"
-                                                value={active.author}
-                                                onChange={(e) => updateItem(activeIdx, { author: e.target.value })}
-                                                placeholder={__('Author name…', 'acme-2026')}
-                                                className="w-full border-0 outline-none m-0 p-0 bg-transparent text-base text-gray-900 placeholder:text-gray-400"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </section>
-            </>
-        );
-    },
-
-    // Server-rendered via block.php — no client save.
-    save: () => null,
+  save: () => null,
 });
 ```
 
 ### `resources/blocks/testimonial-carousel/block.js`
 
-Frontend behavior. Swiper is registered by `BlockManager` and enqueued only
-when this block renders, so `window.Swiper` is available here.
-
 ```js
+// Served from source (no import): Swiper is the vendor script registered in app/setup.php.
 document.addEventListener('DOMContentLoaded', () => {
-    if (typeof Swiper === 'undefined') return;
+  if (typeof window.Swiper === 'undefined') return;
 
-    document.querySelectorAll('.testimonial-carousel__viewport').forEach((el) => {
-        new Swiper(el, {
-            loop: true,
-            slidesPerView: 1,
-            spaceBetween: 24,
-            navigation: {
-                nextEl: el.querySelector('.testimonial-carousel__next'),
-                prevEl: el.querySelector('.testimonial-carousel__prev'),
-            },
-        });
+  document.querySelectorAll('[data-testimonial-carousel]').forEach((slider) => {
+    new window.Swiper(slider, {
+      slidesPerView: 1,
+      spaceBetween: 24,
+      breakpoints: { 768: { slidesPerView: 2 } },
+      pagination: {
+        el: slider.querySelector('.swiper-pagination'),
+        clickable: true,
+      },
+      a11y: { enabled: true },
     });
+  });
 });
 ```
 
 ### `resources/blocks/testimonial-carousel/block.css`
 
-Scoped under the block root class. Tailwind default scale via `@apply`. BEM
-because this block has nested states (track/item/person/role).
-
 ```css
-.testimonial-carousel {
-    @apply py-16;
-}
-
-.testimonial-carousel__heading {
-    @apply mb-8 text-3xl font-bold leading-tight;
-}
-
-.testimonial-carousel__viewport {
-    @apply relative overflow-hidden;
-}
-
-.testimonial-carousel__track {
-    @apply flex;
-}
-
-.testimonial-carousel__item {
-    @apply flex flex-col gap-4 rounded-lg bg-gray-50 p-6;
-}
-
-.testimonial-carousel__quote {
-    @apply text-lg italic text-gray-800;
-}
-
-.testimonial-carousel__person {
-    @apply flex items-center gap-3;
-}
-
-.testimonial-carousel__avatar {
-    @apply h-12 w-12 rounded-full object-cover;
-}
-
-.testimonial-carousel__author {
-    @apply font-semibold;
-}
-
-.testimonial-carousel__role {
-    @apply text-sm text-gray-500;
-}
-
-.testimonial-carousel__prev,
-.testimonial-carousel__next {
-    @apply absolute top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2;
+.testimonial-carousel .swiper-pagination-bullet-active {
+  background-color: var(--color-primary, #2563eb);
 }
 ```
 
-### `resources/views/blocks/testimonial-carousel.blade.php`
+### `app/setup.php` (append)
 
-View-only. Data was prepared in `block.php`. `{{ }}` auto-escapes; the only
-raw output is `wp_get_attachment_image()` — trusted HTML from WP core, called
-with an **explicit image size** (CLAUDE.md › Performance).
-
-```blade
-{{--
-    View-only (CLAUDE.md › PHP/Blade): no queries, no business logic, no
-    fetching. `.testimonial-carousel` is the block's unique root class —
-    encapsulation scope for the styles (CLAUDE.md › CSS).
---}}
-@unless (empty($items))
-    <section
-        class="testimonial-carousel @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop)"
-        aria-label="{{ $heading ?: __('Testimonials', 'acme-2026') }}"
-    >
-        @if ($heading)
-            <h2 class="testimonial-carousel__heading">{{ $heading }}</h2>
-        @endif
-
-        <div class="testimonial-carousel__viewport swiper">
-            <ul class="testimonial-carousel__track swiper-wrapper">
-                @foreach ($items as $item)
-                    <li class="testimonial-carousel__item swiper-slide">
-                        <blockquote class="testimonial-carousel__quote">{{ $item['quote'] }}</blockquote>
-
-                        <div class="testimonial-carousel__person">
-                            @if ($item['image_id'])
-                                {{-- Explicit size — CLAUDE.md › Performance --}}
-                                {!! wp_get_attachment_image($item['image_id'], 'thumbnail', false, [
-                                    'class' => 'testimonial-carousel__avatar',
-                                    'alt'   => $item['author'],
-                                ]) !!}
-                            @endif
-
-                            <p class="testimonial-carousel__author">{{ $item['author'] }}</p>
-
-                            @if ($item['role'])
-                                <p class="testimonial-carousel__role">{{ $item['role'] }}</p>
-                            @endif
-                        </div>
-                    </li>
-                @endforeach
-            </ul>
-
-            <button type="button" class="testimonial-carousel__prev" aria-label="{{ __('Previous', 'acme-2026') }}">‹</button>
-            <button type="button" class="testimonial-carousel__next" aria-label="{{ __('Next', 'acme-2026') }}">›</button>
-        </div>
-    </section>
-@endunless
-```
-
----
-
-## Reference block 2: `vision-accordion`
-
-Demonstrates a pattern block 1 doesn't: an array repeater where each item
-carries an **icon** (via the `IconPicker` shared component), and a
-**zero-JS-framework accordion** — the open/closed state is driven by a
-hidden `<input type="checkbox">` and pure CSS (`peer-checked:...`);
-`accordion.js` only closes sibling items so a checkbox group behaves like
-an accordion (checkboxes, unlike radios, can also be closed by clicking
-the open one again — the one behavior CSS alone can't give us "for free").
-Also demonstrates applying `BlockImagePosition::objectClass()` to a real
-positioned background image, and validating a repeater field's value
-(`icon`) against an allow-list in `block.php` rather than in Blade.
-
-### `resources/blocks/vision-accordion/block.json`
-
-```json
-{
-    "apiVersion": 3,
-    "name": "acme/vision-accordion",
-    "title": "Vision Accordion",
-    "category": "custom-blocks",
-    "icon": "list-view",
-    "description": "Two-column layout: heading + accordion (left) and image (right).",
-    "textdomain": "acme-2026",
-    "render": "file:./block.php",
-    "supports": {
-        "anchor": true
-    },
-    "attributes": {
-        "isPreview": {
-            "type": "boolean",
-            "default": false
-        },
-        "title": {
-            "type": "string",
-            "default": "Our Vision"
-        },
-        "description": {
-            "type": "string",
-            "default": ""
-        },
-        "items": {
-            "type": "array",
-            "default": [
-                {
-                    "title": "Excellence",
-                    "body": "",
-                    "icon": "chakra-crown"
-                }
-            ]
-        },
-        "imageId": {
-            "type": "number",
-            "default": 0
-        },
-        "imageUrl": {
-            "type": "string",
-            "default": ""
-        },
-        "imagePosition": {
-            "type": "string",
-            "default": "center"
-        },
-        "showImageOverlay": {
-            "type": "boolean",
-            "default": false
-        }
-    },
-    "example": {
-        "attributes": {
-            "isPreview": true
-        }
-    }
-}
-```
-
-### `resources/blocks/vision-accordion/block.php`
-
-The real project's version stored raw strings (no `sanitize_text_field`/
-`wp_kses_post`), cast padding numbers with `(int)` instead of `absint`,
-and validated `item.icon` against an allow-list **inside the Blade
-view**. This corrected version sanitizes every field at the boundary and
-moves the icon allow-list check here — validating input is data
-preparation, not the render-control logic Blade is scoped to.
+The library files are committed as `resources/js/vendor/swiper-bundle.min.js` and
+`resources/css/vendor/swiper-bundle.min.css` (Swiper 11, pre-built distributables).
 
 ```php
-<?php
-
-if (!defined('ABSPATH')) {
-    exit;
-}
-
-$attributes = $attributes ?? [];
-
-// Matches the icon set IconPicker's options list offers in block.jsx —
-// validated here so an unexpected value can't reach the icon-file lookup
-// in Blade.
-$allowedIcons = [
-    'chakra-crown', 'chakra-third-eye', 'chakra-throat', 'chakra-heart',
-    'chakra-solar-plexus', 'chakra-sacral', 'chakra-root',
-    'personalized-healthcare-40', 'mindful-yoga-40',
-    'preventative-family-medicine-40', 'health',
-];
-
-$items = array_map(static function (array $item) use ($allowedIcons): array {
-    $icon = $item['icon'] ?? '';
-
-    return [
-        // RichText content — inline formatting (e.g. <strong>) is expected.
-        'title' => wp_kses_post($item['title'] ?? ''),
-        'body'  => wp_kses_post($item['body']  ?? ''),
-        'icon'  => in_array($icon, $allowedIcons, true) ? $icon : 'chakra-crown',
-    ];
-}, $attributes['items'] ?? []);
-
-echo view('blocks.vision-accordion', [
-    'title'            => wp_kses_post($attributes['title'] ?? ''),
-    'description'      => wp_kses_post($attributes['description'] ?? ''),
-    'items'            => $items,
-    'imageId'          => absint($attributes['imageId'] ?? 0),
-    'imagePosition'    => sanitize_text_field($attributes['imagePosition'] ?? 'center'),
-    'showImageOverlay' => (bool) ($attributes['showImageOverlay'] ?? false),
-    'anchor'           => sanitize_html_class($attributes['anchor'] ?? ''),
-
-    // Global padding attributes injected by BlockManager::globalAttributes().
-    'paddingVertDesktop' => absint($attributes['paddingVertDesktop'] ?? 112),
-    'paddingVertMobile'  => absint($attributes['paddingVertMobile']  ?? 56),
-    'paddingXDesktop'    => (bool) ($attributes['paddingXDesktop']   ?? true),
-    'paddingXMobile'     => (bool) ($attributes['paddingXMobile']    ?? true),
-])->render();
-```
-
-### `resources/blocks/vision-accordion/block.jsx`
-
-Editor side had no standards deviation in the source — reproduced with
-the corrected `IconPicker` (see below): the block, not the shared
-component, knows which icons live in a `chakras/` subfolder.
-
-```jsx
-import { registerBlockType } from '@wordpress/blocks';
-import { useBlockProps, MediaUpload, MediaUploadCheck, RichText } from '@wordpress/block-editor';
-import { ToggleControl } from '@wordpress/components';
-import { useState } from '@wordpress/element';
-import { PaddingControls } from '../components/backend/PaddingControls.jsx';
-import { ImageUploadWithHover } from '../components/backend/ImageUploadWithHover.jsx';
-import { ImagePositionControl } from '../components/backend/ImagePositionControl.jsx';
-import { RemoveButton } from '../components/backend/RemoveButton.jsx';
-import { IconPicker } from '../components/backend/IconPicker.jsx';
-import { TabSelector } from '../components/backend/TabSelector.jsx';
-import previewImage from './preview.svg';
-import metadata from './block.json';
-
-const ICON_OPTIONS = [
-    { label: 'Crown (Default)', value: 'chakra-crown' },
-    { label: 'Third Eye', value: 'chakra-third-eye' },
-    { label: 'Throat', value: 'chakra-throat' },
-    { label: 'Heart', value: 'chakra-heart' },
-    { label: 'Solar Plexus', value: 'chakra-solar-plexus' },
-    { label: 'Sacral', value: 'chakra-sacral' },
-    { label: 'Root', value: 'chakra-root' },
-    { label: 'Healthcare', value: 'personalized-healthcare-40' },
-    { label: 'Yoga Practice', value: 'mindful-yoga-40' },
-    { label: 'Family Medicine', value: 'preventative-family-medicine-40' },
-    { label: 'Holistic Health', value: 'health' },
-];
-
-// Only the chakra-* icons live under public/icons/chakras/ — everything
-// else lives directly under public/icons/. IconPicker itself doesn't know
-// this; it's this block's own icon set, so the mapping lives here.
-const iconFolderFor = (icon) => (icon.startsWith('chakra-') ? 'chakras' : '');
-
-registerBlockType(metadata, {
-    edit({ attributes, setAttributes }) {
-        const blockProps = useBlockProps();
-        const { isPreview, title, description, items, imageId, imageUrl, imagePosition, showImageOverlay } = attributes;
-
-        if (isPreview) {
-            return (
-                <div {...blockProps}>
-                    <img
-                        src={previewImage}
-                        alt="Vision Accordion preview"
-                        style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '8px' }}
-                    />
-                </div>
-            );
-        }
-
-        const [activeItem, setActiveItem] = useState(0);
-
-        const updateItem = (index, field, value) => {
-            const next = [...items];
-            next[index] = { ...next[index], [field]: value };
-            setAttributes({ items: next });
-        };
-
-        const addItem = () => {
-            const next = [...items, { title: '', body: '', icon: 'chakra-crown' }];
-            setAttributes({ items: next });
-            setActiveItem(next.length - 1);
-        };
-
-        const removeItem = (index) => {
-            const next = items.filter((_, i) => i !== index);
-            setAttributes({ items: next.length ? next : [{ title: '', body: '', icon: 'chakra-crown' }] });
-            setActiveItem(Math.max(0, index - 1));
-        };
-
-        const active = items[activeItem];
-
-        return (
-            <>
-                <PaddingControls attributes={attributes} setAttributes={setAttributes} />
-
-                <section {...blockProps} className={`${blockProps.className} mb-10 bg-gray-50 border-2 border-dashed border-gray-600 rounded-lg p-6`}>
-                    <h3 className="text-base font-sans! font-bold mb-6 text-gray-500 uppercase tracking-widest">Vision Accordion Preview</h3>
-
-                    <div className="flex flex-col gap-6">
-                        {/* Background image */}
-                        <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-                            <MediaUploadCheck>
-                                <ImageUploadWithHover
-                                    imageId={imageId}
-                                    imageUrl={imageUrl}
-                                    MediaUpload={MediaUpload}
-                                    onSelect={(media) => setAttributes({ imageId: media.id, imageUrl: media.url })}
-                                    onRemove={() => setAttributes({ imageId: 0, imageUrl: '' })}
-                                    height="220px"
-                                />
-                            </MediaUploadCheck>
-                            <ImagePositionControl
-                                value={imagePosition}
-                                onChange={(val) => setAttributes({ imagePosition: val })}
-                            />
-                            <ToggleControl
-                                label="Green image overlay"
-                                checked={!!showImageOverlay}
-                                onChange={(val) => setAttributes({ showImageOverlay: val })}
-                                className="!mb-0 mt-3"
-                            />
-                        </div>
-
-                        {/* Heading + description — short text → plain input; long copy → RichText */}
-                        <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm space-y-4">
-                            <div>
-                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Title</label>
-                                <div className="p-3 border border-gray-300 rounded bg-white">
-                                    <input
-                                        type="text"
-                                        value={title}
-                                        onChange={(e) => setAttributes({ title: e.target.value })}
-                                        placeholder="Enter title…"
-                                        className="w-full border-0 outline-none m-0 p-0 bg-transparent text-base text-gray-900 placeholder:text-gray-400"
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Description</label>
-                                <div className="p-3 border border-gray-300 rounded bg-white">
-                                    <RichText
-                                        tagName="p"
-                                        value={description}
-                                        onChange={(value) => setAttributes({ description: value })}
-                                        className="!m-0 min-h-[60px]"
-                                        placeholder="Enter description…"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Items repeater — icon + title + body */}
-                        <div className="space-y-4">
-                            <TabSelector
-                                items={items}
-                                activeItem={activeItem}
-                                setActiveItem={setActiveItem}
-                                addItem={addItem}
-                                itemLabelPrefix="Item"
-                            />
-
-                            {active && (
-                                <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-4">
-                                    {items.length > 1 && (
-                                        <div className="flex justify-end">
-                                            <RemoveButton onClick={() => removeItem(activeItem)} />
-                                        </div>
-                                    )}
-
-                                    <IconPicker
-                                        label={`Item ${activeItem + 1} Icon`}
-                                        value={active.icon || 'chakra-crown'}
-                                        options={ICON_OPTIONS}
-                                        onChange={(val) => updateItem(activeItem, 'icon', val)}
-                                        iconFolder={iconFolderFor(active.icon || 'chakra-crown')}
-                                    />
-
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Title</label>
-                                        <div className="p-2 border border-gray-300 rounded bg-white">
-                                            <input
-                                                type="text"
-                                                value={active.title}
-                                                onChange={(e) => updateItem(activeItem, 'title', e.target.value)}
-                                                placeholder="Item title…"
-                                                className="w-full border-0 outline-none m-0 p-0 bg-transparent text-base text-gray-900 placeholder:text-gray-400"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Body</label>
-                                        <div className="p-2 border border-gray-300 rounded bg-white">
-                                            <RichText
-                                                tagName="p"
-                                                value={active.body}
-                                                onChange={(val) => updateItem(activeItem, 'body', val)}
-                                                className="!m-0 min-h-[60px]"
-                                                placeholder="Item body…"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </section>
-            </>
-        );
-    },
-
-    save: () => null,
+/**
+ * Register vendor libs. Registration != enqueue — each block.php that needs a lib enqueues its handle.
+ */
+add_action('init', function () {
+    wp_register_script('swiper', get_theme_file_uri('resources/js/vendor/swiper-bundle.min.js'), [], '11.2.10', true);
+    wp_register_style('swiper', get_theme_file_uri('resources/css/vendor/swiper-bundle.min.css'), [], '11.2.10');
 });
-```
-
-### `resources/blocks/vision-accordion/accordion.js`
-
-Unmodified from the source — already minimal and framework-free.
-
-```js
-// Vision accordion — single-open behaviour with click-again-to-close.
-//
-// The open/closed visuals are pure CSS, driven by the input's :checked state.
-// Using <input type="checkbox"> gives "click an open item again to close it"
-// for free (radios can't be unchecked by clicking). The only thing checkboxes
-// don't do on their own is enforce one-open-at-a-time — so when one opens we
-// close the others that share its name (the accordion group).
-//
-// Markup contract:
-//   - each item's toggle is an <input class="vision-accordion-input">
-//   - items in the same accordion share the same `name`
-//
-// Degrades gracefully: with JS off, checkboxes still toggle (just without the
-// single-open constraint).
-
-function init() {
-  const inputs = Array.from(document.querySelectorAll('.vision-accordion-input'));
-  if (!inputs.length) return;
-
-  for (const input of inputs) {
-    input.addEventListener('change', () => {
-      if (!input.checked) return;
-      for (const other of inputs) {
-        if (other !== input && other.name === input.name) {
-          other.checked = false;
-        }
-      }
-    });
-  }
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
-```
-
-### `resources/views/blocks/vision-accordion.blade.php`
-
-Icon **validation** (allow-listing) moved to `block.php` — Blade only
-maps an already-trusted icon name to its file path, a purely
-presentational lookup. The background image now renders via
-`wp_get_attachment_image()` with an explicit size instead of a raw
-`<img src="{{ $imageUrl }}">`, and the root `<section>` applies
-`@paddingClasses(...)`.
-
-```blade
-{{-- View-only. Icon validity is checked in block.php; this file only maps
-     an already-trusted icon name to its SVG file path. --}}
-@php
-    $accordionGroup = 'vision-accordion-' . uniqid();
-    $chakraIcons = [
-        'chakra-crown', 'chakra-third-eye', 'chakra-throat', 'chakra-heart',
-        'chakra-solar-plexus', 'chakra-sacral', 'chakra-root',
-    ];
-@endphp
-
-<section
-    @if ($anchor) id="{{ $anchor }}" @endif
-    class="vision-accordion relative w-full bg-light-green overflow-hidden @paddingClasses($paddingVertMobile, $paddingVertDesktop, false, false)"
->
-    <div class="grid grid-cols-1 lg:grid-cols-2">
-
-        {{-- Left column: heading + accordion --}}
-        <div class="relative px-6 md:px-12 lg:pl-24 lg:pr-12">
-            <div class="flex flex-col gap-10">
-                <div class="flex flex-col gap-8">
-                    @if ($title)
-                        <h2 class="!mb-0 vision-accordion__title">{!! $title !!}</h2>
-                    @endif
-                    @if ($description)
-                        <p class="!mb-0 vision-accordion__description">{!! $description !!}</p>
-                    @endif
-                </div>
-
-                <div class="relative z-10 flex flex-col gap-5">
-                    @foreach ($items as $index => $item)
-                        @php
-                            $iconSubfolder = in_array($item['icon'], $chakraIcons, true) ? 'chakras/' : '';
-                            $iconPath = get_template_directory() . '/public/icons/' . $iconSubfolder . $item['icon'] . '.svg';
-                            $iconSvg = file_exists($iconPath) ? file_get_contents($iconPath) : '';
-                            $itemId = $accordionGroup . '-' . $index;
-                        @endphp
-
-                        <div class="vision-accordion__item">
-                            <input
-                                type="checkbox"
-                                name="{{ $accordionGroup }}"
-                                id="{{ $itemId }}"
-                                class="peer vision-accordion-input hidden"
-                                @if ($index === 0) checked @endif
-                            >
-                            <div class="vision-accordion__card peer-checked:bg-off-white peer-checked:[&_.vision-accordion__chevron]:rotate-180 peer-checked:[&_.vision-accordion__body-grid]:grid-rows-[1fr]">
-                                <label for="{{ $itemId }}" class="vision-accordion__trigger">
-                                    @if ($iconSvg)
-                                        <span class="vision-accordion__icon">{!! $iconSvg !!}</span>
-                                    @endif
-
-                                    <h3 class="vision-accordion__item-title !mb-0">{!! $item['title'] !!}</h3>
-
-                                    <svg class="vision-accordion__chevron" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                        <path d="M8 12l8 8 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </label>
-
-                                <div class="vision-accordion__body-grid">
-                                    <div class="overflow-hidden">
-                                        @if (!empty($item['body']))
-                                            <p class="vision-accordion__body">{!! $item['body'] !!}</p>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-
-        {{-- Right column: full-bleed background image --}}
-        <div class="relative min-h-[400px] lg:min-h-full">
-            @if ($showImageOverlay)
-                <div class="absolute inset-0 bg-medium-green/[0.15] z-10 pointer-events-none"></div>
-            @endif
-            @if ($imageId)
-                {{-- Explicit size — CLAUDE.md › Performance --}}
-                {!! wp_get_attachment_image($imageId, 'large', false, [
-                    'class'   => 'absolute inset-0 h-full w-full object-cover ' . \App\Blocks\BlockImagePosition::objectClass($imagePosition),
-                    'alt'     => $title ? wp_strip_all_tags($title) : '',
-                    'loading' => 'lazy',
-                ]) !!}
-            @endif
-        </div>
-
-    </div>
-</section>
-```
-
----
-
-## Reference block 3: `image-card-grid`
-
-Demonstrates a pattern block 1 and 2 don't: a **fixed array** of cards
-(add/remove, but no `TabSelector`/active-item state — the editor maps
-over `cards` directly), and a **zero-JS** hover/tap-reveal interaction
-using native `<details>/<summary>` with CSS `group-open` — no
-`accordion.js`-style script at all needed on the frontend.
-
-### `resources/blocks/image-card-grid/block.json`
-
-```json
-{
-    "apiVersion": 3,
-    "name": "acme/image-card-grid",
-    "title": "Image Card Grid",
-    "category": "custom-blocks",
-    "icon": "grid-view",
-    "description": "Stacked heading + 3 image cards with hover-reveal body.",
-    "textdomain": "acme-2026",
-    "render": "file:./block.php",
-    "supports": {
-        "anchor": true
-    },
-    "attributes": {
-        "isPreview": {
-            "type": "boolean",
-            "default": false
-        },
-        "headingSerif": {
-            "type": "string",
-            "default": ""
-        },
-        "headingSans": {
-            "type": "string",
-            "default": ""
-        },
-        "cards": {
-            "type": "array",
-            "default": [
-                { "title": "", "body": "", "imageId": 0, "imageUrl": "", "imagePosition": "center" }
-            ]
-        }
-    },
-    "example": {
-        "attributes": {
-            "isPreview": true
-        }
-    }
-}
-```
-
-### `resources/blocks/image-card-grid/block.php`
-
-Same corrections as block 2: sanitize every field (the source used raw
-casts/passthrough strings), `absint` the padding numbers, and each card's
-image renders via `wp_get_attachment_image` rather than a raw `<img>`.
-
-```php
-<?php
-
-if (!defined('ABSPATH')) {
-    exit;
-}
-
-$attributes = $attributes ?? [];
-
-$cards = array_map(static function (array $card): array {
-    return [
-        'title'         => wp_kses_post($card['title'] ?? ''),
-        'body'          => wp_kses_post($card['body']  ?? ''),
-        'imageId'       => absint($card['imageId'] ?? 0),
-        'imagePosition' => sanitize_text_field($card['imagePosition'] ?? 'center'),
-    ];
-}, $attributes['cards'] ?? []);
-
-echo view('blocks.image-card-grid', [
-    'headingSerif' => wp_kses_post($attributes['headingSerif'] ?? ''),
-    'headingSans'  => wp_kses_post($attributes['headingSans']  ?? ''),
-    'cards'        => $cards,
-    'anchor'       => sanitize_html_class($attributes['anchor'] ?? ''),
-
-    // Global padding attributes injected by BlockManager::globalAttributes().
-    'paddingVertDesktop' => absint($attributes['paddingVertDesktop'] ?? 112),
-    'paddingVertMobile'  => absint($attributes['paddingVertMobile']  ?? 56),
-    'paddingXDesktop'    => (bool) ($attributes['paddingXDesktop']   ?? true),
-    'paddingXMobile'     => (bool) ($attributes['paddingXMobile']    ?? true),
-])->render();
-```
-
-### `resources/blocks/image-card-grid/block.jsx`
-
-Editor side had no standards deviation — reproduced as-is (adds the
-shared `preview.svg` wiring the source used a real `.webp` for instead,
-per this kit's placeholder-preview convention).
-
-```jsx
-import { registerBlockType } from '@wordpress/blocks';
-import { useBlockProps, MediaUpload, MediaUploadCheck, RichText } from '@wordpress/block-editor';
-import { Button } from '@wordpress/components';
-import { PaddingControls } from '../components/backend/PaddingControls.jsx';
-import { ImageUploadWithHover } from '../components/backend/ImageUploadWithHover.jsx';
-import { ImagePositionControl } from '../components/backend/ImagePositionControl.jsx';
-import { RemoveButton } from '../components/backend/RemoveButton.jsx';
-import previewImage from './preview.svg';
-import metadata from './block.json';
-
-registerBlockType(metadata, {
-    edit({ attributes, setAttributes }) {
-        const blockProps = useBlockProps();
-        const { isPreview, headingSerif, headingSans, cards } = attributes;
-
-        if (isPreview) {
-            return (
-                <div {...blockProps}>
-                    <img
-                        src={previewImage}
-                        alt="Image Card Grid preview"
-                        style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '8px' }}
-                    />
-                </div>
-            );
-        }
-
-        const updateCard = (index, field, value) => {
-            const next = [...cards];
-            next[index] = { ...next[index], [field]: value };
-            setAttributes({ cards: next });
-        };
-
-        const addCard = () => {
-            setAttributes({
-                cards: [...cards, { title: '', body: '', imageId: 0, imageUrl: '', imagePosition: 'center' }],
-            });
-        };
-
-        const removeCard = (index) => {
-            setAttributes({ cards: cards.filter((_, i) => i !== index) });
-        };
-
-        return (
-            <>
-                <PaddingControls attributes={attributes} setAttributes={setAttributes} />
-
-                <section {...blockProps} className={`${blockProps.className} mb-10 bg-gray-50 border-2 border-dashed border-gray-600 rounded-lg p-6`}>
-                    <h3 className="text-base font-sans! font-bold mb-6 text-gray-500 uppercase tracking-widest">Image Card Grid Preview</h3>
-
-                    <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm space-y-4 mb-6">
-                        <div>
-                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Heading (serif)</label>
-                            <div className="p-3 border border-gray-300 rounded bg-white">
-                                <input
-                                    type="text"
-                                    value={headingSerif}
-                                    onChange={(e) => setAttributes({ headingSerif: e.target.value })}
-                                    placeholder="Serif heading…"
-                                    className="w-full border-0 outline-none m-0 p-0 bg-transparent text-base text-gray-900 placeholder:text-gray-400"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Heading (sans)</label>
-                            <div className="p-3 border border-gray-300 rounded bg-white">
-                                <input
-                                    type="text"
-                                    value={headingSans}
-                                    onChange={(e) => setAttributes({ headingSans: e.target.value })}
-                                    placeholder="Sans heading…"
-                                    className="w-full border-0 outline-none m-0 p-0 bg-transparent text-base text-gray-900 placeholder:text-gray-400"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Fixed-array grid — direct .map(), no active-item state */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        {cards.map((card, index) => (
-                            <div key={index} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                                <div className="flex justify-between items-center pb-2 mb-3 border-b border-gray-100">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Card #{index + 1}</span>
-                                    {cards.length > 1 && (
-                                        <RemoveButton onClick={() => removeCard(index)} />
-                                    )}
-                                </div>
-
-                                <MediaUploadCheck>
-                                    <ImageUploadWithHover
-                                        imageId={card.imageId}
-                                        imageUrl={card.imageUrl}
-                                        MediaUpload={MediaUpload}
-                                        onSelect={(media) => {
-                                            updateCard(index, 'imageId', media.id);
-                                            updateCard(index, 'imageUrl', media.url);
-                                        }}
-                                        onRemove={() => {
-                                            updateCard(index, 'imageId', 0);
-                                            updateCard(index, 'imageUrl', '');
-                                        }}
-                                        height="160px"
-                                    />
-                                </MediaUploadCheck>
-                                <ImagePositionControl
-                                    value={card.imagePosition || 'center'}
-                                    onChange={(val) => updateCard(index, 'imagePosition', val)}
-                                />
-
-                                <div className="mt-3 space-y-3">
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Title</label>
-                                        <div className="p-2 border border-gray-300 rounded bg-white">
-                                            <input
-                                                type="text"
-                                                value={card.title}
-                                                onChange={(e) => updateCard(index, 'title', e.target.value)}
-                                                placeholder="Card title…"
-                                                className="w-full border-0 outline-none m-0 p-0 bg-transparent text-base text-gray-900 placeholder:text-gray-400"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase block mb-1">Body (hover)</label>
-                                        <div className="p-2 border border-gray-300 rounded bg-white">
-                                            <RichText
-                                                tagName="p"
-                                                value={card.body}
-                                                onChange={(val) => updateCard(index, 'body', val)}
-                                                className="!m-0 min-h-[60px]"
-                                                placeholder="Body shown on hover…"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="flex justify-center mt-4">
-                        <Button variant="secondary" onClick={addCard}>+ Add Card</Button>
-                    </div>
-                </section>
-            </>
-        );
-    },
-
-    save: () => null,
-});
-```
-
-### `resources/views/blocks/image-card-grid.blade.php`
-
-`<details>/<summary>` with a shared `name` attribute gives "only one open
-at a time" natively (same browser behavior as radio-button-driven
-accordions) with **zero JavaScript**; `group-open`/`group-hover` classes
-drive the reveal animation entirely in CSS.
-
-```blade
-{{-- View-only. Data prepared in block.php. --}}
-<section
-    @if ($anchor) id="{{ $anchor }}" @endif
-    class="image-card-grid relative w-full bg-light-green @paddingClasses($paddingVertMobile, $paddingVertDesktop, false, false)"
->
-    <div class="mx-auto w-full max-w-[1440px] px-6 lg:px-24">
-        <div class="flex flex-col gap-20">
-
-            @if ($headingSerif || $headingSans)
-                <div class="flex flex-col items-center text-center">
-                    @if ($headingSerif)
-                        <p class="!mb-0 image-card-grid__heading-serif">{!! $headingSerif !!}</p>
-                    @endif
-                    @if ($headingSans)
-                        <h2 class="!mb-0 image-card-grid__heading-sans">{!! $headingSans !!}</h2>
-                    @endif
-                </div>
-            @endif
-
-            <div class="flex flex-wrap justify-center gap-6 items-start">
-                @foreach ($cards as $card)
-                    <details
-                        name="image-card-grid"
-                        class="group image-card-grid__card"
-                    >
-                        <summary class="image-card-grid__summary">
-                            @if ($card['imageId'])
-                                {{-- Explicit size — CLAUDE.md › Performance --}}
-                                {!! wp_get_attachment_image($card['imageId'], 'large', false, [
-                                    'class'   => 'absolute inset-0 h-full w-full object-cover -z-20 ' . \App\Blocks\BlockImagePosition::objectClass($card['imagePosition']),
-                                    'alt'     => $card['title'] ? wp_strip_all_tags($card['title']) : '',
-                                    'loading' => 'lazy',
-                                ]) !!}
-                            @endif
-
-                            <div class="image-card-grid__overlay-default"></div>
-                            <div class="image-card-grid__overlay-active"></div>
-
-                            <div class="relative z-10 flex flex-col gap-5">
-                                @if (!empty($card['title']))
-                                    <h3 class="!mb-0 image-card-grid__card-title">{!! $card['title'] !!}</h3>
-                                @endif
-                                @if (!empty($card['body']))
-                                    <div class="image-card-grid__body-grid">
-                                        <div class="overflow-hidden">
-                                            <p class="!mb-0 image-card-grid__body">{!! $card['body'] !!}</p>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        </summary>
-                    </details>
-                @endforeach
-            </div>
-
-        </div>
-    </div>
-</section>
 ```

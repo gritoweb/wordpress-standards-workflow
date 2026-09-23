@@ -3,6 +3,8 @@ import { Button, Spinner } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { useAttachmentUrls } from './useAttachmentUrls.js';
+import { RemoveImageButton } from './RemoveImageButton.jsx';
+import { image as imageIcon } from './coreIcons.jsx';
 
 export function AttachmentImageControl({
   imageId,
@@ -137,10 +139,10 @@ export function AttachmentImageControl({
 
         {state === 'empty' && (
           <p
-            className="m-0 px-4 text-center text-sm"
-            style={{ textAlign: 'center' }}
+            className="m-0"
+            style={{ display: 'flex', width: '36px', maxWidth: '50%', color: '#949494' }}
           >
-            {__('No image selected.', '__TEXT_DOMAIN__')}
+            {imageIcon}
           </p>
         )}
 
@@ -184,43 +186,22 @@ export function AttachmentImageControl({
         </MediaUploadCheck>
 
         {hasReference && onRemove && (
-          <button
-            type="button"
-            aria-label={removeLabel}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onRemove();
-            }}
+          // Shown on hover/focus by the frame's handlers; the button itself is the shared RemoveImageButton.
+          <div
+            data-attachment-remove
             onFocus={(e) => { e.currentTarget.style.opacity = '1'; }}
             onBlur={(e) => { e.currentTarget.style.opacity = '0'; }}
-            className="group-hover:opacity-100 focus:opacity-100 hover:scale-110 active:scale-95"
             style={{
               position: 'absolute',
               top: '8px',
               right: '8px',
               zIndex: 30,
-              width: '28px',
-              height: '28px',
-              borderRadius: '50%',
-              background: 'rgba(0,0,0,0.75)',
-              color: '#fff',
-              border: '2px solid #fff',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              lineHeight: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
               opacity: 0,
-              transition: 'opacity 0.2s ease, transform 0.15s ease',
-              cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+              transition: 'opacity 0.2s ease',
             }}
-            data-attachment-remove
           >
-            ×
-          </button>
+            <RemoveImageButton label={removeLabel} onClick={onRemove} />
+          </div>
         )}
       </div>
 
