@@ -2,6 +2,30 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-23 — Editor fidelity report
+
+The Blade view and `block.jsx` are written separately, so a front-end change
+could leave the editor canvas behind with nothing to flag it.
+
+### Added
+- **`scripts/editor-fidelity.mjs`** (report only, never edits a file):
+  headless Chrome inserts the theme's blocks into a temporary draft, compares
+  every visible text's computed styles in the canvas and on the page at the
+  same width, and lists per block what differs and what the page shows that
+  the editor lacks, with both class lists. No npm packages (Node 22+ and
+  Chrome). Verified on test-skill: 3 reference blocks match; a title colour
+  and a new text changed only in Blade were both reported.
+
+### Fixed
+- **Canvas used the system font.** `css-foundation-wizard` built
+  `editor.css` without `base.css`, where the body and heading fonts live;
+  the report showed `-apple-system` in the editor vs the theme font on the
+  page for every text. `editor.css` now imports `base.css`, and the heading
+  rule covers `[data-heading]` — set by `AutoGrowingTextarea`'s new
+  `heading` prop — so a title typed in a textarea takes the heading font.
+- Reference block titles lacked `sm:text-4xl` in `block.jsx` (30px in the
+  editor, 36px on the page), found by the report.
+
 ## 2026-09-23 — Carousel canvas, install defaults, source of truth
 
 QA of a site built from the kit (`luis`): every block loaded without errors,

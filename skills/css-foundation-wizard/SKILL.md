@@ -151,8 +151,13 @@ never placeholders.
        color: var(--color-ink);
      }
 
-     h1 {
+     /* [data-heading] is a heading typed in the block editor (a textarea,
+        not an h2) — sharing the rule keeps the canvas on the page's font. */
+     h1, h2, h3, h4, h5, h6, [data-heading] {
        font-family: var(--font-display);
+     }
+
+     h1 {
        font-size: var(--text-h1);
        line-height: var(--text-h1--line-height);
        font-weight: var(--text-h1--font-weight);
@@ -247,12 +252,13 @@ Leave a blank line after this group for any future `components/` and `pages/` im
 
 ### 2. Wire `resources/css/editor.css`
 
-Ensure `resources/css/editor.css` imports the necessary layers so the Gutenberg editor canvas has visual parity with the front-end layout and typography:
+Ensure `resources/css/editor.css` imports the necessary layers so the Gutenberg editor canvas has visual parity with the front-end layout and typography. **`base.css` is required** — it holds the body and heading fonts; without it every canvas text falls back to WordPress's system font (measured with `scripts/editor-fidelity.mjs`: `-apple-system` in the editor vs the theme font on the page):
 
 ```css
 @import "tailwindcss";
 
 @import "./global/variables.css";
+@import "./global/base.css";
 @import "./global/typography.css";
 @import "./global/layout.css";
 @import "./global/container.css";

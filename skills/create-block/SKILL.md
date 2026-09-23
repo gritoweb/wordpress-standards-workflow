@@ -86,6 +86,7 @@ wrong domain/path into every file.
 | 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers three Blade directives: `paddingClasses` → `\App\Blocks\BlockPadding::resolve(...)`, `entrance` → `\App\Blocks\BlockEntrance::root(...)` and `entrancePart` → `\App\Blocks\BlockEntrance::part(...)` (see "Infra bootstrap templates"). |
 | 0.18 | `resources/css/components/entrance.css` exists (template `<skill>/templates/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). `resources/css/components/hover.css` exists (template `<skill>/templates/hover.css`) and is `@import`ed by `resources/css/app.css` — **not** inside `@layer`, it must beat Tailwind's transition utilities. |
 | 0.19 | `resources/js/modules/entrance.js` exists (template `<skill>/templates/entrance.js`) and `resources/js/app.js` has `import { initEntrance } from './modules/entrance';` plus a top-level `initEntrance();` call (module scripts are deferred). Without it the front end never adds `data-entered` and the head script's 5s safety net is the only thing that un-hides the page. |
+| 0.20 | `scripts/editor-fidelity.mjs` exists (template `<skill>/templates/editor-fidelity.mjs`). It is a report-only dev tool — see "Editor fidelity report". |
 
 ### Compatibility warnings (do NOT auto-fix)
 
@@ -97,7 +98,7 @@ wrong domain/path into every file.
 
 ### Bootstrap UX
 
-If any check 0.1–0.19 (incl. 0.6.1) fails:
+If any check 0.1–0.20 (incl. 0.6.1) fails:
 
 1. Show the dev a status table of failed checks.
 2. Split fixes into **(A) Creations** (new files/folders) and **(B) Modifications** (edits to `functions.php`, `editor.js`, `app.css`). `package.json` is not edited — tell the dev to run `npm install --save-dev react@^18.0.0 react-dom@^18.0.0` themselves.
@@ -315,7 +316,9 @@ Attributes:
 - **Canvas (inline)** = block **content** — real data rendered with theme
   styling, bounded by `EDITOR_BLOCK_FRAME`:
   - **Headings / subtitles:** `<AutoGrowingTextarea>` styled with
-    `EDITOR_TYPE` tokens, positioned where the text appears visually.
+    `EDITOR_TYPE` tokens, positioned where the text appears visually. A
+    field that is an `h1`–`h6` on the page gets the `heading` prop, so it
+    takes the theme's heading font.
   - **Body copy:** `<ParagraphsField>` or `<RichText>`, inline.
   - **Inline Images (foreground):** `<AttachmentImageControl>` with the **X button on hover** (top-right
     corner) to remove. Clicking the image opens Media Library in browse mode.
@@ -570,6 +573,7 @@ End with a summary table listing every file created/modified.
 ├── entrance.css                    → copied to resources/css/components/entrance.css (check 0.18)
 ├── hover.css                       → copied to resources/css/components/hover.css (check 0.18)
 ├── entrance.js                     → copied to resources/js/modules/entrance.js (check 0.19)
+├── editor-fidelity.mjs             → copied to scripts/editor-fidelity.mjs (check 0.20)
 ├── blocks.php                      → copied to app/blocks.php (check 0.6)
 ├── preview.svg                     → copied per block (with __BLOCK_TITLE__ substituted)
 └── components/backend/             → copied to resources/blocks/components/backend/ (check 0.12)
@@ -817,7 +821,10 @@ registerBlockType(metadata, {
                         onChange={(value) => setAttributes({ heading: value })}
                         placeholder={__('Enter heading…', '<text-domain>')}
                         className={EDITOR_TYPE.display}
+                        heading
                     />
+                    `heading` marks a field that is an h1–h6 on the page, so it takes the
+                    theme's heading font (base.css styles [data-heading] like h1–h6).
                     */}
 
                     {/* Inline Image — AttachmentImageControl (X on hover):
@@ -1085,11 +1092,48 @@ The contract is shared by `BlockEntrance.php`, `entranceCanvas.js`,
 - **Don't save entrance values while building a page** (WP-CLI post content,
   or clicking fields in the panel): the block.json preset is the default and
   a saved object freezes that block against future preset changes.
-- **Verify** before calling the block done, after `npm run build`: open the
-  page in the editor — no block shows "This block has encountered an error"
-  (console clean); clicking the sidebar **Preview** hides and replays the
+- **Verify** before calling the block done, after `npm run build`: run
+  `scripts/editor-fidelity.mjs` for the block (see "Editor fidelity report")
+  and fix what it lists; open the page in the editor — no block shows "This
+  block has encountered an error" (console clean); clicking the sidebar **Preview** hides and replays the
   parts; on the front end the section has `data-entrance` and gains
   `data-entered` on scroll.
+
+#### Editor fidelity report (`scripts/editor-fidelity.mjs`)
+
+The Blade view and `block.jsx` are written separately; nothing keeps them in
+sync by itself. This tool **measures** the drift — it never edits a file, so
+it can't break the editor. The dev (or the AI, when asked) fixes what it
+lists.
+
+```bash
+WP_URL=https://<site>.lndo.site WP_USER=<local admin> WP_PASS=<password> \
+  node scripts/editor-fidelity.mjs [slug ...] [--json]
+```
+
+It opens headless Chrome, inserts the theme's blocks (default attributes) into
+a temporary draft, reads every visible text on the canvas, opens the draft's
+preview **at the canvas's width** (same Tailwind breakpoints) and compares the
+same texts' font size, weight, family, line height, colour, alignment,
+transform and letter spacing, plus each block root's background and top
+padding. The draft is deleted at the end. Output, per block:
+
+```
+✗ vision-accordion
+   "How the kit is built": color rgba(15, 23, 42, 255) → rgba(231, 0, 11, 255)   (editor → page)
+      page class:   text-3xl font-extrabold tracking-tight text-red-600 sm:text-4xl
+      editor class: … text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl
+   "Frequently asked": shown on the page, missing in the editor
+      page class:   text-xs font-bold uppercase text-blue-600
+```
+
+- **Run it** after creating or changing a block, before calling it done, and
+  whenever the dev asks. Exit code 0 = every block matches.
+- **Fix only what it lists**, reading the two class lists it prints — no need
+  to re-read the whole block. `· only in the editor` lines are editor
+  controls ("+ Add link") and are fine.
+- Needs Node 22+ and Chrome on the dev machine, and a local admin login (never
+  a production URL). No npm packages.
 
 #### `app/Providers/ThemeServiceProvider.php` — register the Blade directives
 

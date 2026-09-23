@@ -320,8 +320,9 @@ registerBlockType(metadata, {
                 {...entrancePartProps(entrance, 0)}
                 value={title}
                 onChange={(value) => setAttributes({ title: value })}
+                heading
                 placeholder={__('Section title…', '<text-domain>')}
-                className="w-full bg-transparent text-3xl font-extrabold tracking-tight text-slate-900"
+                className="w-full bg-transparent text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl"
               />
               <div {...entrancePartProps(entrance, 1)}>
                 <RichText
@@ -704,8 +705,9 @@ registerBlockType(metadata, {
               {...entrancePartProps(entrance, 0)}
               value={attributes.title}
               onChange={(value) => setAttributes({ title: value })}
+              heading
               placeholder={__('Section title…', '<text-domain>')}
-              className="w-full bg-transparent text-center text-3xl font-extrabold tracking-tight text-slate-900"
+              className="w-full bg-transparent text-center text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl"
             />
             <div {...entrancePartProps(entrance, 1)}>
               <RichText
@@ -738,6 +740,7 @@ registerBlockType(metadata, {
                   <AutoGrowingTextarea
                     value={card.title}
                     onChange={(value) => updateCard(index, { title: value })}
+                    heading
                     placeholder={__('Card title…', '<text-domain>')}
                     className="w-full bg-transparent text-xl font-bold tracking-tight text-slate-900"
                   />
@@ -1135,8 +1138,9 @@ registerBlockType(metadata, {
             {...entrancePartProps(entrance, 0)}
             value={attributes.title}
             onChange={(value) => setAttributes({ title: value })}
+            heading
             placeholder={__('Section title…', '<text-domain>')}
-            className="mb-10 w-full bg-transparent text-center text-3xl font-extrabold tracking-tight text-slate-900"
+            className="mb-10 w-full bg-transparent text-center text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl"
           />
 
           {/* The front end's carousel, driven by the bullets and the sidebar list instead of Swiper. */}

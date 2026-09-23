@@ -12,6 +12,8 @@ export function AutoGrowingTextarea({
   className = '',
   style = {},
   rows = 1,
+  // A heading field: base.css styles [data-heading] like h1–h6, so the canvas matches the page.
+  heading = false,
   ...props
 }) {
   const handleChange = (event) => {
@@ -35,6 +37,7 @@ export function AutoGrowingTextarea({
         msOverflowStyle: 'none',
         ...style,
       }}
+      {...(heading ? { 'data-heading': '' } : {})}
       {...props}
     />
   );
