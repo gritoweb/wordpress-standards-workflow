@@ -52,6 +52,16 @@ To write a commit, use the `commit-rules` SKILL (message format, types, flow). I
 
 To create a new block, use the `create-block` SKILL. If it doesn't exist in the project, ask the user to add it before proceeding.
 
+**Editor — content on the canvas, never in the sidebar.** Text, links and
+buttons are edited on the canvas, where they show on the page. The sidebar
+(`<InspectorControls>`) holds configuration only: the item list, background
+media, block settings, Spacing, Entrance animation. **Never put a button
+editor, link field or text field in the sidebar** — no `ActionEditor`,
+`LinkPicker`, `LinkControl`, `TextControl`, `RichText` or
+`AutoGrowingTextarea` inside `<InspectorControls>` (a numeric
+`TextControl type="number"` setting is fine). `scripts/editor-fidelity.mjs`
+reports any it finds.
+
 **Block assets — the canonical rule:**
 
 - A block's **own** front-end CSS/JS is declared in `block.json` via

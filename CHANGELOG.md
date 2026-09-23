@@ -2,6 +2,15 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-23 — Sidebar rule up front
+
+### Changed
+- The "no content editing in the sidebar" rule sat mid-way through
+  `create-block/SKILL.md`, and a generated `cta` / `hero` still mounted
+  `ActionEditor` in `InspectorControls`. It now opens the skill as a hard
+  rule and is in `CLAUDE.md` › Blocks — the two files agents read first —
+  naming the components that must never be in the sidebar.
+
 ## 2026-09-23 — CTA link field and sidebar buttons
 
 A project generated from the kit put button editing in the sidebar and showed

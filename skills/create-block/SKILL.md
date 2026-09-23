@@ -24,6 +24,16 @@ dev's explicit consent (two gates — creations vs. modifications).
 Never runs `npm` / `composer` / `lando` / `git` commands. The dev does
 that themselves.
 
+> **Hard rule — no content editing in the sidebar.** A button (label +
+> link), a link or any text is edited on the **canvas**: click the button
+> preview → `<ActionEditor>` opens inline right under it. `<InspectorControls>`
+> holds configuration only (item list, background media, block settings,
+> Spacing, Entrance animation) and must never contain `ActionEditor`,
+> `LinkPicker`, `LinkControl`, `TextControl`, `RichText` or
+> `AutoGrowingTextarea` (a numeric `TextControl type="number"` setting is
+> fine). `scripts/editor-fidelity.mjs` reports a block that breaks this; fix
+> it before calling the block done.
+
 ---
 
 ## Pre-conditions
