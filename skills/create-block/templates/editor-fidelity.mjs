@@ -227,6 +227,20 @@ function compare(editor, front) {
   return { issues, notes };
 }
 
+// Content editing (text, links, buttons) belongs on the canvas; the sidebar is configuration only.
+const CONTENT_FIELDS = /<(ActionEditor|LinkPicker|LinkControl|URLInput|RichText|AutoGrowingTextarea|TextareaControl|TextControl)\b(?![^>]*type=["']number["'])/g;
+
+function sidebarContent(slug) {
+  const file = join('resources/blocks', slug, 'block.jsx');
+  if (!existsSync(file)) return [];
+  const code = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  const found = new Set();
+  for (const [, inspector] of code.matchAll(/<InspectorControls>([\s\S]*?)<\/InspectorControls>/g)) {
+    for (const [, name] of inspector.matchAll(CONTENT_FIELDS)) found.add(`<${name}>`);
+  }
+  return [...found];
+}
+
 // --- Run ---------------------------------------------------------------------
 
 const { page, close } = await launchChrome();
@@ -304,7 +318,12 @@ try {
   const report = editor.blocks.map((block, index) => {
     if (block.crashed) return { block: block.slug, issues: [{ text: '(block)', diff: 'the editor shows "This block has encountered an error"' }], notes: [] };
     if (!front[index]) return { block: block.slug, issues: [{ text: '(block)', diff: `no .${block.slug} root on the page (not rendered, or its root class is not the slug)` }], notes: [] };
-    return { block: block.slug, ...compare(block, front[index]) };
+    const result = compare(block, front[index]);
+    const inSidebar = sidebarContent(block.slug);
+    if (inSidebar.length) {
+      result.issues.unshift({ text: '(sidebar)', diff: `${inSidebar.join(', ')} inside <InspectorControls> — text, links and buttons are edited on the canvas, never in the sidebar` });
+    }
+    return { block: block.slug, ...result };
   });
 
   const failing = report.filter((entry) => entry.issues.length);

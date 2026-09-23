@@ -175,7 +175,7 @@ placeholder + accidental-newline behavior than RichText.
 | `bg`/`background image`/`cover image` (fills the block behind other content) | image (ID-first) | `<name>Id` (number) | In the **sidebar**, inside a `PanelBody title="Background Media"`: `<AttachmentImageControl imageId={...} onSelect={...} onRemove={...} noStylesheet />` + `<ImagePositionControl />` right under it for the focal point. The canvas keeps only the **passive** full-bleed preview (`backgroundImage`/`<img>` with `focalCss(<name>Position)`) — no click target there. |
 | `icon` | string (Dashicon slug or arbitrary name) | `<name>` | `<TextControl>` (or `<IconPicker>` if the project ships one) |
 | `link`, `url`, `cta link`, `href` | link (Gutenberg `LinkControl` object: `{url, opensInNewTab}`) | `<name>` | `<LinkPicker label="..." value={...} onChange={...} />` — sized to match the white-card input height so it lines up next to a sibling text field |
-| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor>` inline**, directly below the button — always on canvas, never in the sidebar, never a floating `Popover`. `stacked={false}` (two-column layout) for a full-width/single CTA; `stacked={true}` (single vertical column, the same treatment `ActionEditor` uses in a sidebar) when the trigger sits inside a narrow per-item container (grid card, list item) — see the "Buttons / CTAs" rule below. |
+| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor>` inline**, directly below the button — always on canvas, never in the sidebar, never a floating `Popover`. `stacked={false}` (two-column layout) for a full-width/single CTA; `stacked={true}` (single vertical column) when the trigger sits inside a narrow per-item container (grid card, list item) — see the "Buttons / CTAs" rule below. **`ActionEditor` and `LinkPicker` never go inside `<InspectorControls>`.** |
 | `color`, `bg color`, `text color` | string (hex / palette slug) | `<name>` | `<ColorPalette>` or `<PanelColorSettings>` |
 | `size`, `width`, `height`, `count`, `amount`, plain `number` | number (unsigned) | `<name>` | `<TextControl type="number">` or `<RangeControl>` |
 | `show X`, `enable X`, `visible`, `active`, `toggle`, "is X" boolean | boolean | `<name>` | `<ToggleControl>` |
@@ -233,18 +233,24 @@ placeholder + accidental-newline behavior than RichText.
      `<ActionEditor stacked={false}>` (two-column layout — label field
      beside the link picker), inside exactly
      `<div className="w-full max-w-xl text-left">`. The block already
-     has the width and naturally grows to contain it. **That wrapper is
-     layout only — never give it `bg-*`, `p-*`, `rounded-*`, `shadow-*`,
-     `border` or a top margin:** `ActionEditor` already draws its own panel
-     (white background, padding, shadow, `mt-3`), so a styled wrapper puts
-     a card inside a card.
+     has the width and naturally grows to contain it. **The wrapper around
+     `ActionEditor` (either mode) is layout only — never give it `bg-*`,
+     `p-*`, `rounded-*`, `shadow-*`, `border` or a top margin:**
+     `ActionEditor` draws its own panel, so a styled wrapper puts a card
+     inside a card.
    - **CTA inside a repeater item** (a grid card, a list item):
-     `<ActionEditor stacked={true}>` — the SAME component, just the single
-     vertical-column layout it already has for sidebar use (label, then
-     the link picker, then the checkbox, each full width). A ~280px grid
+     `<ActionEditor stacked={true}>` — the SAME component, just a single
+     vertical column (label, then the link picker, then the checkbox, each
+     full width). A ~280px grid
      column has no room for `stacked={false}`'s two-column layout, but
      easily fits one stacked field at a time — no separate mechanism
      needed, just the prop `ActionEditor` was already built with.
+   - **The link field is the one exception:** inside `ActionEditor`, the
+     destination is a button showing the URL that opens core's
+     `LinkControl` in a small `Popover`. Keep it — `LinkControl` rendered
+     inline on the canvas is broken by the theme CSS (squashed icon row,
+     stray ↗), while its `Popover` renders outside the canvas and looks like
+     core everywhere else. Only the CTA editor as a whole must not float.
    - **Why not `Popover`, twice**: floating a `Popover` around
      `ActionEditor` for consistency, then again only for the narrow-item
      case, both got reverted the same day. A `Popover` doesn't participate
@@ -887,10 +893,9 @@ registerBlockType(metadata, {
                     {/* ONLY for a button/link that belongs to a REPEATER ITEM (a grid
                         card, a list item) — SAME inline pattern as the default above,
                         SAME component, just stacked={true} instead of stacked={false}.
-                        stacked renders ActionEditor's fields in one vertical column
-                        (the layout it already uses inside a sidebar), which is what
-                        fits a ~280px grid column — no separate mechanism, no sidebar,
-                        no Popover:
+                        stacked renders ActionEditor's fields in one vertical column,
+                        which is what fits a ~280px grid column — no separate
+                        mechanism, and never the sidebar:
                     <span
                         role="button"
                         tabIndex={0}

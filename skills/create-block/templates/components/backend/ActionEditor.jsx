@@ -81,9 +81,11 @@ const positionButton = (active) => ({
 });
 
 /**
- * Paired label and destination fields for one action. `stacked` is the
- * inspector treatment; the default is the canvas treatment, which Tailwind
- * reaches.
+ * Paired label and destination fields for one action, always on the canvas
+ * (never in InspectorControls). `stacked` is one column for a narrow container
+ * such as a grid card; the default is two columns for a full-width CTA. The
+ * link opens LinkControl in a Popover: inline on the canvas, the theme CSS
+ * breaks LinkControl's preview row.
  */
 export function ActionEditor({
   groupLabel,
@@ -139,7 +141,6 @@ export function ActionEditor({
           label={linkLabel}
           value={link || emptyLink()}
           onChange={onLinkChange}
-          fullWidth={stacked}
         />
         {/* The picker's LinkControl has no toggle of its own here, so the
             flag sits directly under it. Every renderer that reads

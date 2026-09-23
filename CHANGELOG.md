@@ -2,6 +2,27 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-23 — CTA link field and sidebar buttons
+
+A project generated from the kit put button editing in the sidebar and showed
+a broken link field on the canvas (squashed LinkControl icon row, stray ↗).
+
+### Fixed
+- **Broken link field on the canvas.** `ActionEditor` passed
+  `fullWidth={stacked}` to `LinkPicker`, which renders `LinkControl` inline;
+  inline on the canvas the theme CSS breaks its preview row. White Summers
+  only ever rendered it inline in the sidebar. `ActionEditor` now always uses
+  `LinkPicker`'s trigger + `Popover` (as the older projects did), which renders
+  outside the canvas and looks like core.
+- **Button editing in the sidebar.** The skill and `ActionEditor`'s comments
+  called `stacked` "the sidebar treatment", which led an agent to mount
+  `ActionEditor` inside `InspectorControls`. That wording is gone, the skill
+  states `ActionEditor` / `LinkPicker` never go in the sidebar, and
+  `scripts/editor-fidelity.mjs` now reports any text, link or button field
+  inside `<InspectorControls>` (checked against the generated project: it
+  flags its `cta` and `hero`; the kit's examples and template are clean).
+- The layout-only wrapper rule now covers both `ActionEditor` modes.
+
 ## 2026-09-23 — CTA editor wrapper is layout only
 
 ### Fixed
