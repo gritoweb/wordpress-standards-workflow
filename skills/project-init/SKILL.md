@@ -246,10 +246,26 @@ Phase 0 answer. Do not run any of these commands.
     lando wp menu item add-post primary "$HOME_ID" --title="Home"
     lando wp menu location assign primary primary_navigation
     ```
-12. **Smoke check before handing off** — open the home at desktop and mobile
-    width: header menu works (Phase 1b), and each block with an entrance
-    animation gains `data-entered` on scroll (`create-block` › "Entrance
-    animation wiring"). Report what was checked, not "should work".
+12. **Clear WordPress's install defaults** — a fresh install puts
+    Archives / Categories / Recent Comments widgets into Sage's footer
+    sidebar (they render unstyled under the site) and leaves comments open,
+    which `CLAUDE.md` › WordPress Settings forbids:
+    ```bash
+    lando wp widget reset --all
+    lando wp option update default_comment_status closed
+    lando wp option update default_ping_status closed
+    lando wp comment list --format=ids | xargs -r lando wp comment delete --force
+    lando wp post list --post_type=any --comment_status=open --format=ids \
+      | xargs -r -I{} lando wp post update {} --comment_status=closed --ping_status=closed
+    ```
+13. **Smoke check before handing off** — open the home at desktop and mobile
+    width: header menu works (Phase 1b), nothing renders under the content
+    but the footer you built (no stray widgets), and each block with an
+    entrance animation gains `data-entered` on scroll (`create-block` ›
+    "Entrance animation wiring"). In the editor: no block shows "This block
+    has encountered an error", repeaters reorder/delete from the sidebar
+    with the canvas updating at once. Report what was checked, not "should
+    work".
 
 ### Theme assets (both scenarios)
 

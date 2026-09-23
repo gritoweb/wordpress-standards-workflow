@@ -125,6 +125,13 @@ Infra templates live in **Templates** at the bottom of this doc.
 
 ## Phase 1 — Collect block requirements
 
+> **Source of truth: this skill's templates and `_docs/examples.md` only.**
+> Never copy a block, component or CSS from another project on the machine
+> (a sibling theme, an earlier test site): those were built with an older
+> kit and carry the bugs the kit has since fixed. Verified 2026-09-23: an
+> agent copied an earlier test theme's blocks and shipped its stale canvas
+> spacing, carousel and panel order.
+
 ### How the skill asks
 
 1. **Pre-extract** title, slug, attribute names from the user's initial request.
@@ -344,9 +351,13 @@ Attributes:
       `setActiveItem` to `ItemList`; the canvas opens that item and clicking
       an item on the canvas selects it. The front end uses native
       `<details name="<group>">` so opening one closes the others — no JS.
-    - **Carousels:** the canvas shows every slide side by side (horizontal
-      scroll) so a reorder is visible at once; the slider library runs only
-      on the front end (`block.js`).
+    - **Carousels:** the canvas looks like the front end — the same slides
+      per view and the same pagination bullets, **never a scrollbar**. The
+      track moves with the bullets and with the sidebar list (selecting an
+      off-screen slide brings it into view; editing a visible slide never
+      moves it). The slider library runs only on the front end (`block.js`),
+      with autoplay set in the sidebar (on/off + seconds), paused on hover
+      and off for `prefers-reduced-motion`. The canvas never autoplays.
     - Every write is **one** `setAttributes` built from the current array
       (`items.map(...)` with a patch object). Two `setAttributes` calls in a
       row both start from the same stale array and the second erases the
@@ -362,6 +373,9 @@ Attributes:
       `ItemList`.
     - Reference code, tested end to end: `_docs/examples.md` (accordion,
       card grid, carousel).
+  - **Sidebar panel order**, the same in every block: the item list
+    ("Items" / "Slides" / "Cards") → Background Media → the block's own
+    settings (e.g. Autoplay, layout) → Spacing → Entrance animation.
   - **Editor controls are components, never hand-written:**
     - **Removing an image** is `<RemoveImageButton>` — core's close ("X")
       icon in a dark round button that reads over any photo.

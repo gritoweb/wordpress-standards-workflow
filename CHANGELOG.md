@@ -2,6 +2,26 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-23 — Carousel canvas, install defaults, source of truth
+
+QA of a site built from the kit (`luis`): every block loaded without errors,
+but the agent had copied an earlier test theme instead of the kit, the
+carousel showed a scrollbar in the editor and never advanced on the page, the
+footer showed WordPress's default widgets and comments were open.
+
+### Changed
+- **Carousel reference:** the editor canvas now looks like the front end —
+  two slides and the same pagination bullets, no scrollbar; the sidebar list
+  brings an off-screen slide into view and editing a visible slide never
+  moves the track. Autoplay on the front end is set in the sidebar
+  (on/off + seconds), pauses on hover and stays off for reduced motion.
+- `create-block`: blocks come only from the kit's templates and
+  `_docs/examples.md`, never from another project on the machine; sidebar
+  panels follow one order (items → background media → block settings →
+  Spacing → Entrance animation).
+- `project-init`: a new step clears the install's default widgets and closes
+  comments; the smoke check covers stray widgets and editor errors.
+
 ## 2026-09-23 — Repeaters, remove controls and tested reference blocks
 
 A second project built with the kit (Gemini) came out with an accordion and

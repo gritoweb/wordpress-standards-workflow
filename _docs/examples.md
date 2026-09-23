@@ -801,7 +801,7 @@ registerBlockType(metadata, {
 
 ## Reference block: Testimonial carousel (vendor library) — `testimonial-carousel`
 
-An array of quotes in a Swiper carousel. Demonstrates the **vendor library** rule (file in `resources/{js,css}/vendor/`, registered in `app/setup.php`, enqueued only in this `block.php`), a plain `block.js`/`block.css` served from source through `block.json`, and a canvas that shows every slide side by side so a reorder is visible at once.
+An array of quotes in a Swiper carousel. Demonstrates the **vendor library** rule (file in `resources/{js,css}/vendor/`, registered in `app/setup.php`, enqueued only in this `block.php`), a plain `block.js`/`block.css` served from source through `block.json`, an editor canvas that looks like the front end (two slides and the same pagination bullets, no scrollbar; the sidebar list moves it to the selected slide, editing a visible slide never moves it), and autoplay set in the sidebar (off on hover and for reduced motion).
 
 ### `resources/blocks/testimonial-carousel/block.json`
 
@@ -852,6 +852,14 @@ An array of quotes in a Swiper carousel. Demonstrates the **vendor library** rul
           "avatarId": 0
         }
       ]
+    },
+    "autoplay": {
+      "type": "boolean",
+      "default": true
+    },
+    "autoplaySeconds": {
+      "type": "number",
+      "default": 5
     },
     "entrance": {
       "type": "object",
@@ -911,6 +919,10 @@ echo view('blocks.testimonial-carousel', [
     'anchor'   => sanitize_html_class($attributes['anchor'] ?? ''),
     'title'    => sanitize_text_field($attributes['title'] ?? ''),
     'items'    => $items,
+    // 0 turns autoplay off; the range matches the sidebar control.
+    'autoplayMs' => !empty($attributes['autoplay'])
+        ? 1000 * max(2, min(15, absint($attributes['autoplaySeconds'] ?? 5)))
+        : 0,
     'entrance' => \App\Blocks\BlockEntrance::fromBlock($attributes, __DIR__),
     ...\App\Blocks\BlockPadding::fromAttributes($attributes),
 ])->render();
@@ -929,7 +941,8 @@ echo view('blocks.testimonial-carousel', [
 
     @if ($items)
       {{-- The anchor id stays on the section; Swiper only needs the data hook. --}}
-      <div @entrancePart(1) class="testimonial-carousel__slider swiper" data-testimonial-carousel>
+      <div @entrancePart(1) class="testimonial-carousel__slider swiper" data-testimonial-carousel
+        data-autoplay="{{ $autoplayMs }}">
         <div class="swiper-wrapper">
           @foreach ($items as $item)
             <figure class="swiper-slide !h-auto">
@@ -971,7 +984,8 @@ import {
   InspectorControls,
   RichText,
 } from '@wordpress/block-editor';
-import { PanelBody } from '@wordpress/components';
+import { PanelBody, RangeControl, ToggleControl } from '@wordpress/components';
+import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { AutoGrowingTextarea } from '../components/backend/AutoGrowingTextarea.jsx';
 import { AttachmentImageControl } from '../components/backend/AttachmentImageControl.jsx';
@@ -990,10 +1004,17 @@ import { EDITOR_BLOCK_FRAME } from '../components/backend/editorCanvas.js';
 import previewImage from './preview.svg';
 import metadata from './block.json';
 
+// Same layout as block.js on a desktop viewport: two slides, 24px apart.
+const PER_VIEW = 2;
+const GAP = 24;
+
 const emptyItem = () => ({ quote: '', author: '', role: '', avatarId: 0 });
 
 registerBlockType(metadata, {
   edit({ attributes, setAttributes, clientId }) {
+    // Hooks run before the preview return, so their order never changes.
+    const [activeItem, setActiveItem] = useState(0);
+    const [firstVisible, setFirstVisible] = useState(0);
     const blockProps = useBlockProps();
     const items = Array.isArray(attributes.items) ? attributes.items : [];
     const avatars = useAttachmentUrls(
@@ -1018,12 +1039,35 @@ registerBlockType(metadata, {
     );
     const rootEntrance = entranceRootProps(entrance);
 
+    // Swiper's page count: one bullet per position the first visible slide can take.
+    const pages = Math.max(1, items.length - PER_VIEW + 1);
+    const page = Math.min(firstVisible, pages - 1);
+    const selected = Math.min(activeItem, Math.max(items.length - 1, 0));
+
+    // Selecting a slide scrolls only when it is off screen, so editing never moves the track.
+    const selectSlide = (index) => {
+      setActiveItem(index);
+      if (index < page) setFirstVisible(index);
+      else if (index > page + PER_VIEW - 1)
+        setFirstVisible(index - PER_VIEW + 1);
+    };
+
     const updateItem = (index, patch) =>
       setAttributes({
         items: items.map((item, i) =>
           i === index ? { ...item, ...patch } : item,
         ),
       });
+    const addItem = () => {
+      setAttributes({ items: [...items, emptyItem()] });
+      selectSlide(items.length);
+    };
+    const removeItem = (index) => {
+      setAttributes({ items: items.filter((_, i) => i !== index) });
+      setActiveItem((current) =>
+        Math.max(0, current > index ? current - 1 : current),
+      );
+    };
 
     return (
       <>
@@ -1031,11 +1075,10 @@ registerBlockType(metadata, {
           <PanelBody title={__('Slides', '<text-domain>')} initialOpen>
             <ItemList
               items={items}
-              selectable={false}
-              onAdd={() => setAttributes({ items: [...items, emptyItem()] })}
-              onRemove={(index) =>
-                setAttributes({ items: items.filter((_, i) => i !== index) })
-              }
+              activeItem={selected}
+              setActiveItem={selectSlide}
+              onAdd={addItem}
+              onRemove={removeItem}
               onMove={(from, to) =>
                 setAttributes({ items: moveItem(items, from, to) })
               }
@@ -1044,6 +1087,28 @@ registerBlockType(metadata, {
               addButtonLabel={__('+ Add slide', '<text-domain>')}
               itemLabelPrefix={__('Slide', '<text-domain>')}
             />
+          </PanelBody>
+          <PanelBody title={__('Autoplay', '<text-domain>')} initialOpen={false}>
+            <ToggleControl
+              __nextHasNoMarginBottom
+              label={__('Advance slides automatically', '<text-domain>')}
+              help={__(
+                'Pauses on hover; off for visitors who reduce motion.',
+                '<text-domain>',
+              )}
+              checked={!!attributes.autoplay}
+              onChange={(value) => setAttributes({ autoplay: value })}
+            />
+            {attributes.autoplay && (
+              <RangeControl
+                __nextHasNoMarginBottom
+                label={__('Seconds per slide', '<text-domain>')}
+                min={2}
+                max={15}
+                value={attributes.autoplaySeconds}
+                onChange={(value) => setAttributes({ autoplaySeconds: value })}
+              />
+            )}
           </PanelBody>
           <PaddingControls
             attributes={attributes}
@@ -1074,54 +1139,87 @@ registerBlockType(metadata, {
             className="mb-10 w-full bg-transparent text-center text-3xl font-extrabold tracking-tight text-slate-900"
           />
 
-          {/* Every slide side by side, in array order, so a reorder shows at once. */}
-          <div
-            {...entrancePartProps(entrance, 1)}
-            className="flex snap-x gap-6 overflow-x-auto pb-4"
-          >
-            {items.map((item, index) => (
-              <figure
-                key={index}
-                className="flex w-[calc(50%-12px)] shrink-0 snap-start flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
-              >
-                <RichText
-                  tagName="blockquote"
-                  value={item.quote}
-                  onChange={(value) => updateItem(index, { quote: value })}
-                  placeholder={__('Quote…', '<text-domain>')}
-                  className="flex-1 text-lg leading-relaxed text-slate-700"
-                />
+          {/* The front end's carousel, driven by the bullets and the sidebar list instead of Swiper. */}
+          <div {...entrancePartProps(entrance, 1)} className="overflow-hidden">
+            <div
+              className="flex transition-transform duration-300 ease-out"
+              style={{
+                gap: `${GAP}px`,
+                transform: `translateX(calc(${-page} * (${100 / PER_VIEW}% + ${GAP / PER_VIEW}px)))`,
+              }}
+            >
+              {items.map((item, index) => (
+                <figure
+                  key={index}
+                  className="flex shrink-0 flex-col rounded-2xl border border-slate-200 bg-white p-8 shadow-sm"
+                  style={{
+                    width: `calc((100% - ${GAP * (PER_VIEW - 1)}px) / ${PER_VIEW})`,
+                  }}
+                  onFocus={() => setActiveItem(index)}
+                >
+                  <RichText
+                    tagName="blockquote"
+                    value={item.quote}
+                    onChange={(value) => updateItem(index, { quote: value })}
+                    placeholder={__('Quote…', '<text-domain>')}
+                    className="flex-1 text-lg leading-relaxed text-slate-700"
+                  />
 
-                <figcaption className="mt-6 flex items-center gap-4">
-                  <div className="w-16 shrink-0">
-                    <AttachmentImageControl
-                      imageId={item.avatarId}
-                      onSelect={(media) =>
-                        updateItem(index, { avatarId: Number(media.id) || 0 })
-                      }
-                      onRemove={() => updateItem(index, { avatarId: 0 })}
-                      height="64px"
-                      emptyLabel={__('Photo', '<text-domain>')}
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <AutoGrowingTextarea
-                      value={item.author}
-                      onChange={(value) => updateItem(index, { author: value })}
-                      placeholder={__('Name…', '<text-domain>')}
-                      className="w-full bg-transparent font-bold text-slate-900"
-                    />
-                    <AutoGrowingTextarea
-                      value={item.role}
-                      onChange={(value) => updateItem(index, { role: value })}
-                      placeholder={__('Role…', '<text-domain>')}
-                      className="w-full bg-transparent text-sm text-slate-500"
-                    />
-                  </div>
-                </figcaption>
-              </figure>
-            ))}
+                  <figcaption className="mt-6 flex items-center gap-4">
+                    <div className="w-16 shrink-0">
+                      <AttachmentImageControl
+                        imageId={item.avatarId}
+                        onSelect={(media) =>
+                          updateItem(index, {
+                            avatarId: Number(media.id) || 0,
+                          })
+                        }
+                        onRemove={() => updateItem(index, { avatarId: 0 })}
+                        height="64px"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <AutoGrowingTextarea
+                        value={item.author}
+                        onChange={(value) =>
+                          updateItem(index, { author: value })
+                        }
+                        placeholder={__('Name…', '<text-domain>')}
+                        className="w-full bg-transparent font-bold text-slate-900"
+                      />
+                      <AutoGrowingTextarea
+                        value={item.role}
+                        onChange={(value) => updateItem(index, { role: value })}
+                        placeholder={__('Role…', '<text-domain>')}
+                        className="w-full bg-transparent text-sm text-slate-500"
+                      />
+                    </div>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
           </div>
+
+          {pages > 1 && (
+            <div className="mt-8 flex justify-center gap-2">
+              {Array.from({ length: pages }, (_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  aria-label={`${__('Go to slide', '<text-domain>')} ${index + 1}`}
+                  aria-current={index === page ? 'true' : undefined}
+                  onClick={() => setFirstVisible(index)}
+                  className="h-2 w-2 cursor-pointer rounded-full border-0 p-0"
+                  style={{
+                    background:
+                      index === page
+                        ? 'var(--color-primary, #2563eb)'
+                        : 'rgb(0 0 0 / 0.2)',
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </section>
       </>
     );
@@ -1138,11 +1236,23 @@ registerBlockType(metadata, {
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof window.Swiper === 'undefined') return;
 
+  const reducedMotion = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches;
+
   document.querySelectorAll('[data-testimonial-carousel]').forEach((slider) => {
+    const delay = Number(slider.dataset.autoplay) || 0;
+
     new window.Swiper(slider, {
       slidesPerView: 1,
       spaceBetween: 24,
       breakpoints: { 768: { slidesPerView: 2 } },
+      // Rewind instead of loop: loop needs more slides than are visible.
+      rewind: true,
+      autoplay:
+        delay > 0 && !reducedMotion
+          ? { delay, pauseOnMouseEnter: true, disableOnInteraction: false }
+          : false,
       pagination: {
         el: slider.querySelector('.swiper-pagination'),
         clickable: true,
