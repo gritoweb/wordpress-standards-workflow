@@ -21,7 +21,7 @@ team standard. **Never pushes.** **Never adds a co-author.**
 - **Never `git push`** — committing is local only. If the user wants to
   push, they ask separately and grant permission.
 - **Never add `Co-authored-by`** (or any co-author trailer).
-- **English only** for the commit subject and body.
+- **English only** for the commit message.
 - **One subject per commit** — one logical change. If the working tree
   mixes unrelated changes, stop and ask whether to split into multiple
   commits.
@@ -36,13 +36,7 @@ team standard. **Never pushes.** **Never adds a co-author.**
 
 - `TYPE` is uppercase, subject in lowercase imperative ("add", "fix",
   "update" — not "added"/"adds").
-- Keep the subject under ~72 chars. No trailing period.
-- **Subject only, no body, by default.** Don't add a body unless the
-  *why* is genuinely non-obvious from the subject + diff and the user
-  would need it later (e.g. a non-obvious workaround, a breaking
-  change's migration note). When a body is warranted, keep it to a
-  single short line — never a multi-paragraph explanation or a bullet
-  list recapping every file touched.
+- **One line only — never a body.** Max 72 chars, no trailing period.
 
 ### Types
 
@@ -107,9 +101,8 @@ third-party changelogs.
 4. **Stage** — stage the relevant files (`git add`), including
    `CHANGELOG.md` / version file if the user opted in. Don't blindly
    `git add -A` if there are unrelated changes in the tree.
-5. **Compose** — pick the single best `TYPE` and write the subject.
-   Default to subject-only; add a one-line body only if the change
-   needs a *why* the subject genuinely can't carry.
+5. **Compose** — pick the single best `TYPE` and write the one-line
+   subject (max 72 chars, no body).
 6. **Commit** — `git commit`. Never `--amend` an existing commit unless
    the user explicitly asks.
 7. **Confirm** — report the commit hash and subject. Do **not** push.
