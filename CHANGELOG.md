@@ -2,6 +2,38 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-24 — Words never split on the editor canvas
+
+A generated theme showed "Frequently Asked Questions" split mid-word in the
+editor ("Frequent / ly") while the page kept every word whole.
+
+### Fixed
+- **Editor column as wide as the site container.** Sage's `theme.json` sets
+  `contentSize: 48rem`, so every block was laid out in 768px on the canvas
+  but in the full 1280px container on the page (the FAQ title had 217px in the
+  editor, 490px on the page). The wizard now sets
+  `"contentSize": "var(--container-max-width)"` — the one value in
+  `container.css`; blocks stay centered and aligned, no `align: full`.
+- **No mid-word breaks on the canvas.** WordPress's `block-editor/content.css`
+  sets `overflow-wrap: break-word` on every block, and browsers default
+  `textarea` and `contenteditable` (RichText) to the same. The new
+  `resources/css/editor/canvas.css` (imported by `editor.css` only) sets
+  `overflow-wrap: normal` for those three, matching the page.
+
+### Added
+- The check refuses a `theme.json` whose `contentSize` isn't the container
+  token and an `editor.css` that doesn't import `editor/canvas.css`;
+  `editor-fidelity.mjs` compares `overflow-wrap`, so the canvas can't hide an
+  overflowing word by splitting it.
+
+### Verified
+- On the generated theme (`luistestenovo`): all five blocks 1280px wide and
+  aligned in the editor, the FAQ title in two whole lines, check and
+  editor-fidelity exit 0 (fidelity now comparing `overflow-wrap`). Before the
+  canvas rule, fidelity flagged every RichText (`break-word → normal`).
+- The check exits 1 with Sage's stock `48rem` and without the canvas import;
+  a theme built only from the wizard's code blocks passes.
+
 ## 2026-09-23 — One card class, no copied class strings in the examples
 
 A second agent test (vague prompt, 5 blocks) built every block on the style

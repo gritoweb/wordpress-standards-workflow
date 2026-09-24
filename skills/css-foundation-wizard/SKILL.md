@@ -64,7 +64,7 @@ All paths under `resources/css/`. Never at the root of `resources/css/`
 5. **Step 5** — `global/base.css`
 6. **Step 6** — `global/container.css`
 7. **Step 7** — `components/button.css` and `components/card.css`
-8. **Step 8** — wiring: `app.css`, `editor.css`, Sage's `alert` component
+8. **Step 8** — wiring: `app.css`, `editor.css`, `theme.json`, `editor/canvas.css`, Sage's `alert` component
 9. **Step 9** — copy and run `scripts/check-css-foundation.mjs`; must exit 0
 10. **Handoff**
 
@@ -558,9 +558,49 @@ font on the page):
 @import "./components/button.css";
 @import "./components/card.css";
 
+@import "./editor/canvas.css";
+
 @source "../blocks/**/*.{php,jsx,js}";
 @source "../components/**/*.{jsx,js}";
 ```
+
+### `theme.json` — the editor column
+
+Sage's `theme.json` sets `"contentSize": "48rem"`: the block editor lays every
+block out in a 768px column while the page gives it the full container. A
+section built for 1280px then wraps into a third of the width and headings
+break mid-word (measured: an FAQ title at 44px in a 217px column). Point the
+editor column at the container token, so both read the one value in
+`container.css`:
+
+```json
+"layout": {
+  "contentSize": "var(--container-max-width)"
+}
+```
+
+Blocks stay in the normal centered column — no `align: full` needed.
+
+### `resources/css/editor/canvas.css` — words never split on the canvas
+
+The editor breaks long words mid-word where the page doesn't: WordPress's
+`block-editor/content.css` sets `overflow-wrap: break-word` on every block, and
+browsers default `textarea` and `contenteditable` (every `RichText`) to the
+same. Undo it for the canvas only, in the editor-only folder
+(`css-standards` › **CSS folder layout**), imported by `editor.css`:
+
+```css
+/* The editor splits long words (WordPress's block rule, textarea and contenteditable defaults); the page doesn't. */
+.editor-styles-wrapper .block-editor-block-list__layout .block-editor-block-list__block,
+.editor-styles-wrapper .block-editor-rich-text__editable,
+.editor-styles-wrapper textarea {
+  overflow-wrap: normal;
+}
+```
+
+A word that still doesn't fit is a layout problem to solve in the design (a
+smaller `heading-N`, a wider column) — `scripts/editor-fidelity.mjs` compares
+`overflow-wrap` too, so the canvas can't hide it by splitting the word.
 
 ### Sage's `resources/views/components/alert.blade.php`
 

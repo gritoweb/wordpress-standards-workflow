@@ -141,6 +141,9 @@ A web-font `@import url(...)` goes on the **first line**, above
 @import "./global/container.css";
 
 @import "./components/button.css";
+@import "./components/card.css";
+
+@import "./editor/canvas.css";
 
 @source "../blocks/**/*.{php,jsx,js}";
 @source "../components/**/*.{jsx,js}";

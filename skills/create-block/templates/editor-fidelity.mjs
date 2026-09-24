@@ -167,6 +167,7 @@ const COLLECT = `(root, withFields) => {
         color: rgba(cs.color), 'text-align': { start: 'left', end: 'right' }[cs.textAlign] || cs.textAlign,
         'text-transform': cs.textTransform,
         'letter-spacing': cs.letterSpacing,
+        'overflow-wrap': cs.overflowWrap,
       },
     });
   };

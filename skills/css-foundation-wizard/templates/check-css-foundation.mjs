@@ -98,6 +98,16 @@ for (const entry of ['app', 'editor']) {
   if (missing.length) problems.push(`${file} does not import ${missing.map((name) => `./${name}.css`).join(', ')}`);
 }
 
+if (!/@import\s+["']\.\/editor\/canvas\.css["']/.test(read(`${CSS}/editor.css`))) {
+  problems.push(`${CSS}/editor.css does not import ./editor/canvas.css — without it the canvas splits long words the page keeps whole`);
+}
+
+// The editor column must read the container token, or blocks are laid out narrower than on the page.
+const themeJson = read('theme.json');
+if (themeJson && !/"contentSize"\s*:\s*"var\(--container-max-width\)"/.test(themeJson)) {
+  problems.push('theme.json layout.contentSize must be "var(--container-max-width)" — the editor column then matches the page container');
+}
+
 // Editor-UI components under resources/blocks/components/ mimic wp-admin, not the site, so they are skipped.
 const walk = (dir, test) =>
   !existsSync(dir)
