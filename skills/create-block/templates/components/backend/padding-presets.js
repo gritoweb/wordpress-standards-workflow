@@ -22,15 +22,17 @@ export const PADDING_PRESETS = {
   },
 };
 
-// Canvas preview of the Spacing panel at desktop values — the same numbers BlockPadding prints.
-export function editorPaddingStyle(attributes) {
-  const vertical = attributes.paddingVertDesktop ?? 112;
-  const side = (attributes.paddingXDesktop ?? true) ? PADDING_PRESETS.horizontal.desktop : 0;
+// The same responsive classes BlockPadding prints on the page, so the canvas adapts to its own width like the page does.
+const PY_MOBILE = { 0: 'py-0', 56: 'py-14', 96: 'py-24', 112: 'py-28' };
+const PY_DESKTOP = { 0: 'md:py-0', 56: 'md:py-14', 112: 'md:py-28', 218: 'md:py-[13.625rem]' };
+const PX_MOBILE = { false: 'px-0', true: 'px-5' };
+const PX_DESKTOP = { false: 'lg:px-0', true: 'lg:px-[6rem]' };
 
-  return {
-    paddingTop: `${vertical}px`,
-    paddingBottom: `${vertical}px`,
-    paddingLeft: `${side}px`,
-    paddingRight: `${side}px`,
-  };
+export function editorPaddingClasses(attributes) {
+  return [
+    PY_MOBILE[attributes.paddingVertMobile ?? 56] ?? 'py-14',
+    PY_DESKTOP[attributes.paddingVertDesktop ?? 112] ?? 'md:py-28',
+    PX_MOBILE[attributes.paddingXMobile ?? true] ?? 'px-5',
+    PX_DESKTOP[attributes.paddingXDesktop ?? true] ?? 'lg:px-[6rem]',
+  ].join(' ');
 }

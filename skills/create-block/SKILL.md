@@ -513,8 +513,11 @@ come from `BlockManager::globalAttributes()`):
    `...\App\Blocks\BlockPadding::fromAttributes($attributes),`
 2. The Blade root puts the directive **inside** `class="…"`:
    `class="<slug> @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop)"`
-3. `block.jsx` previews it on the canvas root:
-   `style={{ ...blockProps.style, ...editorPaddingStyle(attributes), ...rootEntrance.style }}`
+3. `block.jsx` puts the same responsive classes on the canvas root:
+   `className={`${blockProps.className} ${editorPaddingClasses(attributes)} <slug> …`}` —
+   never an inline padding style: it can't follow breakpoints, so a narrow
+   canvas (list view + settings open on a laptop) got 96px side padding and
+   the content no room.
 
 Verify on the rendered HTML, not by reading the Blade: the `<section>`'s
 `class` attribute must contain `py-… md:py-… px-… lg:px-…`, and changing
@@ -740,7 +743,7 @@ import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { PaddingControls } from '../components/backend/PaddingControls.jsx';
-import { editorPaddingStyle } from '../components/backend/padding-presets.js';
+import { editorPaddingClasses } from '../components/backend/padding-presets.js';
 import { EntranceControl } from '../components/backend/EntranceControl.jsx';
 import { resolveEntrance, entranceRootProps, entrancePartProps } from '../components/backend/entranceCanvas.js';
 // Uncomment the imports your attributes actually need:
@@ -829,8 +832,8 @@ registerBlockType(metadata, {
                 <section
                     {...blockProps}
                     {...rootEntrance}
-                    className={`${blockProps.className || ''} <slug>-editor ${EDITOR_BLOCK_FRAME}`}
-                    style={{ ...blockProps.style, ...editorPaddingStyle(attributes), ...rootEntrance.style }}
+                    className={`${blockProps.className || ''} ${editorPaddingClasses(attributes)} <slug>-editor ${EDITOR_BLOCK_FRAME}`}
+                    style={{ ...blockProps.style, ...rootEntrance.style }}
                 >
                     {/* Every visible part (heading, subtitle, body, CTA row, each
                         repeater item) spreads entrancePartProps with a running

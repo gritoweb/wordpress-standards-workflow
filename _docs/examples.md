@@ -37,7 +37,9 @@ components) is **not** repeated here — it comes from
   the preview branch never changes the hook order.
 - **Spacing in three places**: `...BlockPadding::fromAttributes($attributes)`
   in `block.php`, `@paddingClasses(...)` **inside** the root `class`, and
-  `editorPaddingStyle(attributes)` on the canvas root.
+  `editorPaddingClasses(attributes)` in the canvas root's `className` — the
+  same responsive classes as the page, so a narrow canvas gets the mobile
+  padding instead of a forced desktop one.
 - **Entrance**: preset in `block.json` (from the `create-block` preset
   table), `@entrance` on the root, `@entrancePart(n)` on each part, the same
   indexes in `block.jsx`.
@@ -217,7 +219,7 @@ import { AutoGrowingTextarea } from '../components/backend/AutoGrowingTextarea.j
 import { ItemList } from '../components/backend/ItemList.jsx';
 import { moveItem } from '../components/backend/moveItem.js';
 import { PaddingControls } from '../components/backend/PaddingControls.jsx';
-import { editorPaddingStyle } from '../components/backend/padding-presets.js';
+import { editorPaddingClasses } from '../components/backend/padding-presets.js';
 import { EntranceControl } from '../components/backend/EntranceControl.jsx';
 import {
   resolveEntrance,
@@ -307,10 +309,9 @@ registerBlockType(metadata, {
         <section
           {...blockProps}
           {...rootEntrance}
-          className={`${blockProps.className} accordion bg-surface ${EDITOR_BLOCK_FRAME}`}
+          className={`${blockProps.className} ${editorPaddingClasses(attributes)} accordion bg-surface ${EDITOR_BLOCK_FRAME}`}
           style={{
             ...blockProps.style,
-            ...editorPaddingStyle(attributes),
             ...rootEntrance.style,
           }}
         >
@@ -599,7 +600,7 @@ import { ItemList } from '../components/backend/ItemList.jsx';
 import { moveItem } from '../components/backend/moveItem.js';
 import { useAttachmentUrls } from '../components/backend/useAttachmentUrls.js';
 import { PaddingControls } from '../components/backend/PaddingControls.jsx';
-import { editorPaddingStyle } from '../components/backend/padding-presets.js';
+import { editorPaddingClasses } from '../components/backend/padding-presets.js';
 import { EntranceControl } from '../components/backend/EntranceControl.jsx';
 import {
   resolveEntrance,
@@ -693,10 +694,9 @@ registerBlockType(metadata, {
         <section
           {...blockProps}
           {...rootEntrance}
-          className={`${blockProps.className} card-grid bg-light ${EDITOR_BLOCK_FRAME}`}
+          className={`${blockProps.className} ${editorPaddingClasses(attributes)} card-grid bg-light ${EDITOR_BLOCK_FRAME}`}
           style={{
             ...blockProps.style,
-            ...editorPaddingStyle(attributes),
             ...rootEntrance.style,
           }}
         >
@@ -988,7 +988,7 @@ import {
   RichText,
 } from '@wordpress/block-editor';
 import { PanelBody, RangeControl, ToggleControl } from '@wordpress/components';
-import { useState } from '@wordpress/element';
+import { useEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { AutoGrowingTextarea } from '../components/backend/AutoGrowingTextarea.jsx';
 import { AttachmentImageControl } from '../components/backend/AttachmentImageControl.jsx';
@@ -996,7 +996,7 @@ import { ItemList } from '../components/backend/ItemList.jsx';
 import { moveItem } from '../components/backend/moveItem.js';
 import { useAttachmentUrls } from '../components/backend/useAttachmentUrls.js';
 import { PaddingControls } from '../components/backend/PaddingControls.jsx';
-import { editorPaddingStyle } from '../components/backend/padding-presets.js';
+import { editorPaddingClasses } from '../components/backend/padding-presets.js';
 import { EntranceControl } from '../components/backend/EntranceControl.jsx';
 import {
   resolveEntrance,
@@ -1008,8 +1008,22 @@ import previewImage from './preview.svg';
 import metadata from './block.json';
 
 // Same layout as block.js on a desktop viewport: two slides, 24px apart.
-const PER_VIEW = 2;
 const GAP = 24;
+
+// Swiper's breakpoint (block.js): one slide below 768px, two from 768px — read on the canvas iframe, not the admin window.
+const useSlidesPerView = (ref) => {
+  const [perView, setPerView] = useState(1);
+  useEffect(() => {
+    const view = ref.current?.ownerDocument.defaultView;
+    if (!view) return undefined;
+    const query = view.matchMedia('(min-width: 768px)');
+    const update = () => setPerView(query.matches ? 2 : 1);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, [ref]);
+  return perView;
+};
 
 const emptyItem = () => ({ quote: '', author: '', role: '', avatarId: 0 });
 
@@ -1019,6 +1033,8 @@ registerBlockType(metadata, {
     const [activeItem, setActiveItem] = useState(0);
     const [firstVisible, setFirstVisible] = useState(0);
     const blockProps = useBlockProps();
+    const viewportRef = useRef(null);
+    const perView = useSlidesPerView(viewportRef);
     const items = Array.isArray(attributes.items) ? attributes.items : [];
     const avatars = useAttachmentUrls(
       items.map((item) => Number(item.avatarId) || 0),
@@ -1043,7 +1059,7 @@ registerBlockType(metadata, {
     const rootEntrance = entranceRootProps(entrance);
 
     // Swiper's page count: one bullet per position the first visible slide can take.
-    const pages = Math.max(1, items.length - PER_VIEW + 1);
+    const pages = Math.max(1, items.length - perView + 1);
     const page = Math.min(firstVisible, pages - 1);
     const selected = Math.min(activeItem, Math.max(items.length - 1, 0));
 
@@ -1051,8 +1067,8 @@ registerBlockType(metadata, {
     const selectSlide = (index) => {
       setActiveItem(index);
       if (index < page) setFirstVisible(index);
-      else if (index > page + PER_VIEW - 1)
-        setFirstVisible(index - PER_VIEW + 1);
+      else if (index > page + perView - 1)
+        setFirstVisible(index - perView + 1);
     };
 
     const updateItem = (index, patch) =>
@@ -1127,10 +1143,9 @@ registerBlockType(metadata, {
         <section
           {...blockProps}
           {...rootEntrance}
-          className={`${blockProps.className} testimonial-carousel bg-surface ${EDITOR_BLOCK_FRAME}`}
+          className={`${blockProps.className} ${editorPaddingClasses(attributes)} testimonial-carousel bg-surface ${EDITOR_BLOCK_FRAME}`}
           style={{
             ...blockProps.style,
-            ...editorPaddingStyle(attributes),
             ...rootEntrance.style,
           }}
         >
@@ -1144,12 +1159,12 @@ registerBlockType(metadata, {
           />
 
           {/* The front end's carousel, driven by the bullets and the sidebar list instead of Swiper. */}
-          <div {...entrancePartProps(entrance, 1)} className="overflow-hidden">
+          <div {...entrancePartProps(entrance, 1)} ref={viewportRef} className="overflow-hidden">
             <div
               className="flex transition-transform duration-300 ease-out"
               style={{
                 gap: `${GAP}px`,
-                transform: `translateX(calc(${-page} * (${100 / PER_VIEW}% + ${GAP / PER_VIEW}px)))`,
+                transform: `translateX(calc(${-page} * (${100 / perView}% + ${GAP / perView}px)))`,
               }}
             >
               {items.map((item, index) => (
@@ -1157,7 +1172,7 @@ registerBlockType(metadata, {
                   key={index}
                   className="card flex shrink-0 flex-col p-8"
                   style={{
-                    width: `calc((100% - ${GAP * (PER_VIEW - 1)}px) / ${PER_VIEW})`,
+                    width: `calc((100% - ${GAP * (perView - 1)}px) / ${perView})`,
                   }}
                   onFocus={() => setActiveItem(index)}
                 >

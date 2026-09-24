@@ -596,7 +596,19 @@ same. Undo it for the canvas only, in the editor-only folder
 .editor-styles-wrapper textarea {
   overflow-wrap: normal;
 }
+
+/* Same side gutter as the site container, so a block never touches the canvas edges on a narrow screen. */
+.editor-styles-wrapper .is-root-container,
+.editor-styles-wrapper .editor-visual-editor__post-title-wrapper {
+  padding-inline: var(--container-padding-x);
+}
 ```
+
+The canvas adapts instead of forcing a size: blocks are at most the
+container wide, keep the container's gutter from the canvas edges, and —
+because the canvas is an iframe — Tailwind's breakpoints follow **its** width.
+With list view and settings open on a laptop the canvas is phone-width, and
+blocks take their mobile layout exactly as the page does on a phone.
 
 A word that still doesn't fit is a layout problem to solve in the design (a
 smaller `heading-N`, a wider column) — `scripts/editor-fidelity.mjs` compares

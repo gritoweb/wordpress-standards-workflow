@@ -2,6 +2,34 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-24 — The canvas adapts to its width instead of forcing one
+
+With list view and settings open on a laptop the editor canvas is
+phone-width (394px on a 1024px screen). The canvas still forced desktop
+values, so blocks touched the canvas edges, the hero title was clipped and
+the carousel author rows had 0px.
+
+### Fixed
+- **Padding follows breakpoints.** `editorPaddingStyle()` wrote the desktop
+  padding as an inline style (96px each side at any width). It's replaced by
+  `editorPaddingClasses()`, which returns the same responsive classes
+  `BlockPadding` prints on the page (`py-14 md:py-28 px-5 lg:px-[6rem]` by
+  default); the canvas iframe's own width drives the breakpoints.
+- **Carousel slides per view follow Swiper.** The canvas forced 2 slides at
+  any width; it now reads Swiper's breakpoint (1 below 768px, 2 from 768px)
+  on the canvas iframe.
+- **Minimum gutter.** `editor/canvas.css` gives the block list and the post
+  title the container's side padding (`--container-padding-x`), so nothing
+  touches the canvas edges.
+
+### Verified
+- `luistestenovo`, list view + settings open, 1920 / 1366 / 1024px screens
+  (canvas 1290 / 736 / 394px): 24px minimum gap, no section overflowing, no
+  clipped field, carousel 2 / 1 / 1 slides; post title aligned with the
+  blocks; check and editor-fidelity exit 0.
+- The three example `block.jsx` parse; `editorPaddingClasses` returns the
+  same strings as `BlockPadding::resolve` for defaults and custom values.
+
 ## 2026-09-24 — Words never split on the editor canvas
 
 A generated theme showed "Frequently Asked Questions" split mid-word in the
