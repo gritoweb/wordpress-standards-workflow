@@ -2,6 +2,18 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — The alert component keeps its props
+
+### Fixed
+- **No PHP warning on the alert.** The wizard's `alert.blade.php` dropped
+  Sage's `@props(['type' => null, 'message' => null])`, so every alert
+  printed `Warning: Undefined variable $type`. The snippet keeps it now.
+
+### Verified
+- On a local Lando site, the Styleguide page rendered with the old snippet
+  printed `Warning: Undefined variable $type`; with the new one it printed no
+  warning and all four alert variants.
+
 ## 2026-09-25 — Every project gets a private Styleguide page
 
 ### Added

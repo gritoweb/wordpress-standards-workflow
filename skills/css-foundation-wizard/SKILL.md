@@ -618,9 +618,16 @@ smaller `heading-N`, a wider column) — `scripts/editor-fidelity.mjs` compares
 ### Sage's `resources/views/components/alert.blade.php`
 
 Sage ships it on Tailwind's stock palette (`bg-green-400`, `bg-red-400`, …),
-which the check refuses. Point it at the state tokens:
+which the check refuses. Point it at the state tokens, and keep Sage's
+`@props` line: without it `$type` is undefined and the page prints a PHP
+warning.
 
 ```blade
+@props([
+    'type' => null,
+    'message' => null,
+])
+
 @php($class = match ($type) {
   'success' => 'border-success text-success',
   'caution' => 'border-warning text-warning',
