@@ -3,12 +3,16 @@
 Global values an editor changes without a deploy live on one **Site Settings**
 page, built on **Secure Custom Fields** (SCF, the free ACF fork).
 
-## Nothing ships by default
+## New project vs existing site
 
-A new project has no Site Settings page and no SCF. **The first tab someone
-asks for** installs Secure Custom Fields and adds the page
-(`app/Settings/SiteSettings.php`, registered from `app/blocks.php`), through
-`site-settings-wizard`. Nothing is installed that the site doesn't use.
+- **New project** (`project-init`): installs Secure Custom Fields and ships an
+  **empty** Site Settings page (`app/Settings/SiteSettings.php`, registered
+  from `app/blocks.php`). No tab, no field.
+- **Existing site** that gets the updated kit: installs nothing. The first
+  tab someone asks for installs SCF and adds the page, through
+  `site-settings-wizard`.
+
+Tabs (Branding, Header, Footer, Integrations…) are added only when asked.
 
 Motion (entrance and hover defaults) is not part of this: it stays in
 **Appearance › Customize › Motion** (`BlockMotion`), unchanged, so older

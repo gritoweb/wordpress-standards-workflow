@@ -2,6 +2,29 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — New projects get an empty Site Settings; cleanup runs after the theme
+
+### Changed
+- **Site Settings: new project yes, existing site only on request.**
+  `project-init` (both scenarios, right after activating the theme) installs
+  Secure Custom Fields and copies `SiteSettings.php`: an empty Site Settings
+  page. `app/blocks.php` registers it only `if (class_exists(...))`, so an
+  older theme without the class runs as before. An existing site gets SCF and
+  the page only with its first tab (`site-settings-wizard`).
+- **Install defaults are cleared after the theme is active.** The cleanup is
+  now its own section, run right after `theme activate`, one command per line
+  (no `&&`, no `|| true`), and ends with three counts that must print 0
+  (both sidebars' widgets, posts with comments open). A test run that reset
+  widgets *before* activating Sage kept Archives/Categories in the footer and
+  left "Hello world" open.
+
+### Verified
+- `app/blocks.php` run in plain PHP with stub classes: without
+  `SiteSettings` it prints categories, motion, init hook (no error); with it,
+  it also registers Site Settings.
+- The count commands printed 2 and 3 widgets on the test site that reset too
+  early, and 0 on the one that reset after activation.
+
 ## 2026-09-25 — Motion stays in the Customizer; SCF only with the first tab
 
 ### Changed

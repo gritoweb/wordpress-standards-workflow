@@ -3,14 +3,15 @@ name: site-settings-wizard
 description: >
   Adds a tab of fields to a Sage 11 theme's Site Settings page, built on Secure Custom Fields (SCF, the free ACF fork):
   one SCF field group in acf-json/ and reads through App\Settings\SiteSettings::field(). Only runs when the dev asks for
-  a tab (Branding, Header, Footer, Integrations…); nothing is installed before that.
+  a tab (Branding, Header, Footer, Integrations…). New projects already have the empty page (project-init); an existing
+  site gets SCF and the page only with its first tab.
 ---
 
 # site-settings-wizard — add a tab to Site Settings (SCF)
 
-A project has **no Site Settings page and no SCF** until the dev asks for a
-tab. The first tab installs both; every tab after that only adds its own
-group. This skill adds the tab that was asked for, and nothing else. The
+A **new project** already has SCF and an empty Site Settings page
+(`project-init`). An **existing site** has neither until the dev asks for a
+tab: its first tab installs both. Every tab only adds its own group. This skill adds the tab that was asked for, and nothing else. The
 pattern is `_docs/site-settings-pattern.md`.
 
 Motion (entrance and hover defaults) is **not** a Site Settings tab: it stays
@@ -25,14 +26,15 @@ only `lando` command is the plugin install above, on a local site.
 ## Pre-conditions
 
 - Working directory = active Sage 11 theme root. If unsure, **ask** — don't guess.
-- **First tab only** (no `app/Settings/SiteSettings.php` yet):
+- **Only when `app/Settings/SiteSettings.php` is missing** (an existing site's first tab):
   1. Install the plugin: `lando wp plugin install secure-custom-fields --activate`
      (skip if ACF Pro is already active: same API).
   2. Copy `<skill>/templates/SiteSettings.php` to `app/Settings/SiteSettings.php`,
      replacing `__TEXT_DOMAIN__` with the theme's text domain. It registers
      the Site Settings page and is the one reader for its fields.
-  3. Add `\App\Settings\SiteSettings::register();` to `app/blocks.php`, after
-     `BlockMotion::register();`. Nothing else in the theme changes.
+  3. If `app/blocks.php` doesn't register it yet, add after `BlockMotion::register();`:
+     `if (class_exists(\App\Settings\SiteSettings::class)) { \App\Settings\SiteSettings::register(); }`.
+     Nothing else in the theme changes.
 
 ---
 

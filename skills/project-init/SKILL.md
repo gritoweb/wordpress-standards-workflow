@@ -215,7 +215,7 @@ Phase 0 answer. Do not run any of these commands.
    identity in `style.css` — `Theme Name`, `Author`, `Text Domain`, and **reset
    `Version` to `1.0.0`**; match `package.json`'s `name`. (Re-verified by the
    launch list at go-live.)
-5. `lando wp theme activate <theme>`.
+5. `lando wp theme activate <theme>`, then **Clear install defaults** and **Site Settings** (below).
 6. Review and commit the copied kit files through the normal git flow —
    **never push without the project owner's permission**.
 7. Build theme assets (Step below).
@@ -257,7 +257,7 @@ Phase 0 answer. Do not run any of these commands.
    not `sage`).
 6. Copy kit standards into `wp-content/themes/<theme>/` per Phase 1 table.
    If the kit repository was cloned from GitHub, **delete the cloned kit directory immediately** (`rm -rf ...`) so the WordPress root remains clean.
-7. `lando wp theme activate <theme>`.
+7. `lando wp theme activate <theme>`, then **Clear install defaults** and **Site Settings** (below).
 8. Optionally `git init` + an initial commit inside `wp-content/themes/<theme>` — local only, never push without permission.
 9. Build theme assets (Step below).
 10. **Creating Home Page with Sample Blocks** (when requested by user prompt) —
@@ -281,19 +281,7 @@ Phase 0 answer. Do not run any of these commands.
     lando wp menu item add-post primary "$HOME_ID" --title="Home"
     lando wp menu location assign primary primary_navigation
     ```
-12. **Clear WordPress's install defaults** — a fresh install puts
-    Archives / Categories / Recent Comments widgets into Sage's footer
-    sidebar (they render unstyled under the site) and leaves comments open,
-    which `CLAUDE.md` › WordPress Settings forbids:
-    ```bash
-    lando wp widget reset --all
-    lando wp option update default_comment_status closed
-    lando wp option update default_ping_status closed
-    lando wp comment list --format=ids | xargs -r lando wp comment delete --force
-    lando wp post list --post_type=any --post_status=any --comment_status=open --format=ids \
-      | xargs -r lando wp post update --comment_status=closed --ping_status=closed
-    ```
-13. **Smoke check before handing off** — open the home at desktop and mobile
+12. **Smoke check before handing off** — open the home at desktop and mobile
     width: header menu works (Phase 1c), nothing renders under the content
     but the footer you built (no stray widgets), and each block with an
     entrance animation gains `data-entered` on scroll (`create-block` ›
@@ -301,6 +289,46 @@ Phase 0 answer. Do not run any of these commands.
     has encountered an error", repeaters reorder/delete from the sidebar
     with the canvas updating at once. Report what was checked, not "should
     work".
+
+### Clear install defaults (both scenarios, right after activating the theme)
+
+A fresh install puts Archives / Categories / Recent Comments widgets into
+Sage's sidebars (they render unstyled under the site) and leaves comments
+open, which `CLAUDE.md` › WordPress Settings forbids. Run this **after**
+`lando wp theme activate <theme>`: reset earlier and WordPress moves the
+default widgets into the new theme's sidebars on activation. One command per
+line, never chained with `&&` or hidden behind `|| true`:
+
+```bash
+lando wp widget reset --all
+lando wp option update default_comment_status closed
+lando wp option update default_ping_status closed
+lando wp comment list --format=ids | xargs -r lando wp comment delete --force
+lando wp post list --post_type=any --post_status=any --comment_status=open --format=ids \
+  | xargs -r lando wp post update --comment_status=closed --ping_status=closed
+```
+
+Then prove it — each must print `0`:
+
+```bash
+lando wp widget list sidebar-primary --format=count
+lando wp widget list sidebar-footer --format=count
+lando wp post list --post_type=any --post_status=any --comment_status=open --format=count
+```
+
+### Site Settings (new projects only)
+
+A new project ships with an **empty** Site Settings page, right after
+activating the theme:
+
+1. `lando wp plugin install secure-custom-fields --activate`
+2. Copy `.claude/skills/site-settings-wizard/templates/SiteSettings.php` to
+   `app/Settings/SiteSettings.php`, replacing `__TEXT_DOMAIN__` with the
+   theme's text domain. `app/blocks.php` registers it when the class exists.
+
+No tab, no field: tabs are added only when asked, with `site-settings-wizard`.
+An **existing** site that gets the updated kit installs nothing; it only gets
+SCF and the page when someone asks for its first tab.
 
 ### Theme assets (both scenarios)
 
