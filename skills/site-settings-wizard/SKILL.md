@@ -1,13 +1,20 @@
 ---
 name: site-settings-wizard
 description: >
-  Interactively scaffold Site Settings for a Sage 11 theme using only WordPress core APIs (Customizer and Settings API).
-  Zero ACF or third-party dependencies. Use this when a theme needs global settings like Branding, Header, Footer, or Motion.
+  Interactively add Site Settings fields to a Sage 11 theme built on the kit, using Secure Custom Fields (SCF, the free
+  ACF fork): one SCF field group on the kit's Site Settings options page, a typed accessor that extends
+  App\Settings\SiteSettings, and a test. Use when a theme needs global, editor-changeable values (header button,
+  legal name, social links, a Maps key, a form ID).
 ---
 
-# site-settings-wizard — interactive Site Settings scaffolding
+# site-settings-wizard — add fields to Site Settings (SCF)
 
-Turns a dev's requirement for global site settings into a clean, ACF-free implementation using WordPress core APIs. It asks which sections and fields are needed, helps decide between the Customizer (for live-previewable fields) and the Settings API (for back-office configuration), and generates the necessary PHP classes, service providers, and helper functions.
+Turns a dev's list of global settings into the kit's Site Settings pattern:
+the fields live in an SCF group on the **Site Settings** options page that
+`app/site.php` already registers (next to the framework's **Motion** tab), and
+the theme reads them only through a class that extends `SiteSettings`. The
+full pattern, and what does and doesn't belong here, is
+`_docs/site-settings-pattern.md` — read it first.
 
 Never runs `npm` / `composer` / `git` — the dev does that themselves.
 
@@ -16,128 +23,82 @@ Never runs `npm` / `composer` / `git` — the dev does that themselves.
 ## Pre-conditions
 
 - Working directory = active Sage 11 theme root. If unsure, **ask** — don't guess.
-- Must be a 100% WordPress core implementation. **Zero references to ACF, SCF, `get_field`, `acf-json`, or any external plugin.**
+- The kit is installed: `app/site.php`, `app/Settings/SiteSettings.php` and
+  `acf-json/group_<prefix>_site_settings.json` exist, and `functions.php`
+  loads `'site'`. If not, stop and run `project-init`.
+- **Secure Custom Fields** is the plugin (`wp plugin install secure-custom-fields --activate`,
+  run by the dev). ACF Pro also works — same API — but the standard is SCF.
+- `prefix` comes from `kit.config.json`.
 
 ---
 
 ## Execution Flow
 
-1. **Step 1** — Sections & Fields Gathering
-2. **Step 2** — API Decision (Customizer vs Settings API)
-3. **Step 3** — Generation of PHP Classes (`app/Customizer/*.php` and ServiceProvider)
-4. **Step 4** — Generation of Options Page (Settings API)
-5. **Step 5** — Helpers & CSS Variables (`wp_head` emission)
-6. **Handoff** — Summary of what was created
+1. **Step 1** — Fields: which values, which tab, which type
+2. **Step 2** — Filter out what doesn't belong in Site Settings
+3. **Step 3** — The SCF field group JSON
+4. **Step 4** — The typed accessor class
+5. **Step 5** — The test
+6. **Handoff**
 
 ---
 
-## Step 1 — Sections & Fields Gathering
+## Step 1 — Fields
 
-1. Ask the dev what settings sections they need. Suggest common examples (e.g., Branding, Header, Footer, Motion) but do not hardcode them.
-2. For each section, ask what specific fields are required (e.g., Logo, CTA Label, Primary Color).
+Ask which sections (tabs) and fields the site needs; suggest from the design
+(Header, Footer, Socials, Integrations) but don't hardcode them. For each
+field: label, `name` (snake_case), SCF type (`text`, `email`, `url`, `link`,
+`image`, `number`, `true_false`, `select`), default, and for numbers
+`min`/`max`.
 
----
+## Step 2 — Does it belong here?
 
-## Step 2 — API Decision (Customizer vs Settings API)
+Apply `_docs/site-settings-pattern.md` › "What belongs": site-wide, changed
+by an editor without a deploy, one value at a time. Push back on design
+tokens (they live in `variables.css`), per-block choices (block attributes)
+and repeatable records (a post type).
 
-1. For each gathered field, ask the dev whether it requires live-preview functionality or if it's better suited as a backend option.
-2. **Rule of thumb**:
-   - Visual/Layout changes (Colors, Typography, Layout choices) → **Customizer**
-   - API Keys, Integration toggles, Hidden settings → **Settings API**
+## Step 3 — Field group
 
----
+Write `acf-json/group_<prefix>_<group>.json` with `location` on the options
+page `site-settings`, one `tab` field per section, and keys
+`field_<prefix>_<name>`. Model it on the kit's
+`<kitPath>/examples/acf-json/group___PREFIX___header_footer.json`. Never write
+`id` or `modified`; SCF fills them on the next sync.
 
-## Step 3 — Customizer PHP Classes
+## Step 4 — Accessor
 
-1. Generate a PHP class for each Customizer section in `app/Customizer/<Name>.php`.
-2. Each class must have a `boot()` method that hooks into `customize_register` and uses native `add_section`, `add_setting`, and `add_control`.
+Write `app/Settings/<Group>Settings.php` extending `App\Settings\SiteSettings`.
+Every getter reads through the inherited `static::field()` guard and returns a
+typed default — never `null`, `false` or a raw field array:
 
 ```php
-<?php
+namespace App\Settings;
 
-namespace App\Customizer;
-
-class Header
+class HeaderFooterSettings extends SiteSettings
 {
-    public static function boot(): void
+    public static function supportEmail(): string
     {
-        add_action('customize_register', function ($wp_customize) {
-            $wp_customize->add_section('header_section', [
-                'title' => __('Header', 'sage'),
-                'priority' => 30,
-            ]);
-
-            $wp_customize->add_setting('header_cta_label', [
-                'default' => 'Subscribe',
-                'transport' => 'refresh',
-            ]);
-
-            $wp_customize->add_control('header_cta_label', [
-                'label' => __('CTA Label', 'sage'),
-                'section' => 'header_section',
-                'type' => 'text',
-            ]);
-        });
+        return sanitize_email((string) static::field('support_email'));
     }
 }
 ```
 
-3. Generate `app/Providers/CustomizerServiceProvider.php` that calls `::boot()` on each of these section classes:
+A number with a range gets its own `LIMITS` (`[min, max, default]`) and a
+clamp, matching the field's `min`/`max`. Views read the value from a composer;
+`block.php` calls the getter. Nothing calls `get_field()` directly.
 
-```php
-<?php
+## Step 5 — Test
 
-namespace App\Providers;
-
-use Illuminate\Support\ServiceProvider;
-use App\Customizer\Header;
-// ...
-
-class CustomizerServiceProvider extends ServiceProvider
-{
-    public function boot()
-    {
-        Header::boot();
-        // ...
-    }
-}
-```
-Ask the dev to ensure this ServiceProvider is registered in `config/app.php` (providers array).
-
----
-
-## Step 4 — Settings API (Non-Customizer Fields)
-
-1. If any fields were designated for the Settings API, generate a class (e.g., `app/Admin/SiteSettings.php`) that uses `add_options_page` and `register_setting`.
-2. Wire this class in a ServiceProvider or directly in `setup.php`/`admin.php`.
-
----
-
-## Step 5 — Helpers & CSS Variables Emission
-
-1. Explain how to consume these values. Always require a fallback when reading:
-   - `get_theme_mod('header_cta_label', 'Subscribe')`
-   - `get_option('my_api_key', '')`
-2. If any fields are CSS-related (like Motion settings or Colors), generate an action hooked to `wp_head` that emits CSS custom properties inline.
-
-```php
-add_action('wp_head', function () {
-    $reduced_motion = get_theme_mod('motion_reduced', false);
-    ?>
-    <style>
-        :root {
-            --motion-duration: <?= $reduced_motion ? '0s' : '0.3s' ?>;
-        }
-    </style>
-    <?php
-});
-```
-
-3. **Block-Override Pattern**: Document for the dev that when building blocks, if an attribute is `null`, it means "use Site Settings default".
-   - Example: `$cta_label = $attributes['ctaLabel'] ?? get_theme_mod('header_cta_label', 'Subscribe');`
-
----
+Write `app/Settings/<Group>Settings.test.mjs` with `callKitPhp()` from
+`app/test-support.mjs`: one case with no SCF (the default), one with a
+fixture `get_field()` (the saved value), and, for ranged numbers, `LIMITS`
+equal to the JSON's `min`/`max`. Model: the kit's
+`examples/app/Settings/HeaderFooterSettings.test.mjs`.
 
 ## Handoff
 
-End with a summary table of the generated files and the next steps (e.g., registering the ServiceProvider, using the fallback pattern in blocks).
+A table of the files written, then tell the dev to: open
+`wp-admin/edit.php?post_type=acf-field-group` and click **Sync** for the new
+group, fill the values under **Site Settings**, and commit the JSON with the
+code.

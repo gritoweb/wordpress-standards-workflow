@@ -35,6 +35,8 @@ project's `_docs/` folder and tick items as you go.
 - [ ] ⚠️ `Settings → Discussion` — comments globally enabled or disabled per the project's intent
 - [ ] ⚠️ `Settings → General → New User Default Role` is appropriate (typically `Subscriber`; don't ship as `Administrator`)
 
+- [ ] 🚫 **Secure Custom Fields** active on Live, and every `acf-json/` group synced there (`Custom Fields → Field Groups` shows no "Sync available"); **Site Settings** has Motion and the site's own tabs filled
+
 ## 🔒 Security
 
 - [ ] 🚫 WordPress core, all plugins, and the active theme on the latest stable version

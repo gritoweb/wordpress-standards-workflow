@@ -9,8 +9,8 @@
  */
 
 /*
- * Defaults, so the editor canvas and any page without saved Customizer > Motion
- * values still animate. BlockMotion.php overrides them with html:root.
+ * Defaults, so the editor canvas and any page without saved Site Settings > Motion
+ * values still animate. app/site.php overrides them with html:root.
  */
 :root {
   --e-duration: 1000ms;

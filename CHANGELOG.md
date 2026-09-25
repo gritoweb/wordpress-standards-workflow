@@ -2,6 +2,40 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Site Settings on Secure Custom Fields
+
+Site Settings moves off the Customizer onto an options page from **Secure
+Custom Fields** (SCF, the free WordPress.org fork of ACF, already used on
+Unity DSP). Same Motion options and White Summers defaults as before.
+
+### Added
+- `theme/app/site.php`: the **Site Settings** options page, the Motion values
+  as `html:root` custom properties (front end and canvas), the
+  `html.entrance` head script, `window.__PREFIX__EntranceDefaults` for the
+  sidebar, the hover body classes, the `@layer` order first in `<head>`,
+  comments off site-wide, and Gravity Forms button markup when the plugin is
+  active.
+- `theme/app/Settings/SiteSettings.php`: the only reader of Site Settings,
+  typed and defaulted when SCF is off or a field was never saved;
+  `acf-json/group___PREFIX___site_settings.json` (Motion tab).
+- Tests: defaults (1000/250/250 ms, fade hover, literal ease-out), clamping,
+  the field group's min/max against `LIMITS`, and `site.php`'s hooks.
+
+### Changed
+- `site-settings-wizard` adds fields as an SCF group + a class extending
+  `SiteSettings` + a test (was: Customizer and Settings API, no SCF).
+- `_docs/site-settings-pattern.md` rewritten for the SCF pattern.
+- `functions.php` loads `'site'` next to `'blocks'` (create-block 0.6.1);
+  `project-init` installs SCF; `CLAUDE.md`, `README.md` and the launch list
+  name SCF as the custom-fields plugin, never ACF Pro.
+
+### Removed
+- `BlockMotion.php` (Customizer > Motion). An older theme's
+  `BlockMotion::register()` call is removed by `create-block`'s Phase 0.
+
+### Verified
+- `node --test` on `SiteSettings` + `site.php`: 16 pass; `npm test` exit 0.
+
 ## 2026-09-25 — Framework components from the Sage Site Kit, with tests
 
 Second step of the Sage Site Kit port. Our components stay the base; theirs

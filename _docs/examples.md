@@ -9,9 +9,8 @@ initialised only where the block renders, console clean).
 
 Placeholders, same as the `create-block` templates: `<namespace>` (block
 namespace), `<text-domain>`, `<category>`. Theme infrastructure
-(`BlockManager`, `BlockPadding`, `BlockEntrance`, `BlockMotion`, the shared
-components) is **not** repeated here — it comes from
-`skills/create-block/templates/`.
+(`BlockManager`, `BlockPadding`, `BlockEntrance`, `app/site.php`, the shared
+components) is **not** repeated here — it comes from the kit's `theme/`.
 
 ## Rules every block follows
 

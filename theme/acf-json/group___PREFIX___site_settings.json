@@ -1,0 +1,179 @@
+{
+    "key": "group___PREFIX___site_settings",
+    "title": "Site Settings",
+    "fields": [
+        {
+            "key": "field___PREFIX___tab_motion",
+            "label": "Motion",
+            "name": "",
+            "type": "tab",
+            "placement": "top"
+        },
+        {
+            "key": "field___PREFIX___motion_duration",
+            "label": "Animation duration",
+            "name": "motion_duration",
+            "type": "number",
+            "instructions": "How long each block takes to animate in.",
+            "wrapper": {
+                "width": "50"
+            },
+            "default_value": 1000,
+            "append": "ms",
+            "min": 0,
+            "max": 3000,
+            "step": 1
+        },
+        {
+            "key": "field___PREFIX___motion_delay",
+            "label": "Start delay",
+            "name": "motion_delay",
+            "type": "number",
+            "instructions": "Wait before a block starts to animate.",
+            "wrapper": {
+                "width": "50"
+            },
+            "default_value": 250,
+            "append": "ms",
+            "min": 0,
+            "max": 3000,
+            "step": 1
+        },
+        {
+            "key": "field___PREFIX___motion_stagger",
+            "label": "Delay between items",
+            "name": "motion_stagger",
+            "type": "number",
+            "instructions": "Gap between items in a row or list.",
+            "wrapper": {
+                "width": "50"
+            },
+            "default_value": 250,
+            "append": "ms",
+            "min": 0,
+            "max": 1000,
+            "step": 1
+        },
+        {
+            "key": "field___PREFIX___motion_distance",
+            "label": "Travel distance",
+            "name": "motion_distance",
+            "type": "number",
+            "instructions": "How far a block moves while it fades in.",
+            "wrapper": {
+                "width": "50"
+            },
+            "default_value": 32,
+            "min": 0,
+            "max": 2000,
+            "step": 1
+        },
+        {
+            "key": "field___PREFIX___motion_distance_unit",
+            "label": "Distance unit",
+            "name": "motion_distance_unit",
+            "type": "select",
+            "instructions": "Use screen width for large moves.",
+            "wrapper": {
+                "width": "50"
+            },
+            "choices": {
+                "px": "Pixels",
+                "vw": "Screen width"
+            },
+            "default_value": "px",
+            "return_format": "value",
+            "allow_null": 0,
+            "ui": 0
+        },
+        {
+            "key": "field___PREFIX___motion_ease",
+            "label": "Easing",
+            "name": "motion_ease",
+            "type": "select",
+            "instructions": "The curve every entrance animation follows.",
+            "wrapper": {
+                "width": "50"
+            },
+            "default_value": "ease-out",
+            "choices": {
+                "ease-out": "Ease out",
+                "ease-in-out": "Ease in and out",
+                "ease": "Ease"
+            },
+            "return_format": "value",
+            "allow_null": 0,
+            "multiple": 0,
+            "ui": 0
+        },
+        {
+            "key": "field___PREFIX___hover_button",
+            "label": "Button hover effect",
+            "name": "hover_button",
+            "type": "select",
+            "instructions": "How buttons react under the pointer.",
+            "wrapper": {
+                "width": "50"
+            },
+            "choices": {
+                "lift": "Fade and lift",
+                "fade": "Fade",
+                "none": "None"
+            },
+            "default_value": "fade",
+            "return_format": "value",
+            "allow_null": 0,
+            "ui": 0
+        },
+        {
+            "key": "field___PREFIX___hover_link",
+            "label": "Link hover effect",
+            "name": "hover_link",
+            "type": "select",
+            "instructions": "How text links react under the pointer.",
+            "wrapper": {
+                "width": "50"
+            },
+            "choices": {
+                "underline": "Underline",
+                "fade": "Fade",
+                "none": "None"
+            },
+            "default_value": "underline",
+            "return_format": "value",
+            "allow_null": 0,
+            "ui": 0
+        },
+        {
+            "key": "field___PREFIX___hover_duration",
+            "label": "Hover speed",
+            "name": "hover_duration",
+            "type": "number",
+            "instructions": "How long a hover effect takes.",
+            "wrapper": {
+                "width": "50"
+            },
+            "default_value": 250,
+            "append": "ms",
+            "min": 0,
+            "max": 1000,
+            "step": 1
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "options_page",
+                "operator": "==",
+                "value": "site-settings"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "active": true,
+    "show_in_rest": 0
+}

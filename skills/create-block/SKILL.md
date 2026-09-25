@@ -92,14 +92,14 @@ and run `project-init` (or copy `<kit>/theme/<path>` and rerun `kit-setup`). The
 | 0.3 | `resources/views/blocks/` exists |
 | 0.4 | `resources/js/vendor/` exists |
 | 0.5 | `resources/css/vendor/` exists |
-| 0.6 | `app/blocks.php` is the **central block-bootstrap file** — must (a) exist (kit: `theme/app/blocks.php`), (b) contain top-level `BlockCategories::register();` and `BlockMotion::register();`, (c) contain `add_action('init', function () { (new BlockManager())->register(); });`, (d) be loaded by `functions.php`'s `collect([...])` array (see 0.6.1). |
-| 0.6.1 | `functions.php`'s `collect([...])` array includes `'blocks'`. Without it, `app/blocks.php` never loads. If `functions.php` doesn't use the `collect([...])` pattern at all, **bail out** — needs manual wiring. |
+| 0.6 | `app/blocks.php` is the **central block-bootstrap file** — must (a) exist (kit: `theme/app/blocks.php`), (b) contain top-level `BlockCategories::register();`, (c) contain `add_action('init', function () { (new BlockManager())->register(); });`, (d) be loaded by `functions.php`'s `collect([...])` array (see 0.6.1). |
+| 0.6.1 | `functions.php`'s `collect([...])` array includes `'blocks'` and `'site'`. Without them, `app/blocks.php` (blocks) and `app/site.php` (Site Settings, motion, entrance head script, comments off) never load. If `functions.php` doesn't use the `collect([...])` pattern at all, **bail out** — needs manual wiring. |
 | 0.8 | `resources/js/editor.js` calls `import.meta.glob('../blocks/*/block.jsx', { eager: true });` (Vite compiles the **editor** JSX only — front-end `block.js`/`block.css` are served from source via `file:`, see "Block asset loading") |
 | 0.9 | `resources/css/app.css` has `@source "../blocks/**/*.{php,jsx}";` **and** scans `app/` (`@source "../../app/";` — Sage's stock line). The padding / image-position classes are literals in `app/Blocks/*.php`; without that source Tailwind never generates them and Spacing silently does nothing. |
 | 0.10 | `package.json` `devDependencies` has `react@^18` AND `react-dom@^18`. **React pinned to ^18, not ^19** — React 19 breaks Gutenberg (element-symbol mismatch with WP's React 18). |
 | 0.11 | `app/Blocks/BlockCategories.php` exists (kit: `theme/app/Blocks/BlockCategories.php`) with no `__BLOCK_CATEGORY_*__` left. Read the category from `const SLUG = '...'`; it comes from `kit.config.json` › `blockCategory`. The `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). |
 | 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `RemoveButton.jsx`, `RemoveImageButton.jsx`, `coreIcons.jsx`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`, `EditorSection.jsx`, `InlineField.jsx`, `CtaPreview.jsx`, `AddPrompt.jsx`, `InfoPanel.jsx`, `useRepeater.js`, `ground.js`, `GroundSelect.jsx`. Kit: `theme/resources/blocks/components/backend/`. A leftover `__TEXT_DOMAIN__` / `__THEME_SLUG__` means `kit-setup` never ran. |
-| 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php`, `app/Blocks/BlockEntrance.php` and `app/Blocks/BlockMotion.php` exist (kit: `theme/app/Blocks/`). `BlockEntrance.php` must expose `fromBlock()`, `root()` and `part()` — an older copy that only has `resolve()` (it prints `data-entrance-type`) is **incompatible** with `EntranceControl`/`entranceCanvas.js`: replace it. |
+| 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php`, `app/Blocks/BlockEntrance.php`, `app/Settings/SiteSettings.php` and `app/site.php` exist (kit: `theme/app/`). `BlockEntrance.php` must expose `fromBlock()`, `root()` and `part()` — an older copy that only has `resolve()` (it prints `data-entrance-type`) is **incompatible** with `EntranceControl`/`entranceCanvas.js`: replace it. |
 | 0.16 | `functions.php`'s `->withProviders([...])` list includes `\App\Providers\BlockDirectivesServiceProvider::class` (kit: `theme/app/Providers/`). It registers `@paddingClasses`, `@entrance` and `@entrancePart`; Sage's own `ThemeServiceProvider` stays stock. |
 | 0.18 | `resources/css/components/entrance.css` exists (kit: `theme/resources/css/components/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). `resources/css/components/hover.css` exists (kit: `theme/resources/css/components/hover.css`) and is `@import`ed by `resources/css/app.css` — **not** inside `@layer`, it must beat Tailwind's transition utilities. |
 | 0.19 | `resources/js/modules/entrance.js` exists (kit: `theme/resources/js/modules/entrance.js`) and `resources/js/app.js` has `import { initEntrance } from './modules/entrance';` plus a top-level `initEntrance();` call (module scripts are deferred). Without it the front end never adds `data-entered` and the head script's 5s safety net is the only thing that un-hides the page. |
@@ -128,8 +128,8 @@ Phase 0 must be re-runnable. Before each create/modify, Read the target and chec
 
 | Target | Expected shape | If matches | If partial | If diverges from stock |
 |---|---|---|---|---|
-| `app/blocks.php` (Group A) | Has `BlockCategories::register()`, `BlockMotion::register()` and `add_action('init', ...)` referencing `BlockManager` | **Skip** | Only `BlockMotion::register()` missing → insert it (plus its `use`) after `BlockCategories::register();`. Anything else missing → **Bail** — name the missing piece | **Bail** — content unrecognized; ask dev to move/rename |
-| `functions.php` (Group B) | `collect([...])->each(...)` array includes `'blocks'` | **Skip** | Edit the array (insert `'blocks'`); preserve formatting | **Bail** — pattern not found / dynamic array |
+| `app/blocks.php` (Group A) | Has `BlockCategories::register()` and `add_action('init', ...)` referencing `BlockManager` | **Skip** | An older copy also calls `BlockMotion::register()` → remove that call and its `use` (Site Settings replaced it). Anything else missing → **Bail** — name the missing piece | **Bail** — content unrecognized; ask dev to move/rename |
+| `functions.php` (Group B) | `collect([...])->each(...)` array includes `'blocks'` and `'site'` | **Skip** | Edit the array (insert the missing ones); preserve formatting | **Bail** — pattern not found / dynamic array |
 | `resources/js/editor.js` | `import.meta.glob('../blocks/*/block.jsx'` | **Skip** | apply documented edit | **Bail** |
 | `resources/css/app.css` | `@source "../blocks/**` and `@import './components/entrance.css'` | **Skip** | apply documented edit | **Bail** |
 | `resources/css/editor.css` | `@import './components/entrance.css'` | **Skip** | append the import | **Bail** |
@@ -624,7 +624,8 @@ kit's `theme/` folder, mirrors the theme layout, and is installed by `project-in
 ├── app/blocks.php                          ← block bootstrap (check 0.6)
 ├── app/Blocks/BlockManager.php             ← registers every resources/blocks/*/block.json (check 0.1)
 ├── app/Blocks/BlockCategories.php          ← category from kit.config.json (check 0.11)
-├── app/Blocks/{BlockPadding,BlockImagePosition,BlockEntrance,BlockMotion}.php (check 0.15)
+├── app/Blocks/{BlockPadding,BlockImagePosition,BlockEntrance}.php (check 0.15)
+├── app/site.php, app/Settings/SiteSettings.php, acf-json/group___PREFIX___site_settings.json ← Site Settings (SCF)
 ├── resources/css/components/{entrance,hover}.css (check 0.18)
 ├── resources/js/modules/entrance.js        (check 0.19)
 ├── resources/blocks/components/backend/    (check 0.12)
@@ -1048,7 +1049,7 @@ numbers/booleans, or an `imagePosition` string) to a literal Tailwind class
 string, so Tailwind's build-time scanner picks the classes up — never
 interpolate a class dynamically.
 
-#### Entrance: `BlockEntrance.php`, `BlockMotion.php`, `entrance.css`, `entrance.js`
+#### Entrance: `BlockEntrance.php`, `app/site.php`, `entrance.css`, `entrance.js`
 
 Then wire them — each piece is required, the system fails **silently** when
 one is missing (no console error, just no animation):
@@ -1069,10 +1070,14 @@ import { initEntrance } from './modules/entrance';
 initEntrance();
 ```
 
-`BlockMotion::register()` is called from `app/blocks.php` (template already
-does it). It adds **Appearance › Customize › Motion** — the same options and
-defaults as the White Summers reference — plus the `html.entrance` head
-script and the same values inside the editor canvas:
+`app/site.php` (loaded by `functions.php`'s `collect([... 'site'])`) registers
+the **Site Settings** options page (SCF, field group in
+`acf-json/group___PREFIX___site_settings.json`), prints its **Motion** values —
+the same options and defaults as the White Summers reference — as the
+`html.entrance` head script and `html:root` custom properties, gives the canvas
+the same values, and prints `window.__PREFIX__EntranceDefaults` for the
+sidebar's placeholders. Read settings through `App\Settings\SiteSettings`,
+never `get_field()` directly:
 
 | Option | Default | Prints |
 |---|---|---|
@@ -1086,7 +1091,7 @@ script and the same values inside the editor canvas:
 | Hover speed | 250 ms | `--hover-duration` |
 
 Never hard-code these values in a block — a block field left empty inherits
-them, so changing the Customizer changes the whole site.
+them, so changing Site Settings changes the whole site.
 
 #### Entrance animation wiring (every block)
 
@@ -1110,7 +1115,7 @@ The contract is shared by `BlockEntrance.php`, `entranceCanvas.js`,
 - **Every block declares its preset** in `block.json` → `attributes.entrance`
   (`"type": "object"`, `"default": {…}`), picked from this table by what the
   block *is* — copy the row, don't invent numbers. `null` = inherit
-  Customizer › Motion. These are the White Summers presets:
+  Site Settings › Motion. These are the White Summers presets:
 
   | Block kind | `default` |
   |---|---|
@@ -1129,7 +1134,7 @@ The contract is shared by `BlockEntrance.php`, `entranceCanvas.js`,
 - **Buttons:** every CTA `<a>` gets the `btn` class next to its Tailwind
   classes, and **no** `transition-*`, `duration-*`, `hover:scale-*` or
   `hover:-translate-*` utilities — the hover motion comes from `hover.css`
-  (Customize › Motion › Button hover effect). Colour changes on hover
+  (Site Settings › Motion › Button hover effect). Colour changes on hover
   (`hover:bg-*`) stay on the button.
 - Only the values in `entranceCanvas.js` exist: types `none | fade | slide |
   fade-slide`, directions `up | down | left | right`, units `px | vw`,
@@ -1202,11 +1207,11 @@ the line manually. A theme wired by an older kit also has the three
 `Blade::directive(...)` calls in `ThemeServiceProvider::boot()`: remove them
 there once the provider is listed (registering a directive twice keeps the last).
 
-#### `functions.php` — add `'blocks'` to the collect array
+#### `functions.php` — add `'blocks'` and `'site'` to the collect array
 
 ```diff
 -collect(['setup', 'filters'])
-+collect(['setup', 'filters', 'blocks'])
++collect(['setup', 'filters', 'blocks', 'site'])
      ->each(function ($file) {
          if (! locate_template($file = "app/{$file}.php", true, true)) {
              // ...

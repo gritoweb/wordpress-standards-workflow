@@ -29,6 +29,7 @@
 | CSS | Tailwind (via `@apply` for reusable patterns) |
 | Blocks | Gutenberg via Acorn |
 | Local env | [Lando](https://lando.dev/) |
+| Custom fields | [Secure Custom Fields](https://wordpress.org/plugins/secure-custom-fields/) (SCF, free ACF fork) — never ACF Pro |
 
 ---
 
@@ -101,6 +102,15 @@ treatment two blocks share becomes a class first.
 **markup**. Full rules (design tokens, base/typography foundation, block class
 naming, hand-written CSS formatting) live in
 `.claude/skills/css-standards/SKILL.md`.
+
+---
+
+## Site Settings
+
+Site-wide values an editor changes live on the SCF **Site Settings** page and
+are read only through `App\Settings\SiteSettings` (or a class extending it),
+never `get_field()` directly. Add fields with the `site-settings-wizard` skill;
+the pattern is `_docs/site-settings-pattern.md`.
 
 ---
 

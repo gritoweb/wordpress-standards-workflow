@@ -70,10 +70,10 @@ the manifest **is** the source of truth either way.
 | `skills/blade-standards/` | `<theme>/.claude/skills/blade-standards/` | Copy the whole folder |
 | `skills/project-init/` | `<theme>/.claude/skills/project-init/` | Copy the whole folder — or use it to drive this very import (see below) |
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy the whole folder — block screenshot generator (Chrome headless → webp + svg fallback) |
-| `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — interactive wizard for Site Settings (Customizer + Settings API, no ACF) |
+| `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — interactive wizard for Site Settings fields (SCF options page + typed accessor) |
 | `_docs/examples.md` | `<theme>/_docs/examples.md` | Reference patterns the AI uses for grounding |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Pre-launch checklist for go-live |
-| `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | Reference doc for Customizer + Settings API pattern |
+| `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | The Site Settings pattern (SCF options page + typed accessor) |
 | `_docs/editor-fidelity-checklist.md` | `<theme>/_docs/editor-fidelity-checklist.md` | Canvas fidelity checklist |
 | `gitignore.example` | `<theme>/.gitignore` | **Only if** `<theme>/.gitignore` does not exist yet — never overwrite |
 | `prettier.config.example.js` | `<theme>/prettier.config.js` | Theme root; then add the `prepare` + `lint-staged` keys and copy the hook installer — see "Code formatting" |
@@ -250,6 +250,9 @@ Composer and Node run on the **host**; Lando only serves WordPress.
   release where you can)
 - Node + npm (theme asset build)
 - Git
+- The **Secure Custom Fields** plugin (free, WordPress.org) on every site —
+  Site Settings runs on it. Install it in WordPress after the site is up
+  (`lando wp plugin install secure-custom-fields --activate`).
 - Scenario A only: a Pantheon account and a personal **machine token**
   (Pantheon → Account → Machine Tokens).
 
