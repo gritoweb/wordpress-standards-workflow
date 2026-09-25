@@ -40,6 +40,24 @@
   `default_ping_status` for post types we register), and close comments/pings
   on existing content. Remove/hide related admin UI and widgets rather than
   leaving an unused, unmoderated attack surface.
+  `scripts/wp/comments-off.sh` (via `lando wp`) closes them on a local site.
+
+---
+
+## Kit log
+
+While building, add one line to `_docs/kit-log.md` whenever the kit got
+something wrong, had to be worked around, or you built something that looks
+reusable — what happened and the file it touched. Don't decide what belongs
+in the kit mid-build: after the site ships, the kit's `kit-harvest` skill
+reads this log and proposes changes, item by item.
+
+## Kit reference
+
+`kitPath` in `kit.config.json` is the kit checkout this theme was set up from
+(kept outside the project). Read `<kitPath>/examples/...` when a doc points
+there: tested builds of each pattern. Read them, build the theme's own — never
+copy an example and never write to the kit.
 
 ---
 

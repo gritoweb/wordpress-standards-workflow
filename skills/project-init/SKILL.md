@@ -87,6 +87,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy whole folder; ask before overwriting |
 | `_docs/examples.md` | `<theme>/_docs/examples.md` | Ask before overwriting if present |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Ask before overwriting if present |
+| `_docs/kit-log.md` | `<theme>/_docs/kit-log.md` | Only if absent — it holds the project's own entries |
 | `_docs/patterns/` | `<theme>/_docs/patterns/` | Copy whole folder; ask before overwriting |
 | `_docs/editor-contract.md`, `_docs/entrance.md`, `_docs/content-types.md` | `<theme>/_docs/` | Ask before overwriting if present |
 | `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | Ask before overwriting if present |
@@ -304,11 +305,9 @@ Phase 0 answer. Do not run any of these commands.
     which `CLAUDE.md` › WordPress Settings forbids:
     ```bash
     lando wp widget reset --all
-    lando wp option update default_comment_status closed
-    lando wp option update default_ping_status closed
     lando wp comment list --format=ids | xargs -r lando wp comment delete --force
-    lando wp post list --post_type=any --comment_status=open --format=ids \
-      | xargs -r -I{} lando wp post update {} --comment_status=closed --ping_status=closed
+    # Closes future and existing comments/pings on every post type (local sites only).
+    bash wp-content/themes/<theme>/scripts/wp/comments-off.sh
     ```
 13. **Smoke check before handing off** — open the home at desktop and mobile
     width: header menu works (Phase 1c), nothing renders under the content

@@ -2,6 +2,29 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — The kit learns from each site; WP-CLI helpers
+
+### Added
+- **Kit log + harvest.** Projects get `_docs/kit-log.md` (one line per thing
+  the kit got wrong or should gain; `CLAUDE.md` › Kit log). The kit-only
+  **`kit-harvest`** skill runs, after a site ships, conformance and the
+  style-guide gates over its theme, sorts the log, compares the site to the
+  patterns and writes a proposal in `docs/harvest/`; nothing changes until
+  each item is approved (`_docs/kit-harvest.md`: a block joins the kit only
+  after two sites needed it, it works on another design by config alone, and
+  it has tests).
+- **`theme/scripts/wp/`** (local sites only, via `lando wp`, refuse a
+  non-local siteurl): `comments-off.sh` (now used by `project-init`),
+  `media-import.sh`, `menus.sh`, `sample-pages.sh` (one "Kit sample" page per
+  block category from each block's `example`, plus the style guide page — the
+  `fotos` skill can shoot them).
+- `CLAUDE.md` › **Kit reference**: `kitPath` and how to read the kit's
+  examples.
+
+### Verified
+- `npm test` at the kit root: exit 0, 889 pass (harvest report: 4, WP-CLI
+  scripts: 21).
+
 ## 2026-09-25 — Tested examples and pattern pages, on this kit's rules
 
 The Sage Site Kit's examples and pattern pages, rebuilt on this kit's

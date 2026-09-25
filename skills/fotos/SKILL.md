@@ -34,6 +34,7 @@ tema **do projeto atual**. Fluxo com **portão de aprovação**: primeiro só PN
 4. Garanta `preview.svg` (padrão acima) em todos os alvos que não tiverem.
 
 ## Passo 2 — página temporária "foto"
+- Atalho: `bash <tema>/scripts/wp/sample-pages.sh` (via `lando wp`) cria uma página "Kit sample" por categoria de bloco a partir do `example` de cada `block.json`, mais a página de style guide — dá para fotografar direto nelas.
 - Monte/atualize uma página WP **`foto`** (rascunho publicado) com **1 instância de cada bloco-alvo**,
   cada um com **`anchor` = `foto-<slug>`** (o tema injeta isso como `id` no elemento raiz; se não
   injetar, envolva cada bloco num wrapper com esse id). Use os defaults de cada bloco.

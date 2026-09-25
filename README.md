@@ -22,6 +22,7 @@ skills/
   project-init/SKILL.md            # kit-import skill — imported to <project>/.claude/skills/
   fotos/SKILL.md                   # block screenshot generator — imported to <project>/.claude/skills/
   site-settings-wizard/SKILL.md    # interactive wizard for Site Settings — imported to <project>/.claude/skills/
+  kit-harvest/                     # KIT-ONLY: turns a finished site's kit-log + conformance into proposed kit changes (docs/harvest/)
   figma-design-system/             # design system from a Figma file (+ references/) — imported to <project>/.claude/skills/
 global-skills/
   commit-rules.md                  # commit convention — NOT per-project; recommend installing to ~/.claude/skills/ (user-level)
@@ -81,6 +82,7 @@ the manifest **is** the source of truth either way.
 | `_docs/patterns/` | `<theme>/_docs/patterns/` | Copy the whole folder — one page per recurring structure; `create-block` reads the closest one first |
 | `_docs/editor-contract.md`, `_docs/entrance.md`, `_docs/content-types.md` | `<theme>/_docs/` | Why the canvas works as it does, the entrance system, the content-type pattern |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Pre-launch checklist for go-live |
+| `_docs/kit-log.md` | `<theme>/_docs/kit-log.md` | Only if absent — the project's log of what the kit got wrong or should gain |
 | `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | The Site Settings pattern (SCF options page + typed accessor) |
 | `_docs/editor-fidelity-checklist.md` | `<theme>/_docs/editor-fidelity-checklist.md` | Canvas fidelity checklist |
 | `gitignore.example` | `<theme>/.gitignore` | **Only if** `<theme>/.gitignore` does not exist yet — never overwrite |
@@ -393,6 +395,17 @@ runtime) — only the mu-plugin file itself is committed.
 > front-end build still needs Build Tools or a committed `public/build/`.
 
 ---
+
+## Improving the kit from each site
+
+Each project logs, in its `_docs/kit-log.md`, what the kit got wrong or should
+gain. After a site ships, run the **`kit-harvest`** skill from this repo
+against that site's theme: it runs conformance and the style-guide gates over
+it, sorts the log, compares the site to `_docs/patterns/`, and writes one
+proposal in `docs/harvest/<project>-<date>.md`. Nothing changes in the kit
+until each item is approved; the promotion rules are in `_docs/kit-harvest.md`
+(a block joins the kit only when two sites needed it, it works on another
+design by config alone, and it has tests).
 
 ## Maintaining the standards
 
