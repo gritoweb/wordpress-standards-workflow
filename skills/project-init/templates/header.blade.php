@@ -7,9 +7,12 @@
 
 <header class="site-header">
   <div class="site-header__inner">
-    <a class="site-header__brand" href="{{ home_url('/') }}">
-      {!! $siteName !!}
-    </a>
+    {{-- The logo comes from Appearance › Customize › Site Identity; the site name stands in until one is set. --}}
+    @if (has_custom_logo())
+      <div class="site-header__brand">{!! get_custom_logo() !!}</div>
+    @else
+      <a class="site-header__brand" href="{{ home_url('/') }}">{!! $siteName !!}</a>
+    @endif
 
     <button class="site-header__toggle" type="button" aria-expanded="false" aria-controls="site-nav"
       data-nav-toggle>

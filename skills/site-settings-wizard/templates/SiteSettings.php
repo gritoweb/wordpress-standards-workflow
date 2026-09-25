@@ -33,19 +33,4 @@ class SiteSettings
 
         return $value === null || $value === '' ? $default : $value;
     }
-
-    /** A repeater of SCF link fields as [url, title, target] rows, skipping empty ones. */
-    public static function links(string $name): array
-    {
-        $rows = static::field($name, []);
-
-        return array_values(array_filter(array_map(
-            fn ($row) => is_array($row['link'] ?? null) && ! empty($row['link']['url']) ? [
-                'url'    => esc_url($row['link']['url']),
-                'title'  => $row['link']['title'] ?: $row['link']['url'],
-                'target' => $row['link']['target'] === '_blank' ? '_blank' : '',
-            ] : null,
-            is_array($rows) ? $rows : []
-        )));
-    }
 }

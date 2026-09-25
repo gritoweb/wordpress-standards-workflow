@@ -3,15 +3,16 @@ name: site-settings-wizard
 description: >
   Adds a tab of fields to a Sage 11 theme's Site Settings page, built on Secure Custom Fields (SCF, the free ACF fork):
   one SCF field group in acf-json/ and reads through App\Settings\SiteSettings::field(). Only runs when the dev asks for
-  a tab or field (Branding, social links, Integrations…). New projects already have the page with Header and Footer link
-  lists (project-init); an existing site gets SCF and the page only with its first tab.
+  a tab or field (social links, legal name, Integrations…); nothing is installed before that. The logo and the menus
+  are WordPress's own (Customize › Site Identity, Appearance › Menus), never Site Settings fields.
 ---
 
 # site-settings-wizard — add a tab to Site Settings (SCF)
 
-A **new project** already has SCF and the Site Settings page with the basic
-**Header** and **Footer** link lists (`project-init`). An **existing site** has neither until the dev asks for a
-tab: its first tab installs both. Every tab only adds its own group. This skill adds the tab that was asked for, and nothing else. The
+A project has **no Site Settings page and no SCF** until the dev asks for a
+tab: the first tab installs both, and every tab after that only adds its own
+group. The logo and the menus are WordPress's own (Customize › Site Identity,
+Appearance › Menus): never rebuild them as Site Settings fields. This skill adds the tab that was asked for, and nothing else. The
 pattern is `_docs/site-settings-pattern.md`.
 
 Motion (entrance and hover defaults) is **not** a Site Settings tab: it stays
@@ -26,7 +27,7 @@ only `lando` command is the plugin install above, on a local site.
 ## Pre-conditions
 
 - Working directory = active Sage 11 theme root. If unsure, **ask** — don't guess.
-- **Only when `app/Settings/SiteSettings.php` is missing** (an existing site's first tab):
+- **First tab only** (no `app/Settings/SiteSettings.php` yet):
   1. Install the plugin: `lando wp plugin install secure-custom-fields --activate`
      (skip if ACF Pro is already active: same API).
   2. Copy `<skill>/templates/SiteSettings.php` to `app/Settings/SiteSettings.php`,

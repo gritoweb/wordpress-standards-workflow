@@ -3,22 +3,16 @@
 Global values an editor changes without a deploy live on one **Site Settings**
 page, built on **Secure Custom Fields** (SCF, the free ACF fork).
 
-## New project vs existing site
+## Nothing ships by default
 
-- **New project** (`project-init`): installs Secure Custom Fields and ships
-  the Site Settings page (`app/Settings/SiteSettings.php`, registered from
-  `app/blocks.php`) with two basic tabs, **Header** and **Footer**, each a
-  list of SCF Link fields (`acf-json/group_site_settings.json`). Read them
-  with `SiteSettings::links('header_links')` / `SiteSettings::links('footer_links')`.
-- **Existing site** that gets the updated kit: installs nothing. The first
-  tab someone asks for installs SCF and adds the page, through
-  `site-settings-wizard`.
+No project gets SCF or a Site Settings page until someone asks for a tab:
+the first tab installs Secure Custom Fields and adds the page
+(`app/Settings/SiteSettings.php`, registered from `app/blocks.php`), through
+`site-settings-wizard`. Nothing is installed that the site doesn't use.
 
-Any other tab or field (Branding, social links, Integrations…) is added only when asked.
-
-Motion (entrance and hover defaults) is not part of this: it stays in
-**Appearance › Customize › Motion** (`BlockMotion`), unchanged, so older
-sites keep their saved values.
+The logo and the menus are WordPress's own (Appearance › Customize › Site
+Identity, Appearance › Menus), used by the header and footer; they are never
+Site Settings fields. Motion stays in Appearance › Customize › Motion.
 
 ## How a tab is built
 

@@ -52,13 +52,13 @@ that themselves. Never writes to a remote or production environment.
 1. Lando + WordPress: Scenario B steps 1–4.
 2. Sage scaffold and theme identity: Scenario B step 5.
 3. Copy the kit into the theme (Phase 1 table), then delete the clone.
-4. `lando wp theme activate <theme>`, then **Clear install defaults** and
-   **Site Settings (new projects only)** — in that order, after activation.
+4. `lando wp theme activate <theme>`, then **Clear install defaults**, after
+   activation.
 5. CSS foundation and the private Styleguide page: Phase 1b.
-6. Header: Phase 1c.
+6. Header and footer: Phase 1c.
 7. Blocks, each with `create-block`: read `_docs/examples/README.md` once,
    then only the example file closest to the block being built.
-8. Home page and Primary menu: Scenario B steps 10–11; build: **Theme assets**.
+8. Home page, Primary and Footer menus: Scenario B steps 10–11; build: **Theme assets**.
 9. Smoke check: Scenario B step 12, and report what was checked.
 
 Read a file once and keep what you need; don't re-read it in chunks.
@@ -153,7 +153,7 @@ after step 4), before the header:
 
 ---
 
-## Phase 1c — Header & primary navigation (theme code)
+## Phase 1c — Header, footer & navigation (theme code)
 
 Sage ships `resources/views/sections/header.blade.php` as an unstyled brand
 link + a `<nav>` that renders **only when a menu is assigned** — a fresh site
@@ -166,6 +166,7 @@ foundation must exist first.
 |---|---|---|
 | `header.blade.php` | `resources/views/sections/header.blade.php` | Overwrite **only** if it is still Sage's stock header (contains `class="banner"` and `nav-primary`); otherwise show the diff and ask |
 | `header.css` | `resources/css/components/header.css` | Create; ask if it exists |
+| `footer.blade.php` | `resources/views/sections/footer.blade.php` | Overwrite **only** if it is still Sage's stock footer (`dynamic_sidebar('sidebar-footer')`); otherwise show the diff and ask. Tailwind utilities only, no CSS file |
 | `navigation.js` | `resources/js/modules/navigation.js` | Create; ask if it exists |
 | `front-page.blade.php` | `resources/views/front-page.blade.php` | Create; ask if it exists. Sage's `page.blade.php` prints `partials.page-header` (an unstyled `<h1>` with the page title) above the content — on a block-built home that stray "Home" line under the header reads as a broken menu, and it duplicates the hero's `<h1>` |
 
@@ -184,8 +185,27 @@ import { initNavigation } from './modules/navigation';
 initNavigation();
 ```
 
-The header keeps Sage's `primary_navigation` location (registered in
-`app/setup.php`). With no menu assigned it lists the published pages, so it
+Both use WordPress's own features, set up in Sage's `app/setup.php` (the only
+edit there): add `'footer_navigation' => __('Footer Navigation', '<text-domain>'),`
+to the existing `register_nav_menus([...])`, and right after it:
+
+```php
+/**
+ * The site logo, set in Appearance > Customize > Site Identity.
+ *
+ * @link https://developer.wordpress.org/themes/functionality/custom-logo/
+ */
+add_theme_support('custom-logo', [
+    'height' => 80,
+    'width' => 240,
+    'flex-height' => true,
+    'flex-width' => true,
+]);
+```
+
+The header and footer show the logo when one is set and the site name until
+then; the footer's menu is the "Footer" menu (Phase 3). No plugin, no Site
+Settings field. The header keeps Sage's `primary_navigation` location. With no menu assigned it lists the published pages, so it
 is never empty; the real menu is created in Phase 3 (**Primary menu**).
 **Verify** at 390px and 1280px: desktop shows the links inline; mobile shows
 the toggle, which opens/closes the panel (`aria-expanded` flips, `Esc` closes);
@@ -233,7 +253,7 @@ Phase 0 answer. Do not run any of these commands.
    identity in `style.css` — `Theme Name`, `Author`, `Text Domain`, and **reset
    `Version` to `1.0.0`**; match `package.json`'s `name`. (Re-verified by the
    launch list at go-live.)
-5. `lando wp theme activate <theme>`, then **Clear install defaults** and **Site Settings** (below).
+5. `lando wp theme activate <theme>`, then **Clear install defaults** (below).
 6. Review and commit the copied kit files through the normal git flow —
    **never push without the project owner's permission**.
 7. Build theme assets (Step below).
@@ -275,7 +295,7 @@ Phase 0 answer. Do not run any of these commands.
    not `sage`).
 6. Copy kit standards into `wp-content/themes/<theme>/` per Phase 1 table.
    If the kit repository was cloned from GitHub, **delete the cloned kit directory immediately** (`rm -rf ...`) so the WordPress root remains clean.
-7. `lando wp theme activate <theme>`, then **Clear install defaults** and **Site Settings** (below).
+7. `lando wp theme activate <theme>`, then **Clear install defaults** (below).
 8. Optionally `git init` + an initial commit inside `wp-content/themes/<theme>` — local only, never push without permission.
 9. Build theme assets (Step below).
 10. **Creating Home Page with Sample Blocks** (when requested by user prompt) —
@@ -292,12 +312,16 @@ Phase 0 answer. Do not run any of these commands.
       lando wp option update show_on_front 'page'
       lando wp option update page_on_front "$HOME_ID"
       ```
-11. **Primary menu** — create it and assign it to Sage's location, so the
-    Phase 1c header shows a real menu (add every page the site has):
+11. **Primary and Footer menus** — create them and assign them to their
+    locations, so the Phase 1c header and footer show real menus (add every
+    page the site has; never the private Styleguide):
     ```bash
     lando wp menu create "Primary"
     lando wp menu item add-post primary "$HOME_ID" --title="Home"
     lando wp menu location assign primary primary_navigation
+    lando wp menu create "Footer"
+    lando wp menu item add-post footer "$HOME_ID" --title="Home"
+    lando wp menu location assign footer footer_navigation
     ```
 12. **Smoke check before handing off** — open the home at desktop and mobile
     width: header menu works (Phase 1c), nothing renders under the content
@@ -333,26 +357,6 @@ lando wp widget list sidebar-primary --format=count
 lando wp widget list sidebar-footer --format=count
 lando wp post list --post_type=any --post_status=any --comment_status=open --format=count
 ```
-
-### Site Settings (new projects only)
-
-A new project ships with a Site Settings page holding the two basic tabs,
-**Header** and **Footer**, each a list of SCF **Link** fields (URL, text, new
-tab). Right after activating the theme:
-
-1. `lando wp plugin install secure-custom-fields --activate`
-2. Copy `.claude/skills/site-settings-wizard/templates/SiteSettings.php` to
-   `app/Settings/SiteSettings.php`, replacing `__TEXT_DOMAIN__` with the
-   theme's text domain. `app/blocks.php` registers it when the class exists.
-3. Copy `.claude/skills/site-settings-wizard/templates/group_site_settings.json`
-   to `acf-json/group_site_settings.json`. SCF loads it from the theme.
-
-The header and footer read them with `SiteSettings::links('header_links')`
-and `SiteSettings::links('footer_links')` (rows of `url`, `title`, `target`).
-Nothing else is added: any other tab or field only when asked, with
-`site-settings-wizard`.
-An **existing** site that gets the updated kit installs nothing; it only gets
-SCF and the page when someone asks for its first tab.
 
 ### Theme assets (both scenarios)
 

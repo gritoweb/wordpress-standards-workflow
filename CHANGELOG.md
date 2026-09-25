@@ -2,6 +2,30 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Native logo and menus in the header and a Tailwind footer
+
+### Added
+- **Footer.** `project-init` Phase 1c installs `footer.blade.php`: the site
+  logo, the "Footer" menu and the legal line, in Tailwind utilities and
+  design-system classes only (no CSS file). It replaces Sage's footer
+  widget area, where the stray Archives/Categories widgets came from.
+- **Native logo.** The header and footer show the logo set in Appearance ›
+  Customize › Site Identity (`add_theme_support('custom-logo')`), and the
+  site name until one is set. `setup.php` gets only that and the
+  `footer_navigation` menu location, next to Sage's own menu registration.
+- Phase 3 creates the "Footer" menu next to "Primary".
+
+### Removed
+- **Site Settings by default.** The Header/Footer link lists (and
+  `SiteSettings::links()`) duplicated WordPress menus. No project installs
+  SCF until someone asks for a Site Settings tab.
+
+### Verified
+- On a local site: with no logo the header shows the site name; with a
+  logo set, both header and footer print `custom-logo-link`; the footer
+  lists the "Footer" menu's links and "© 2026 <site name>", with no widget.
+  Screenshots at 1440px and 390px; `check-css-foundation` exits 0.
+
 ## 2026-09-25 — Ten reference blocks and a whole Home example
 
 ### Added
