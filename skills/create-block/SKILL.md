@@ -41,7 +41,7 @@ that themselves.
 - Working directory = active Sage 11 theme root (must contain `vite.config.js`,
   `app/setup.php`, `composer.json`, `resources/`). If unsure, **ask** — don't guess.
 - Composer/Node run on the host (Lando only serves WP).
-- Standards = `CLAUDE.md` + `_docs/examples.md`. If those aren't in the project,
+- Standards = `CLAUDE.md` + `_docs/examples/` (read its `README.md`, then only the closest block's file). If those aren't in the project,
   treat this skill as the standard.
 
 ---
@@ -137,7 +137,7 @@ Infra templates live in **Templates** at the bottom of this doc.
 
 ## Phase 1 — Collect block requirements
 
-> **Source of truth: this skill's templates and `_docs/examples.md` only.**
+> **Source of truth: this skill's templates and `_docs/examples/` only.**
 > Never copy a block, component or CSS from another project on the machine
 > (a sibling theme, an earlier test site): those were built with an older
 > kit and carry the bugs the kit has since fixed. Verified 2026-09-23: an
@@ -185,7 +185,7 @@ placeholder, no accidental newlines.
 with the **same style guide classes as its Blade element** (`heading-2` on
 both); `AutoGrowingTextarea` already carries the field reset (full width,
 transparent, no outline) — never a form wrapper, a
-white card, or a border around the field. That's how `_docs/examples.md`
+white card, or a border around the field. That's how `_docs/examples/`
 builds all three blocks.
 
 #### Keyword lookup table
@@ -408,8 +408,9 @@ Attributes:
       kit**: one-item-at-a-time editing hid the order and made reordering
       impossible. If an old project still has them, migrate the block to
       `ItemList`.
-    - Reference code, tested end to end: `_docs/examples.md` (accordion,
-      card grid, carousel).
+    - Reference code, tested end to end: `_docs/examples/` — its `README.md`
+      (rules every block follows), then only the closest block's file
+      (`accordion.md`, `card-grid.md`, `testimonial-carousel.md`).
   - **Sidebar panel order**, the same in every block: the item list
     ("Items" / "Slides" / "Cards") → Background Media → the block's own
     settings (e.g. Autoplay, layout) → Spacing → Entrance animation.
@@ -427,7 +428,7 @@ Attributes:
 
 ### What the skill does NOT ask
 
-**Vendor libs** are a deliberate dev decision, not block scaffolding. The skill generates blocks without lib boilerplate; if the dev adds Swiper etc. afterward, they follow the pattern in `_docs/examples.md` (`wp_register_*` in `setup.php` + `wp_enqueue_*` in `block.php`). Phase 0's smell detector watches for the wrong pattern over time.
+**Vendor libs** are a deliberate dev decision, not block scaffolding. The skill generates blocks without lib boilerplate; if the dev adds Swiper etc. afterward, they follow the pattern in `_docs/examples/testimonial-carousel.md` (`wp_register_*` in `setup.php` + `wp_enqueue_*` in `block.php`). Phase 0's smell detector watches for the wrong pattern over time.
 
 ### Validations (cheap, fail fast)
 

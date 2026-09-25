@@ -2,6 +2,20 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Reference blocks split into one file each
+
+### Changed
+- **`_docs/examples.md` → `_docs/examples/`.** `README.md` holds the intro,
+  the rules every block follows and an index; `accordion.md`, `card-grid.md`
+  and `testimonial-carousel.md` hold one block each. An agent reads the
+  README and only the block it's building (about 400 lines) instead of all
+  1,311 lines in chunks: a test run re-read the old file 12 times.
+  `create-block`, `project-init` and the README point at the folder.
+
+### Verified
+- A script checked that every non-heading line of the old file is in the new
+  files: 0 missing. `grep` finds no reference left to `_docs/examples.md`.
+
 ## 2026-09-25 — Figma design system skill (phases 0 to 2)
 
 ### Added

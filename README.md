@@ -26,7 +26,7 @@ skills/
 global-skills/
   commit-rules.md                  # commit convention — NOT per-project; recommend installing to ~/.claude/skills/ (user-level)
 _docs/
-  examples.md                      # canonical reference block (code) — imported to <project>/_docs/
+  examples/                        # reference blocks, one file each + README with the shared rules — imported to <project>/_docs/
   launch-list.md                   # pre-launch checklist — imported to <project>/_docs/
 gitignore.example                  # base .gitignore template — imported as <project>/.gitignore (only if missing)
 prettier.config.example.js         # Prettier + Tailwind/Blade class sorting — copied to <theme>/prettier.config.js
@@ -73,7 +73,7 @@ the manifest **is** the source of truth either way.
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy the whole folder — block screenshot generator (Chrome headless → webp + svg fallback) |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — adds a tab to the Site Settings page (Secure Custom Fields), only when asked |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy the whole folder — builds the css-foundation-wizard files from a Figma file (inventory, foundation, components) |
-| `_docs/examples.md` | `<theme>/_docs/examples.md` | Reference patterns the AI uses for grounding |
+| `_docs/examples/` | `<theme>/_docs/examples/` | Reference blocks the AI uses for grounding: `README.md` (shared rules) + one file per block |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Pre-launch checklist for go-live |
 | `_docs/kit-log.md` | `<theme>/_docs/kit-log.md` | Only if absent — the project's log of what the kit got wrong or lacked |
 | `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | The Site Settings pattern (SCF page, empty by default; tabs on request) |
@@ -124,14 +124,14 @@ cp "$KIT/CLAUDE.md" ./CLAUDE.md
 mkdir -p .claude/skills _docs
 cp -R "$KIT/skills/html-qa-smoketest" .claude/skills/
 cp -R "$KIT/skills/create-block" .claude/skills/
-cp "$KIT/_docs/examples.md"     ./_docs/examples.md
+cp -r "$KIT/_docs/examples"     ./_docs/examples
 cp "$KIT/_docs/launch-list.md"  ./_docs/launch-list.md
 cp -n "$KIT/_docs/kit-log.md"    ./_docs/kit-log.md
 # only if the project has no .gitignore yet:
 cp "$KIT/gitignore.example" ./.gitignore
 ```
 
-Then point the AI at `_docs/examples.md` and `CLAUDE.md` for context before
+Then point the AI at `_docs/examples/README.md` and `CLAUDE.md` for context before
 generating code.
 
 Global skills are **not** part of this per-project copy — they go to your

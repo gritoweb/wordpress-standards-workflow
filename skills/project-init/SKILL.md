@@ -85,7 +85,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy whole folder; ask before overwriting |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy whole folder; ask before overwriting |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy whole folder; ask before overwriting |
-| `_docs/examples.md` | `<theme>/_docs/examples.md` | Ask before overwriting if present |
+| `_docs/examples/` | `<theme>/_docs/examples/` | Copy whole folder (one file per reference block); ask before overwriting |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Ask before overwriting if present |
 | `_docs/kit-log.md` | `<theme>/_docs/kit-log.md` | Only if absent — it holds the project's own entries |
 | `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | Ask before overwriting if present |
