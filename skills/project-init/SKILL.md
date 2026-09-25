@@ -51,17 +51,13 @@ that themselves. Never writes to a remote or production environment.
 
 1. Lando + WordPress: Scenario B steps 1–4.
 2. Sage scaffold and theme identity: Scenario B step 5.
-3. `lando wp theme activate <theme>`, then run **`kit-install.sh`** from the
-   kit clone (below): it copies the Phase 1 files, `create-block`'s Phase 0
-   files, the header/footer and the Styleguide files, clears the install
-   defaults and creates the private Styleguide page. Then delete the clone.
-4. The Sage wiring the script doesn't touch: `create-block` Phase 0 (its
-   checks name each edit) and Phase 1c's `setup.php` lines.
+3. Copy the kit into the theme (Phase 1 table), then delete the clone.
+4. `lando wp theme activate <theme>`, then **Clear install defaults**, after
+   activation.
 5. CSS foundation and the private Styleguide page: Phase 1b.
 6. Header and footer: Phase 1c.
 7. Blocks, each with `create-block`: read `docs/examples/README.md` once,
-   then copy the closest example folder's files (its `README.md` has the
-   command) and adapt them.
+   then only the example file closest to the block being built.
 8. Home page, Primary and Footer menus: Scenario B steps 10–11; build: **Theme assets**.
 9. Smoke check: Scenario B step 12, and report what was checked.
 
@@ -83,32 +79,7 @@ Phase 1 is identical for both.
 
 ---
 
-## kit-install.sh — the mechanical part in one run
-
-From the project root, with the theme active and the kit cloned outside the
-project (run it from the clone, before deleting it):
-
-```bash
-bash <kit>/skills/project-init/kit-install.sh --theme wp-content/themes/<theme> \
-  --namespace <namespace> --text-domain <text-domain> --wp "lando wp" [--pantheon]
-```
-
-It copies every file in the Phase 1 table, `create-block`'s Phase 0 files
-(`app/Blocks/*`, `app/blocks.php`, the backend components, entrance/hover,
-`button-link`, the scripts), the Phase 1c header/footer (only over Sage's
-stock ones) and the Styleguide template/composer, filling the placeholders.
-It **never overwrites** a file — it lists what was already there for you to
-compare — and **never edits Sage's own files** (`functions.php`,
-`setup.php`, `app.js`, `editor.js`, `app.css`, the service provider): those
-stay with `create-block` Phase 0 and Phase 1c. With `--wp` it also runs
-**Clear install defaults**, creates the private Styleguide page once, and
-exits non-zero unless the widget and open-comment counts are 0 and the page
-is private. Safe to run twice.
-
 ## Phase 1 — Copy kit files into the theme
-
-`kit-install.sh` does this whole table; the table stays as the reference for
-what goes where.
 
 Copy the following from the kit into the target theme (`wp-content/themes/<theme>/`). Before
 overwriting any file that **already exists** at the destination, stop,
@@ -130,7 +101,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy whole folder; ask before overwriting |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy whole folder; ask before overwriting |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy whole folder; ask before overwriting |
-| `docs/examples/` | `<theme>/docs/examples/` | Copy whole folder (one folder per reference block, real files); ask before overwriting |
+| `docs/examples/` | `<theme>/docs/examples/` | Copy whole folder (one file per reference block); ask before overwriting |
 | `docs/launch-list.md` | `<theme>/docs/launch-list.md` | Ask before overwriting if present |
 | `docs/kit-log.md` | `<theme>/docs/kit-log.md` | Only if absent — it holds the project's own entries |
 | `docs/site-settings-pattern.md` | `<theme>/docs/site-settings-pattern.md` | Ask before overwriting if present |
@@ -349,8 +320,8 @@ Phase 0 answer. Do not run any of these commands.
 12. **Smoke check before handing off** — open the home at desktop and mobile
     width: header menu works (Phase 1c), nothing renders under the content
     but the footer you built (no stray widgets), and each block with an
-    entrance animation gains `data-entered` on scroll (`create-block`
-    `references/infra.md` › "Entrance animation wiring"). In the editor: no block shows "This block
+    entrance animation gains `data-entered` on scroll (`create-block` ›
+    "Entrance animation wiring"). In the editor: no block shows "This block
     has encountered an error", repeaters reorder/delete from the sidebar
     with the canvas updating at once. Report what was checked, not "should
     work".

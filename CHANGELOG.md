@@ -2,44 +2,6 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
-## 2026-09-25 — kit-install.sh: the mechanical setup in one command
-
-### Added
-- **`skills/project-init/kit-install.sh`**, run from the kit clone: copies
-  the Phase 1 files, `create-block`'s Phase 0 files, the header/footer
-  (only over Sage's stock ones) and the Styleguide template/composer, filling
-  `__TEXT_DOMAIN__` / `__BLOCK_NAMESPACE__` / `__THEME_SLUG__`; with `--wp`
-  it clears the install defaults and creates the private Styleguide page.
-  It never overwrites a file (it lists them) and never edits Sage's own
-  files, which stay with `create-block` Phase 0 and Phase 1c. It fails on a
-  leftover placeholder, a widget or open comment, or a missing page.
-  `project-init`'s new-project order runs it instead of ~30 manual steps.
-
-### Verified
-- On a fresh Lando WordPress + Sage 11: 176 files copied in 16 s (Sage's own
-  `.gitignore` kept), namespace and text domain filled, no placeholder
-  left, header and footer replaced, widget/comment counts 0, Styleguide
-  private; a second run overwrote nothing, kept one Styleguide page, and
-  exited 0.
-
-## 2026-09-25 — create-block split into a core and four references
-
-### Changed
-- **`create-block/SKILL.md` is the core (386 lines, was 1,277):**
-  pre-conditions, the Phase 0 checks, what to ask, what goes on the canvas
-  vs the sidebar, Phases 2–4 and the rules. The rest moved, unchanged, to
-  `references/` and is read only when needed: `attribute-inference.md`
-  (types, keyword table, button pair and other expansions),
-  `assets-and-anchors.md`, `templates.md` (from-scratch file templates) and
-  `infra.md` (Phase 0 files, entrance wiring, fidelity report, Sage wiring).
-  A table in the core says when to read each and where each section went;
-  references by section name in other skills point at the new file.
-  A test run read the old single file 10 times.
-
-### Verified
-- A script checked that every non-empty line of the old `SKILL.md` is in the
-  core or a reference file: 0 missing.
-
 ## 2026-09-25 — `_docs/` becomes `docs/`
 
 ### Changed

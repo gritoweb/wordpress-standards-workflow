@@ -26,7 +26,7 @@ skills/
 global-skills/
   commit-rules.md                  # commit convention — NOT per-project; recommend installing to ~/.claude/skills/ (user-level)
 docs/
-  examples/                        # reference blocks: one folder of real files each + README with the shared rules — imported to <project>/docs/
+  examples/                        # reference blocks, one file each + README with the shared rules — imported to <project>/docs/
   launch-list.md                   # pre-launch checklist — imported to <project>/docs/
 gitignore.example                  # base .gitignore template — imported as <project>/.gitignore (only if missing)
 prettier.config.example.js         # Prettier + Tailwind/Blade class sorting — copied to <theme>/prettier.config.js
@@ -73,7 +73,7 @@ the manifest **is** the source of truth either way.
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy the whole folder — block screenshot generator (Chrome headless → webp + svg fallback) |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — adds a tab to the Site Settings page (Secure Custom Fields), only when asked |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy the whole folder — builds the css-foundation-wizard files from a Figma file (inventory, foundation, components) |
-| `docs/examples/` | `<theme>/docs/examples/` | Reference blocks the AI copies and adapts: `README.md` (shared rules) + one folder of real files per block |
+| `docs/examples/` | `<theme>/docs/examples/` | Reference blocks the AI uses for grounding: `README.md` (shared rules) + one file per block |
 | `docs/launch-list.md` | `<theme>/docs/launch-list.md` | Pre-launch checklist for go-live |
 | `docs/kit-log.md` | `<theme>/docs/kit-log.md` | Only if absent — the project's log of what the kit got wrong or lacked |
 | `docs/site-settings-pattern.md` | `<theme>/docs/site-settings-pattern.md` | The Site Settings pattern (SCF page, empty by default; tabs on request) |
