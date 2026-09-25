@@ -24,6 +24,15 @@ Notable changes to the GritoWeb WordPress standards.
 ### Verified
 - `npm test` at the kit root: exit 0, 889 pass (harvest report: 4, WP-CLI
   scripts: 21).
+- **End to end in a fresh Sage 11** (`composer create-project roots/sage`,
+  Vite 8.3, Tailwind 4), set up the way `project-init`, the wizard and
+  `create-block`'s Phase 0 say, with 6 blocks (the three reference blocks,
+  hero on Swiper, cta-banner, faq): `kit-setup --check` clean,
+  `npm run build` exit 0 (kit classes such as `.btn-on-dark`, `.logo-tint-dark`,
+  `.bleed-x`, `.ground-ink`, `md:py-[13.625rem]` in the built CSS),
+  `check-css-foundation` exit 0, `contrast.mjs` 13 pairs pass, conformance 0
+  errors, theme `npm test` 574/574. The pre-commit hook blocked a commit
+  with an ESC-1 error and let the fixed one through.
 
 ## 2026-09-25 — Tested examples and pattern pages, on this kit's rules
 
