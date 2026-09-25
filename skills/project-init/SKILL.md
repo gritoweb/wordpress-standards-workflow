@@ -319,15 +319,21 @@ lando wp post list --post_type=any --post_status=any --comment_status=open --for
 
 ### Site Settings (new projects only)
 
-A new project ships with an **empty** Site Settings page, right after
-activating the theme:
+A new project ships with a Site Settings page holding the two basic tabs,
+**Header** and **Footer**, each a list of SCF **Link** fields (URL, text, new
+tab). Right after activating the theme:
 
 1. `lando wp plugin install secure-custom-fields --activate`
 2. Copy `.claude/skills/site-settings-wizard/templates/SiteSettings.php` to
    `app/Settings/SiteSettings.php`, replacing `__TEXT_DOMAIN__` with the
    theme's text domain. `app/blocks.php` registers it when the class exists.
+3. Copy `.claude/skills/site-settings-wizard/templates/group_site_settings.json`
+   to `acf-json/group_site_settings.json`. SCF loads it from the theme.
 
-No tab, no field: tabs are added only when asked, with `site-settings-wizard`.
+The header and footer read them with `SiteSettings::links('header_links')`
+and `SiteSettings::links('footer_links')` (rows of `url`, `title`, `target`).
+Nothing else is added: any other tab or field only when asked, with
+`site-settings-wizard`.
 An **existing** site that gets the updated kit installs nothing; it only gets
 SCF and the page when someone asks for its first tab.
 

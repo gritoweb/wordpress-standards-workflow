@@ -1,0 +1,77 @@
+{
+    "key": "group_site_settings",
+    "title": "Site Settings",
+    "fields": [
+        {
+            "key": "field_site_settings_header_tab",
+            "label": "Header",
+            "name": "",
+            "type": "tab",
+            "placement": "top",
+            "endpoint": 0
+        },
+        {
+            "key": "field_site_settings_header_links",
+            "label": "Header links",
+            "name": "header_links",
+            "type": "repeater",
+            "layout": "table",
+            "button_label": "Add link",
+            "min": 0,
+            "max": 0,
+            "sub_fields": [
+                {
+                    "key": "field_site_settings_header_links_link",
+                    "label": "Link",
+                    "name": "link",
+                    "type": "link",
+                    "return_format": "array",
+                    "required": 0
+                }
+            ]
+        },
+        {
+            "key": "field_site_settings_footer_tab",
+            "label": "Footer",
+            "name": "",
+            "type": "tab",
+            "placement": "top",
+            "endpoint": 0
+        },
+        {
+            "key": "field_site_settings_footer_links",
+            "label": "Footer links",
+            "name": "footer_links",
+            "type": "repeater",
+            "layout": "table",
+            "button_label": "Add link",
+            "min": 0,
+            "max": 0,
+            "sub_fields": [
+                {
+                    "key": "field_site_settings_footer_links_link",
+                    "label": "Link",
+                    "name": "link",
+                    "type": "link",
+                    "return_format": "array",
+                    "required": 0
+                }
+            ]
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "options_page",
+                "operator": "==",
+                "value": "site-settings"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "seamless",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "active": true
+}

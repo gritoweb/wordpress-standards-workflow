@@ -5,14 +5,16 @@ page, built on **Secure Custom Fields** (SCF, the free ACF fork).
 
 ## New project vs existing site
 
-- **New project** (`project-init`): installs Secure Custom Fields and ships an
-  **empty** Site Settings page (`app/Settings/SiteSettings.php`, registered
-  from `app/blocks.php`). No tab, no field.
+- **New project** (`project-init`): installs Secure Custom Fields and ships
+  the Site Settings page (`app/Settings/SiteSettings.php`, registered from
+  `app/blocks.php`) with two basic tabs, **Header** and **Footer**, each a
+  list of SCF Link fields (`acf-json/group_site_settings.json`). Read them
+  with `SiteSettings::links('header_links')` / `SiteSettings::links('footer_links')`.
 - **Existing site** that gets the updated kit: installs nothing. The first
   tab someone asks for installs SCF and adds the page, through
   `site-settings-wizard`.
 
-Tabs (Branding, Header, Footer, Integrations…) are added only when asked.
+Any other tab or field (Branding, social links, Integrations…) is added only when asked.
 
 Motion (entrance and hover defaults) is not part of this: it stays in
 **Appearance › Customize › Motion** (`BlockMotion`), unchanged, so older

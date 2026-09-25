@@ -2,6 +2,22 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — New projects' Site Settings: Header and Footer link lists
+
+### Added
+- **Two basic tabs.** `project-init` now also copies
+  `site-settings-wizard/templates/group_site_settings.json`: a **Header** and a
+  **Footer** tab, each a repeater of SCF Link fields. Nothing else (no social
+  links, no motion); any other field is added only when asked.
+- **`SiteSettings::links($name)`** returns the rows as `url` / `title` /
+  `target`, skipping empty rows and falling back to the URL as the title.
+
+### Verified
+- On a local Lando site with SCF 6.9.5 (`wp eval-file`): an empty list
+  returns `[]`; saving three rows (one empty, one with no title and
+  `_blank`) returns two links, the second titled with its URL and target
+  `_blank`.
+
 ## 2026-09-25 — The CSS check fails on a font nothing loads
 
 ### Added

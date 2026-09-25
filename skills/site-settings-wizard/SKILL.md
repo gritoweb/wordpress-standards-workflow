@@ -3,14 +3,14 @@ name: site-settings-wizard
 description: >
   Adds a tab of fields to a Sage 11 theme's Site Settings page, built on Secure Custom Fields (SCF, the free ACF fork):
   one SCF field group in acf-json/ and reads through App\Settings\SiteSettings::field(). Only runs when the dev asks for
-  a tab (Branding, Header, Footer, Integrations…). New projects already have the empty page (project-init); an existing
-  site gets SCF and the page only with its first tab.
+  a tab or field (Branding, social links, Integrations…). New projects already have the page with Header and Footer link
+  lists (project-init); an existing site gets SCF and the page only with its first tab.
 ---
 
 # site-settings-wizard — add a tab to Site Settings (SCF)
 
-A **new project** already has SCF and an empty Site Settings page
-(`project-init`). An **existing site** has neither until the dev asks for a
+A **new project** already has SCF and the Site Settings page with the basic
+**Header** and **Footer** link lists (`project-init`). An **existing site** has neither until the dev asks for a
 tab: its first tab installs both. Every tab only adds its own group. This skill adds the tab that was asked for, and nothing else. The
 pattern is `_docs/site-settings-pattern.md`.
 
