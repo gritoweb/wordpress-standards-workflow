@@ -1,0 +1,53 @@
+/*
+ * The paging control under a collection block (a card grid backed by a post
+ * type query). Markup: a Blade partial the collection block owns. Plain CSS,
+ * served from source. Spacing above the control belongs to each block.
+ */
+.collection-paging {
+  display: flex;
+  justify-content: center;
+}
+
+.collection-paging__pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.collection-paging__page,
+.collection-paging__step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0 0.5rem;
+  border-radius: var(--radius-card);
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.collection-paging__page[aria-current="page"] {
+  background: var(--color-ink);
+  color: var(--color-light);
+}
+
+a.collection-paging__page:hover,
+.collection-paging__step:hover {
+  text-decoration: underline;
+}
+
+.collection-paging a:focus-visible {
+  outline: 3px solid var(--color-ink);
+  outline-offset: 0;
+
+  /* Sits on paper and surface only, where ink already clears 3:1 */
+  box-shadow: none;
+}

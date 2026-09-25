@@ -39,8 +39,8 @@ class BlockMotion
         // Runs before any stylesheet (wp_print_styles is 8), so parts are hidden from
         // first paint; the timeout un-hides everything if entrance.js never loads.
         add_action('wp_head', function () {
-            echo "<script>var h=document.documentElement;h.classList.add('ws-entrance');"
-                ."setTimeout(function(){h.hasAttribute('data-entrance-ready')||h.classList.remove('ws-entrance')},5000)</script>\n";
+            echo "<script>var h=document.documentElement;h.classList.add('entrance');"
+                ."setTimeout(function(){h.hasAttribute('data-entrance-ready')||h.classList.remove('entrance')},5000)</script>\n";
         }, 1);
 
         // html:root outranks the plain :root defaults in entrance.css.
@@ -57,8 +57,8 @@ class BlockMotion
 
         // CSS cannot branch on a custom property's value, so hover effects are body classes.
         add_filter('body_class', function (array $classes): array {
-            $classes[] = 'ws-hover-btn-'.self::choice('hover_button', self::HOVER_BUTTON, 'fade');
-            $classes[] = 'ws-hover-link-'.self::choice('hover_link', self::HOVER_LINK, 'underline');
+            $classes[] = 'hover-btn-'.self::choice('hover_button', self::HOVER_BUTTON, 'fade');
+            $classes[] = 'hover-link-'.self::choice('hover_link', self::HOVER_LINK, 'underline');
 
             return $classes;
         });

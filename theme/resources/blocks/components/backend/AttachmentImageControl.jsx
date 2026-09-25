@@ -24,7 +24,7 @@ export function AttachmentImageControl({
      is written inline below, and a caller that wants to move the crop has no
      other way in. */
   objectPosition = 'center',
-  background = 'var(--color-surface, #f4f1e8)',
+  background = 'var(--color-surface)',
   /* True only for a consumer that never loads the theme stylesheet — an
      inspector sidebar control, which WordPress renders outside the editor
      canvas iframe. There, the button's own bg-transparent Tailwind class
@@ -37,6 +37,8 @@ export function AttachmentImageControl({
   noStylesheet = false,
   // Extra inline style for the rendered img only, e.g. a colour filter.
   imageStyle,
+  // Extra class for the rendered img only, e.g. a logo tint class.
+  imageClassName,
 }) {
   // The sidebar renders in the admin document (the canvas is an iframe), so detect it rather than rely on the prop.
   const rootRef = useRef(null);
@@ -111,6 +113,7 @@ export function AttachmentImageControl({
           <img
             src={previewUrl}
             alt=""
+            className={imageClassName || undefined}
             style={{
               display: 'block',
               width: objectFit === 'contain' ? 'auto' : '100%',

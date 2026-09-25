@@ -5,6 +5,7 @@ import {
   SelectControl,
   TextControl,
 } from '@wordpress/components';
+import { __ } from '@wordpress/i18n';
 import {
   DIRECTIONS,
   LIMITS,
@@ -14,34 +15,33 @@ import {
   resolveEntrance,
 } from './entranceCanvas.js';
 
-// What Site Settings > Motion falls back to, shown greyed in an empty field.
-const SITE_DEFAULTS = { distance: 32, duration: 1000, delay: 250, stagger: 250 };
+// Used only before Site Settings > Motion prints its values as window.__PREFIX__EntranceDefaults (app/site.php).
+const FALLBACK_SITE_DEFAULTS = { distance: 32, duration: 1000, delay: 250, stagger: 250 };
+
+function printedSiteDefaults() {
+  return globalThis.__PREFIX__EntranceDefaults ?? FALLBACK_SITE_DEFAULTS;
+}
 
 // The values live in entranceCanvas.js; only the labels are the panel's own.
-const TYPE_LABELS = {
-  none: 'None',
-  fade: 'Fade',
-  slide: 'Slide',
-  'fade-slide': 'Fade and slide',
-};
-// The value is the direction of travel (decision A19); the label says where
-// the part enters from.
-const DIRECTION_LABELS = {
-  up: 'From below',
-  down: 'From above',
-  left: 'From the right',
-  right: 'From the left',
-};
-const TRIGGER_LABELS = {
-  section: 'All together, staggered',
-  item: 'Each item as it scrolls in',
-};
+const typeLabels = () => ({
+  none: __('None', '__TEXT_DOMAIN__'),
+  fade: __('Fade', '__TEXT_DOMAIN__'),
+  slide: __('Slide', '__TEXT_DOMAIN__'),
+  'fade-slide': __('Fade and slide', '__TEXT_DOMAIN__'),
+});
+// The value is the direction of travel; the label says where the part enters from.
+const directionLabels = () => ({
+  up: __('From below', '__TEXT_DOMAIN__'),
+  down: __('From above', '__TEXT_DOMAIN__'),
+  left: __('From the right', '__TEXT_DOMAIN__'),
+  right: __('From the left', '__TEXT_DOMAIN__'),
+});
+const triggerLabels = () => ({
+  section: __('All together, staggered', '__TEXT_DOMAIN__'),
+  item: __('Each item as it scrolls in', '__TEXT_DOMAIN__'),
+});
 const options = (values, labels = {}) =>
   values.map((value) => ({ label: labels[value] ?? value, value }));
-const TYPE_OPTIONS = options(TYPES, TYPE_LABELS);
-const DIRECTION_OPTIONS = options(DIRECTIONS, DIRECTION_LABELS);
-const TRIGGER_OPTIONS = options(TRIGGERS, TRIGGER_LABELS);
-const UNIT_OPTIONS = options(UNITS);
 
 // '' clears the field (null: use the site default); anything else is clamped.
 function toNumber(raw, key) {
@@ -158,7 +158,11 @@ export function EntranceControl({
   // Supports both { attributes, setAttributes } and { value, onChange } seamlessly.
   const saved = attributes?.entrance ?? value ?? {};
   const entrance = resolveEntrance(saved, preset ?? blockPreset(clientId));
-  const defaults = { ...SITE_DEFAULTS, ...siteDefaults };
+  const defaults = { ...printedSiteDefaults(), ...siteDefaults };
+  const TYPE_OPTIONS = options(TYPES, typeLabels());
+  const DIRECTION_OPTIONS = options(DIRECTIONS, directionLabels());
+  const TRIGGER_OPTIONS = options(TRIGGERS, triggerLabels());
+  const UNIT_OPTIONS = options(UNITS);
   const type = entrance.type;
   const slides = type === 'slide' || type === 'fade-slide';
 
@@ -185,10 +189,13 @@ export function EntranceControl({
   );
   return (
     <InspectorControls>
-      <PanelBody title="Entrance animation" initialOpen={false}>
+      <PanelBody
+        title={__('Entrance animation', '__TEXT_DOMAIN__')}
+        initialOpen={false}
+      >
         <SelectControl
           __nextHasNoMarginBottom
-          label="Type"
+          label={__('Type', '__TEXT_DOMAIN__')}
           value={type}
           options={TYPE_OPTIONS}
           onChange={(value) => write('type', value)}
@@ -199,7 +206,7 @@ export function EntranceControl({
             <div style={{ marginTop: '16px' }}>
               <SelectControl
                 __nextHasNoMarginBottom
-                label="Trigger"
+                label={__('Trigger', '__TEXT_DOMAIN__')}
                 value={entrance.trigger}
                 options={TRIGGER_OPTIONS}
                 onChange={(value) => write('trigger', value)}
@@ -210,7 +217,7 @@ export function EntranceControl({
               <div style={{ marginTop: '16px' }}>
                 <SelectControl
                   __nextHasNoMarginBottom
-                  label="Direction"
+                  label={__('Direction', '__TEXT_DOMAIN__')}
                   value={entrance.direction}
                   options={DIRECTION_OPTIONS}
                   onChange={(value) => write('direction', value)}
@@ -219,10 +226,10 @@ export function EntranceControl({
                 <div
                   style={{ display: 'grid', gap: '16px', marginTop: '16px' }}
                 >
-                  {numberField('distance', 'Distance')}
+                  {numberField('distance', __('Distance', '__TEXT_DOMAIN__'))}
                   <SelectControl
                     __nextHasNoMarginBottom
-                    label="Unit"
+                    label={__('Unit', '__TEXT_DOMAIN__')}
                     value={entrance.unit}
                     options={UNIT_OPTIONS}
                     onChange={(value) => write('unit', value)}
@@ -232,11 +239,11 @@ export function EntranceControl({
             )}
 
             <div style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
-              {numberField('duration', 'Duration (ms)')}
-              {numberField('delay', 'Delay (ms)')}
+              {numberField('duration', __('Duration (ms)', '__TEXT_DOMAIN__'))}
+              {numberField('delay', __('Delay (ms)', '__TEXT_DOMAIN__'))}
               {!singlePart &&
                 entrance.trigger !== 'item' &&
-                numberField('stagger', 'Stagger (ms)')}
+                numberField('stagger', __('Stagger (ms)', '__TEXT_DOMAIN__'))}
             </div>
 
             <Button
@@ -249,7 +256,7 @@ export function EntranceControl({
                 )()
               }
             >
-              Preview
+              {__('Preview', '__TEXT_DOMAIN__')}
             </Button>
           </>
         )}

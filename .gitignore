@@ -2,6 +2,10 @@
 .DS_Store
 Thumbs.db
 
+# Kit-only dev tooling (package.json, composer.json at the kit root)
+node_modules/
+vendor/
+
 # Local WIP scratch notes (not part of the kit)
 _WIP-*.md
 

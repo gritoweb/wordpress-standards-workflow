@@ -83,3 +83,15 @@ export function entrancePartProps(entrance, index = 0) {
     ...(index > 0 ? { style: { '--e-i': index } } : {}),
   };
 }
+
+// Index for each part the canvas draws, in reading order; a part that doesn't draw takes no index. Twin of BlockEntrance::partIndexes().
+export function partIndexes(present) {
+  let next = 0;
+
+  return Object.fromEntries(
+    Object.entries(present).map(([name, draws]) => [
+      name,
+      draws ? next++ : null,
+    ]),
+  );
+}

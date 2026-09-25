@@ -1,6 +1,6 @@
 import { Button } from '@wordpress/components';
-import { useRef, useState } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { useEffect, useRef, useState } from '@wordpress/element';
+import { __, sprintf } from '@wordpress/i18n';
 import { RemoveButton } from './RemoveButton.jsx';
 import { chevronDown, chevronUp, dragHandle, image } from './coreIcons.jsx';
 
@@ -186,6 +186,12 @@ export function ItemList({
   // `over` inside the drag handlers would be the value captured at mousedown —
   // a stale closure. The ref is what the handlers read.
   const overRef = useRef(null);
+  // The in-flight drag's cleanup, so unmounting mid-drag still detaches the document listeners.
+  const stopRef = useRef(null);
+
+  useEffect(() => {
+    return () => stopRef.current?.();
+  }, []);
 
   const label = (item, index) => {
     const own = getLabel ? getLabel(item, index) : '';
@@ -246,9 +252,11 @@ export function ItemList({
         doc.removeEventListener('mouseup', onUp);
       });
       document.removeEventListener('mouseout', onLeave);
+      stopRef.current = null;
       setDragging(null);
       setOver(null);
     };
+    stopRef.current = stop;
     // A release outside the browser window is never delivered, so a move with
     // no button held, or the pointer leaving the window, cancels the drag.
     const onLeave = (e) => {
@@ -315,7 +323,7 @@ export function ItemList({
           return (
             <li key={item && item.key ? item.key : index}>
               <div
-                data-ws-row={index}
+                data-row={index}
                 style={{
                   ...S.row,
                   ...(isActive ? S.rowActive : null),
@@ -330,7 +338,7 @@ export function ItemList({
                 <span
                   aria-hidden="true"
                   title={__('Drag to reorder', '__TEXT_DOMAIN__')}
-                  data-ws-drag-handle
+                  data-drag-handle
                   onMouseDown={(e) => startDrag(index, e)}
                   style={{
                     ...S.handle,
@@ -376,7 +384,12 @@ export function ItemList({
                   <Button
                     icon={chevronUp}
                     size="compact"
-                    label={`${__('Move up', '__TEXT_DOMAIN__')}: ${label(item, index)}`}
+                    label={sprintf(
+                      /* translators: 1: 'Move up', 2: the row's own label. */
+                      __('%1$s: %2$s', '__TEXT_DOMAIN__'),
+                      __('Move up', '__TEXT_DOMAIN__'),
+                      label(item, index),
+                    )}
                     showTooltip
                     disabled={first}
                     onClick={() => move(index, index - 1)}
@@ -384,13 +397,21 @@ export function ItemList({
                   <Button
                     icon={chevronDown}
                     size="compact"
-                    label={`${__('Move down', '__TEXT_DOMAIN__')}: ${label(item, index)}`}
+                    label={sprintf(
+                      __('%1$s: %2$s', '__TEXT_DOMAIN__'),
+                      __('Move down', '__TEXT_DOMAIN__'),
+                      label(item, index),
+                    )}
                     showTooltip
                     disabled={last}
                     onClick={() => move(index, index + 1)}
                   />
                   <RemoveButton
-                    label={`${__('Remove', '__TEXT_DOMAIN__')}: ${label(item, index)}`}
+                    label={sprintf(
+                      __('%1$s: %2$s', '__TEXT_DOMAIN__'),
+                      __('Remove', '__TEXT_DOMAIN__'),
+                      label(item, index),
+                    )}
                     disabled={!canRemove}
                     onClick={() => {
                       if (!removeConfirm || window.confirm(removeConfirm)) {

@@ -2,6 +2,48 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Framework components from the Sage Site Kit, with tests
+
+Second step of the Sage Site Kit port. Our components stay the base; theirs
+add only what doesn't undo a decision recorded in `docs/merge-decisions.md`.
+
+### Added
+- **Canvas helpers:** `EditorSection` (the canvas root: our frame and our
+  responsive `editorPaddingClasses`, ground, divider, container),
+  `InlineField` / `InlineHeading` (on our `AutoGrowingTextarea`), `CtaPreview`,
+  `AddPrompt`, `InfoPanel`, `useRepeater`, `ground.js` / `GroundSelect`,
+  `PostPicker`, `PagingControls`, `useCollectionSummary`, `logoTint`.
+- **PHP:** `BlockAttributes` (CTA keys, grounds, dividers, new-tab hints),
+  `BlockLogos`, `Content/` (content type + paging), the `App` and
+  `PageHeader` composers, and `BlockDirectivesServiceProvider`, which now owns
+  `@paddingClasses` / `@entrance` / `@entrancePart` (Sage's
+  `ThemeServiceProvider` stays stock; check 0.16 changed).
+- **Front end:** `collection-paging.{js,css}` and `scroll-cue.js`, registered
+  once by handle in `app/blocks.php`; partials `page-header` (sr-only `<h1>` on
+  block pages, visible on archives), `new-tab-hint`, `collection-paging`.
+- **Kit test suite:** `npm test` at the kit root (Node test runner, a Vite
+  bundle for JSX, a PHP/Blade render harness via `composer install`). 373 tests
+  over the framework, adapted wherever their test asserted a behavior we chose
+  differently (our padding scale, entrance defaults, popover LinkPicker,
+  icon empty state, core icon buttons).
+
+### Changed
+- Merged into our components: `LinkPicker` (SVG/MathML-safe realm patch,
+  inspector min-width override, labelled trigger), `ItemList` (listener
+  cleanup on unmount, translatable labels), `ImagePositionControl` (accessible
+  names, `aria-pressed`), `EntranceControl` (translatable labels, site
+  defaults read from `window.__PREFIX__EntranceDefaults`, fallback
+  1000/250/250), `ParagraphsField` (lists, links, bold/italic), `BlockEntrance`
+  (`$extraStyle`, escaped style, `partIndexes()`), `AttachmentImageControl`
+  (`imageClassName`; surface token without the hard-coded cream fallback).
+- Neutral names: `html.entrance`, `hover-btn-*`, `hover-link-*`, `data-row`,
+  `data-drag-handle` (were `ws-*`).
+
+### Verified
+- `npm test` at the kit root: exit 0.
+- Fresh install of `theme/` with one dark ground: `kit-setup` filled 33 files,
+  `--check` exit 0, `php -l` clean on every `app/` file.
+
 ## 2026-09-25 — The framework installs as one tree, filled from a config
 
 First step of bringing the Sage Site Kit's work into this kit (decisions in

@@ -13,31 +13,31 @@
     box-shadow var(--hover-duration, 250ms) ease;
 }
 
-.ws-hover-btn-lift
+.hover-btn-lift
   .btn:hover:not(:disabled, [aria-disabled='true'], [aria-busy='true']) {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px color-mix(in srgb, var(--color-ink) 15%, transparent);
 }
 
 /* Fade is colour only, so movement leaves the transition. */
-.ws-hover-btn-fade .btn {
+.hover-btn-fade .btn {
   transition:
     color var(--hover-duration, 250ms) ease,
     background-color var(--hover-duration, 250ms) ease,
     border-color var(--hover-duration, 250ms) ease;
 }
 
-.ws-hover-btn-fade .btn:hover,
-.ws-hover-btn-none .btn:hover {
+.hover-btn-fade .btn:hover,
+.hover-btn-none .btn:hover {
   transform: none;
 }
 
-.ws-hover-btn-none .btn {
+.hover-btn-none .btn {
   transition: none;
 }
 
 /* Underline wipes in a full-strength rule over a faint one; the box never changes. */
-.ws-hover-link-underline :is(main a:not([class]), .link) {
+.hover-link-underline :is(main a:not([class]), .link) {
   text-decoration: none;
   background:
     linear-gradient(currentcolor, currentcolor) 0 100% / 0 1px no-repeat,
@@ -53,28 +53,28 @@
     background-size var(--hover-duration, 250ms) ease;
 }
 
-.ws-hover-link-underline :is(main a:not([class]), .link):hover {
+.hover-link-underline :is(main a:not([class]), .link):hover {
   background-size:
     100% 1px,
     100% 1px;
 }
 
-.ws-hover-link-fade :is(main a:not([class]), .link) {
+.hover-link-fade :is(main a:not([class]), .link) {
   transition: color var(--hover-duration, 250ms) ease;
 }
 
-.ws-hover-link-none :is(main a:not([class]), .link) {
+.hover-link-none :is(main a:not([class]), .link) {
   transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ws-hover-btn-lift
+  .hover-btn-lift
     .btn:hover:not(:disabled, [aria-disabled='true'], [aria-busy='true']) {
     transform: none;
     box-shadow: none;
   }
 
-  .ws-hover-link-underline :is(main a:not([class]), .link) {
+  .hover-link-underline :is(main a:not([class]), .link) {
     transition: color var(--hover-duration, 250ms) ease;
   }
 }

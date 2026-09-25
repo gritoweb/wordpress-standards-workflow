@@ -3,7 +3,7 @@
  * size container, a bleed wrapper or a clipping panel, and a transform on one
  * of those breaks its children's layout.
  *
- * Parts are hidden only under html.ws-entrance, which a head script adds. With
+ * Parts are hidden only under html.entrance, which a head script adds. With
  * no JavaScript, or after the module gives up, everything is simply visible.
  * The direction is the direction of travel: "up" starts below and moves up.
  */
@@ -74,7 +74,7 @@
   --e-i: 0;
 }
 
-html.ws-entrance
+html.entrance
   [data-entrance]:not([data-entrance-trigger='item']):not([data-entered])
   [data-entrance-part] {
   opacity: var(--e-from-opacity);
@@ -86,7 +86,7 @@ html.ws-entrance
  * has entered the module marks the section, so a part added afterwards is
  * never hidden.
  */
-html.ws-entrance
+html.entrance
   [data-entrance][data-entrance-trigger='item']:not([data-entered])
   [data-entrance-part]:not([data-entered]) {
   opacity: var(--e-from-opacity);
@@ -95,7 +95,7 @@ html.ws-entrance
 
 /*
  * Replay hook for the editor canvas: data-entrance-replay on one block root
- * hides that block's parts, with no html.ws-entrance, so other blocks stay
+ * hides that block's parts, with no html.entrance, so other blocks stay
  * visible. The replay removes the marker's effect the same way a visitor's
  * entry does, with data-entered on the root or on each part.
  */
@@ -136,10 +136,10 @@ html.ws-entrance
     --e-duration: 150ms;
   }
 
-  html.ws-entrance
+  html.entrance
     [data-entrance]:not([data-entrance-trigger='item']):not([data-entered])
     [data-entrance-part],
-  html.ws-entrance
+  html.entrance
     [data-entrance][data-entrance-trigger='item']:not([data-entered])
     [data-entrance-part]:not([data-entered]),
   [data-entrance][data-entrance-replay]:not([data-entrance-trigger='item']):not(
@@ -156,7 +156,7 @@ html.ws-entrance
 
 /* A printed page must never come out blank. */
 @media print {
-  html.ws-entrance [data-entrance] [data-entrance-part] {
+  html.entrance [data-entrance] [data-entrance-part] {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;

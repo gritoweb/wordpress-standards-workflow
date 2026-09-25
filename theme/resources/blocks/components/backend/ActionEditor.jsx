@@ -1,4 +1,4 @@
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { emptyLink } from './editorCanvas.js';
 import { LinkPicker } from './LinkPicker.jsx';
 
@@ -61,7 +61,8 @@ export const CTA_ICON_OPTIONS = [
 
 /**
  * Classes the front end puts on a button for its icon. Absent or unknown
- * attributes mean no icon, so an untouched post renders as before.
+ * attributes mean no icon, so an untouched post renders as before. Twin of
+ * BlockAttributes::ctaIconClass() in PHP.
  */
 export function ctaIconClass(icon, position) {
   if (!['arrow', 'external', 'download'].includes(icon)) {
@@ -154,7 +155,11 @@ export function ActionEditor({
         >
           <input
             type="checkbox"
-            aria-label={`${__('Open', '__TEXT_DOMAIN__')} ${linkLabel} ${__('in a new tab', '__TEXT_DOMAIN__')}`}
+            aria-label={sprintf(
+              /* translators: %s: the link's own label, e.g. 'CTA link'. */
+              __('Open %s in a new tab', '__TEXT_DOMAIN__'),
+              linkLabel,
+            )}
             checked={Boolean(link?.opensInNewTab)}
             onChange={(event) =>
               onLinkChange({

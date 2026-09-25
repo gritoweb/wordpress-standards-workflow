@@ -98,9 +98,9 @@ and run `project-init` (or copy `<kit>/theme/<path>` and rerun `kit-setup`). The
 | 0.9 | `resources/css/app.css` has `@source "../blocks/**/*.{php,jsx}";` **and** scans `app/` (`@source "../../app/";` — Sage's stock line). The padding / image-position classes are literals in `app/Blocks/*.php`; without that source Tailwind never generates them and Spacing silently does nothing. |
 | 0.10 | `package.json` `devDependencies` has `react@^18` AND `react-dom@^18`. **React pinned to ^18, not ^19** — React 19 breaks Gutenberg (element-symbol mismatch with WP's React 18). |
 | 0.11 | `app/Blocks/BlockCategories.php` exists (kit: `theme/app/Blocks/BlockCategories.php`) with no `__BLOCK_CATEGORY_*__` left. Read the category from `const SLUG = '...'`; it comes from `kit.config.json` › `blockCategory`. The `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). |
-| 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `RemoveButton.jsx`, `RemoveImageButton.jsx`, `coreIcons.jsx`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. Kit: `theme/resources/blocks/components/backend/`. A leftover `__TEXT_DOMAIN__` / `__THEME_SLUG__` means `kit-setup` never ran. |
+| 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `RemoveButton.jsx`, `RemoveImageButton.jsx`, `coreIcons.jsx`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`, `EditorSection.jsx`, `InlineField.jsx`, `CtaPreview.jsx`, `AddPrompt.jsx`, `InfoPanel.jsx`, `useRepeater.js`, `ground.js`, `GroundSelect.jsx`. Kit: `theme/resources/blocks/components/backend/`. A leftover `__TEXT_DOMAIN__` / `__THEME_SLUG__` means `kit-setup` never ran. |
 | 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php`, `app/Blocks/BlockEntrance.php` and `app/Blocks/BlockMotion.php` exist (kit: `theme/app/Blocks/`). `BlockEntrance.php` must expose `fromBlock()`, `root()` and `part()` — an older copy that only has `resolve()` (it prints `data-entrance-type`) is **incompatible** with `EntranceControl`/`entranceCanvas.js`: replace it. |
-| 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers three Blade directives: `paddingClasses` → `\App\Blocks\BlockPadding::resolve(...)`, `entrance` → `\App\Blocks\BlockEntrance::root(...)` and `entrancePart` → `\App\Blocks\BlockEntrance::part(...)` (see "Infra bootstrap templates"). |
+| 0.16 | `functions.php`'s `->withProviders([...])` list includes `\App\Providers\BlockDirectivesServiceProvider::class` (kit: `theme/app/Providers/`). It registers `@paddingClasses`, `@entrance` and `@entrancePart`; Sage's own `ThemeServiceProvider` stays stock. |
 | 0.18 | `resources/css/components/entrance.css` exists (kit: `theme/resources/css/components/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). `resources/css/components/hover.css` exists (kit: `theme/resources/css/components/hover.css`) and is `@import`ed by `resources/css/app.css` — **not** inside `@layer`, it must beat Tailwind's transition utilities. |
 | 0.19 | `resources/js/modules/entrance.js` exists (kit: `theme/resources/js/modules/entrance.js`) and `resources/js/app.js` has `import { initEntrance } from './modules/entrance';` plus a top-level `initEntrance();` call (module scripts are deferred). Without it the front end never adds `data-entered` and the head script's 5s safety net is the only thing that un-hides the page. |
 | 0.20 | `scripts/editor-fidelity.mjs` exists (kit: `theme/scripts/editor-fidelity.mjs`). It is a report-only dev tool — see "Editor fidelity report". |
@@ -134,7 +134,7 @@ Phase 0 must be re-runnable. Before each create/modify, Read the target and chec
 | `resources/css/app.css` | `@source "../blocks/**` and `@import './components/entrance.css'` | **Skip** | apply documented edit | **Bail** |
 | `resources/css/editor.css` | `@import './components/entrance.css'` | **Skip** | append the import | **Bail** |
 | `resources/js/app.js` | imports and calls `initEntrance` | **Skip** | add the import + call | **Bail** |
-| `app/Providers/ThemeServiceProvider.php` (Group B) | `boot()` calls `parent::boot()` and registers the `paddingClasses`, `entrance` and `entrancePart` directives | **Skip** | `boot()` exists but lacks some — insert the missing `Blade::directive(...)` calls | **Bail** — provider doesn't match Sage's stock shape (custom providers are common; ask the dev to wire it manually) |
+| `functions.php` providers (Group B) | `->withProviders([...])` lists `BlockDirectivesServiceProvider::class` | **Skip** | Plain array literal without it → add the line after `ThemeServiceProvider::class` | **Bail** — `providers` isn't a plain array literal; ask the dev to add the line |
 
 **Bailing > guessing.** Each bail message must name (a) the file, (b) expected shape, (c) what was found, (d) the manual fix the dev would apply.
 
@@ -355,11 +355,20 @@ Attributes:
     full-bleed background image relocated.
 
 - **Canvas (inline)** = block **content** — real data rendered with theme
-  styling, bounded by `EDITOR_BLOCK_FRAME`:
-  - **Headings / subtitles:** `<AutoGrowingTextarea>` styled with
-    `EDITOR_TYPE` tokens, positioned where the text appears visually. A
-    field that is an `h1`–`h6` on the page gets the `heading` prop, so it
-    takes the theme's heading font.
+  styling. The root is **`<EditorSection slug attributes entrance ground sectionDivider>`**:
+  it prints the block props, `<slug>-editor`, the page's responsive padding
+  (`editorPaddingClasses`), `EDITOR_BLOCK_FRAME`, the ground, the divider and
+  the inner `container` — never rebuild that root by hand.
+  - **Headings / subtitles:** `<InlineHeading tier headingClass label>`
+    (a heading tier from `EDITOR_TYPE` + the page's `heading-N`), or
+    `<InlineField label position onDark>` for a plain-string field. Both sit
+    on `AutoGrowingTextarea`, pass the string to `onChange`, and name a
+    repeated field by position (`Card title 2`).
+  - **Section button preview:** `<CtaPreview>` (never navigates) with the
+    `ActionEditor` under it; an optional field group behind a quiet
+    "Add …" prompt: `<AddPrompt>`.
+  - **Repeater state:** `useRepeater({ items, setItems })` (add, update,
+    move, remove, active row) feeding the sidebar `<ItemList>`.
   - **Body copy:** `<ParagraphsField>` or `<RichText>`, inline.
   - **Inline Images (foreground):** `<AttachmentImageControl>` with the **X button on hover** (top-right
     corner) to remove. Clicking the image opens Media Library in browse mode.
@@ -637,7 +646,20 @@ kit's `theme/` folder, mirrors the theme layout, and is installed by `project-in
 │   ├── PaddingControls.jsx
 │   ├── padding-presets.js
 │   ├── ImagePositionControl.jsx
-│   └── IconPicker.jsx
+│   ├── IconPicker.jsx
+│   ├── EditorSection.jsx            ← canvas root (frame, padding, ground, divider, container)
+│   ├── InlineField.jsx              ← InlineField / InlineHeading (canvas text on AutoGrowingTextarea)
+│   ├── CtaPreview.jsx, AddPrompt.jsx, InfoPanel.jsx
+│   ├── useRepeater.js               ← repeater state for ItemList
+│   ├── ground.js, GroundSelect.jsx  ← grounds from kit.config.json
+│   ├── PostPicker.jsx, postPickerQuery.js, PagingControls.jsx, useCollectionSummary.js
+│   └── logoTint.js
+├── resources/blocks/components/frontend/{collection-paging.{js,css},scroll-cue.js}
+├── app/Blocks/{BlockAttributes,BlockLogos}.php  ← CTA keys, grounds, dividers, new-tab hints, logo sizing
+├── app/Providers/BlockDirectivesServiceProvider.php (check 0.16)
+├── app/Content/{ContentType,ContentTypes,Paging}.php
+├── app/View/Composers/{App,PageHeader}.php
+├── resources/views/partials/{page-header,new-tab-hint,collection-paging}.blade.php
 └── scripts/{editor-fidelity,check-css-foundation,kit-setup,install-git-hooks}.mjs
 ```
 
@@ -1049,7 +1071,7 @@ initEntrance();
 
 `BlockMotion::register()` is called from `app/blocks.php` (template already
 does it). It adds **Appearance › Customize › Motion** — the same options and
-defaults as the White Summers reference — plus the `html.ws-entrance` head
+defaults as the White Summers reference — plus the `html.entrance` head
 script and the same values inside the editor canvas:
 
 | Option | Default | Prints |
@@ -1059,8 +1081,8 @@ script and the same values inside the editor canvas:
 | Delay between items | 250 ms | `--e-stagger` |
 | Travel distance + unit | 32 px (`px` / `vw`) | `--e-distance` |
 | Easing | Ease out = `cubic-bezier(0.22, 0.61, 0.36, 1)` (`ease-out` / `ease-in-out` / `ease`) | `--e-ease` |
-| Button hover effect | Fade (`lift` / `fade` / `none`) | `body.ws-hover-btn-*` |
-| Link hover effect | Underline (`underline` / `fade` / `none`) | `body.ws-hover-link-*` |
+| Button hover effect | Fade (`lift` / `fade` / `none`) | `body.hover-btn-*` |
+| Link hover effect | Underline (`underline` / `fade` / `none`) | `body.hover-link-*` |
 | Hover speed | 250 ms | `--hover-duration` |
 
 Never hard-code these values in a block — a block field left empty inherits
@@ -1161,36 +1183,24 @@ padding. The draft is deleted at the end. Output, per block:
 - Needs Node 22+ and Chrome on the dev machine, and a local admin login (never
   a production URL). No npm packages.
 
-#### `app/Providers/ThemeServiceProvider.php` — register the Blade directives
+#### `functions.php` — register the Blade directives provider
 
-Add to the existing `boot()` method (this file is scaffolded by Sage
-itself — don't create it, edit it):
+`BlockDirectivesServiceProvider` (kit `theme/app/Providers/`) owns the three
+directives, so Sage's `ThemeServiceProvider` is never edited:
 
 ```diff
- public function boot()
- {
-     parent::boot();
-+
-+    Blade::directive('paddingClasses', function (string $expression) {
-+        return "<?php echo \App\Blocks\BlockPadding::resolve($expression); ?>";
-+    });
-+
-+    // <section @entrance($entrance)> — prints its own style attribute.
-+    Blade::directive('entrance', function (string $expression) {
-+        return "<?php echo \App\Blocks\BlockEntrance::root($expression); ?>";
-+    });
-+
-+    // <h2 @entrancePart(0)>, <article @entrancePart($loop->index + 1)>.
-+    Blade::directive('entrancePart', function (string $expression) {
-+        return "<?php echo \App\Blocks\BlockEntrance::part($expression); ?>";
-+    });
- }
+ Application::configure()
+     ->withProviders([
+         ThemeServiceProvider::class,
++        \App\Providers\BlockDirectivesServiceProvider::class,
+     ])
+     ->boot();
 ```
 
-Requires `use Illuminate\Support\Facades\Blade;` at the top of the file
-(add it if missing). If `boot()` doesn't exist or the file doesn't match
-Sage's stock provider shape, **bail out** — ask the dev to wire it
-manually.
+If `providers` isn't a plain array literal, **bail out** — ask the dev to add
+the line manually. A theme wired by an older kit also has the three
+`Blade::directive(...)` calls in `ThemeServiceProvider::boot()`: remove them
+there once the provider is listed (registering a directive twice keeps the last).
 
 #### `functions.php` — add `'blocks'` to the collect array
 

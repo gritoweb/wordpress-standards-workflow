@@ -17,8 +17,8 @@ class BlockEntrance
     private const UNITS = ['px', 'vw'];
     private const TRIGGERS = ['section', 'item'];
 
-    // [min, max], the same limits as EntranceControl.jsx.
-    private const LIMITS = [
+    // [min, max], the same limits as EntranceControl.jsx and entranceCanvas.js.
+    public const LIMITS = [
         'distance' => [0, 2000],
         'duration' => [0, 3000],
         'delay' => [0, 3000],
@@ -73,40 +73,49 @@ class BlockEntrance
     }
 
     /**
-     * Attributes for the section root, or '' when there is no entrance.
+     * Attributes for the section root, or '' when there is no entrance and no
+     * extra style. $extraStyle is a caller's own "property: value" pair(s),
+     * merged into the same style attribute this prints rather than left for
+     * the caller to splice in by hand. $entrance defaults to null so a bare
+     * @entrance() (Blade compiles that to a call with no arguments) means
+     * "no entrance" instead of a fatal ArgumentCountError.
      */
-    public static function root(mixed $entrance): string
+    public static function root(mixed $entrance = null, string $extraStyle = ''): string
     {
-        if (! is_array($entrance)) {
-            return '';
+        $out = '';
+        $entranceStyle = '';
+
+        if (is_array($entrance)) {
+            $entrance = self::sanitize($entrance);
+
+            if ($entrance['type'] !== 'none') {
+                $overrides = array_filter([
+                    '--e-distance' => $entrance['distance'] === null ? null : $entrance['distance'].$entrance['unit'],
+                    '--e-duration' => $entrance['duration'] === null ? null : $entrance['duration'].'ms',
+                    '--e-delay' => $entrance['delay'] === null ? null : $entrance['delay'].'ms',
+                    '--e-stagger' => $entrance['stagger'] === null ? null : $entrance['stagger'].'ms',
+                ], fn ($value) => $value !== null);
+
+                $out = 'data-entrance="'.$entrance['type'].'" data-entrance-dir="'.$entrance['direction'].'"';
+
+                if ($entrance['trigger'] === 'item') {
+                    $out .= ' data-entrance-trigger="item"';
+                }
+
+                if ($overrides) {
+                    $entranceStyle = implode('; ', array_map(
+                        fn ($property, $value) => "{$property}: {$value}",
+                        array_keys($overrides),
+                        $overrides,
+                    ));
+                }
+            }
         }
 
-        $entrance = self::sanitize($entrance);
+        $style = implode('; ', array_filter([$extraStyle, $entranceStyle], fn ($part) => $part !== ''));
 
-        if ($entrance['type'] === 'none') {
-            return '';
-        }
-
-        $overrides = array_filter([
-            '--e-distance' => $entrance['distance'] === null ? null : $entrance['distance'].$entrance['unit'],
-            '--e-duration' => $entrance['duration'] === null ? null : $entrance['duration'].'ms',
-            '--e-delay' => $entrance['delay'] === null ? null : $entrance['delay'].'ms',
-            '--e-stagger' => $entrance['stagger'] === null ? null : $entrance['stagger'].'ms',
-        ], fn ($value) => $value !== null);
-
-        $out = 'data-entrance="'.$entrance['type'].'" data-entrance-dir="'.$entrance['direction'].'"';
-
-        if ($entrance['trigger'] === 'item') {
-            $out .= ' data-entrance-trigger="item"';
-        }
-
-        if ($overrides) {
-            $style = implode('; ', array_map(
-                fn ($property, $value) => "{$property}: {$value}",
-                array_keys($overrides),
-                $overrides,
-            ));
-            $out .= ' style="'.$style.'"';
+        if ($style !== '') {
+            $out .= ($out !== '' ? ' ' : '').'style="'.esc_attr($style).'"';
         }
 
         return $out;
@@ -114,15 +123,42 @@ class BlockEntrance
 
     /**
      * Attributes for one part. Index 0 carries no custom property, because the
-     * stylesheet already defaults --e-i to 0.
+     * stylesheet already defaults --e-i to 0. $extraStyle merges into the
+     * same style attribute (a caller with its own inline style, like a
+     * logo cell's own sizing, must not print a second `style=` — HTML keeps
+     * only the first one an element carries).
      */
-    public static function part(mixed $index = 0): string
+    public static function part(mixed $index = 0, string $extraStyle = ''): string
     {
         $index = self::clamp($index, 0, 1000) ?? 0;
+        $indexStyle = $index > 0 ? "--e-i: {$index}" : '';
 
-        return $index > 0
-            ? 'data-entrance-part style="--e-i: '.$index.'"'
+        $style = implode('; ', array_filter([$extraStyle, $indexStyle], fn ($part) => $part !== ''));
+
+        return $style !== ''
+            ? 'data-entrance-part style="'.esc_attr($style).'"'
             : 'data-entrance-part';
+    }
+
+    /**
+     * Part indexes for the parts a block actually renders, in reading order.
+     * $present maps a part name to whether it renders; a part that doesn't
+     * render gets null and takes no index, so the stagger has no gap. Twin
+     * of partIndexes() in components/backend/entranceCanvas.js.
+     *
+     * @param array<string, bool> $present
+     * @return array<string, int|null>
+     */
+    public static function partIndexes(array $present): array
+    {
+        $next = 0;
+        $indexes = [];
+
+        foreach ($present as $name => $renders) {
+            $indexes[$name] = $renders ? $next++ : null;
+        }
+
+        return $indexes;
     }
 
     private static function pick(mixed $value, array $allowed, string $fallback): string

@@ -48,3 +48,11 @@ Working record for the `refactor` branch port. Base = our file; theirs only adds
 | `ws-` names | Theirs: `entrance`, `data-row`, `data-drag-handle` |
 | Per-item link | Ours: text on the canvas, destination in the sidebar for the active item (baaaabe); `ItemLinkTrigger` is not ported |
 | `ItemList` remove confirm | Ours by the base rule: no confirm, Ctrl+Z undoes |
+| Blade directives | Theirs: `App\Providers\BlockDirectivesServiceProvider`, added once to `functions.php`; Sage's `ThemeServiceProvider` stays stock |
+| Canvas root | Theirs, adapted: `EditorSection` prints our `EDITOR_BLOCK_FRAME` and our `editorPaddingClasses()` |
+| Canvas helpers | Theirs: `InlineField` (on our `AutoGrowingTextarea`), `CtaPreview`, `AddPrompt`, `InfoPanel`, `useRepeater` |
+| Page title | Both: our `front-page.blade.php` (no page header on the home) + their `partials/page-header` (sr-only `<h1>` on singular pages, visible on archives/search) |
+
+## Pending (Phase 4 button roles)
+
+`btn-on-dark` (BlockAttributes::ctaButtonClass, ground.js) and `btn-link` (collection-paging partial) are their button role names; our contract has `.btn-primary` / `.btn-secondary`. Resolved with the button-role checkpoint.

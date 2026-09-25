@@ -64,3 +64,22 @@ export const emptyLink = () => ({ url: '', opensInNewTab: false });
 export const EDITOR_BLOCK_FRAME =
   'mb-10 overflow-hidden rounded-[var(--radius-card,1rem)] outline outline-1 outline-offset-[-1px] outline-dashed outline-[color:var(--color-ink,#000)]/30';
 
+// A plain-string canvas field: wraps and grows instead of clipping; color comes from fieldToneClass().
+export const EDITOR_FIELD =
+  'm-0 w-full resize-none overflow-hidden border-0 bg-transparent p-1 outline-none focus-visible:ring-2';
+
+// onDark: the field sits on a dark ground or a photo, so it reads light and the ring follows the text.
+export function fieldToneClass(onDark) {
+  return onDark
+    ? 'text-[color:var(--color-light)] placeholder:text-[color:var(--color-light)]/70 focus-visible:ring-current'
+    : 'text-[color:var(--color-ink)] placeholder:text-[color:var(--color-ink)]/60 focus-visible:ring-[color:var(--color-primary)]';
+}
+
+// A repeated field names its position: fieldLabel('Entry heading', 1) is 'Entry heading 2'.
+export const fieldLabel = (label, index) => {
+  if (!label) return '';
+
+  return index === undefined || index === null
+    ? label
+    : `${label} ${index + 1}`;
+};

@@ -3,7 +3,7 @@ const SELECTOR = '[data-entrance]';
 // Any failure here must leave the page readable: dropping the class that
 // hides the parts is the whole fallback.
 function showEverything() {
-  document.documentElement.classList.remove('ws-entrance');
+  document.documentElement.classList.remove('entrance');
 }
 
 export function initEntrance() {

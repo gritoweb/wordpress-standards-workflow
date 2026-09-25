@@ -1,0 +1,15 @@
+{
+  "name": "gritoweb/wordpress-standards-workflow-dev",
+  "description": "Kit-only Composer dev dependencies for the Blade render harness. Never imported by a project theme.",
+  "type": "project",
+  "private": true,
+  "require-dev": {
+    "php": ">=8.3",
+    "illuminate/view": "^11.0"
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

@@ -1,6 +1,7 @@
 import { LinkControl } from '@wordpress/block-editor';
-import { useState } from '@wordpress/element';
+import { useId, useState } from '@wordpress/element';
 import { Button, Popover } from '@wordpress/components';
+import { __ } from '@wordpress/i18n';
 
 /**
  * Link picker wrapping Gutenberg's stock <LinkControl>.
@@ -51,15 +52,22 @@ if (typeof window !== 'undefined' && window.HTMLElement) {
       return !!(
         instance &&
         typeof instance === 'object' &&
-        instance.nodeType === 1
+        instance.nodeType === 1 &&
+        // An SVG or MathML element is nodeType 1 too; namespaceURI is the same in every realm.
+        (instance.namespaceURI == null ||
+          instance.namespaceURI === 'http://www.w3.org/1999/xhtml')
       );
     },
     configurable: true,
   });
 }
 
+// Core sets min-width: 350px on the link control, wider than the 280px inspector; scoped to this wrapper.
+const INSPECTOR_LINK_CONTROL_CSS =
+  '.link-picker .block-editor-link-control{min-width:0;max-width:100%}';
+
 const fullWidthStyles = {
-  wrapper: { position: 'relative', width: '100%' },
+  wrapper: { position: 'relative', width: '100%', minWidth: 0, maxWidth: '100%' },
   label: {
     display: 'block',
     marginBottom: '4px',
@@ -82,6 +90,7 @@ export const LinkPicker = ({
   fullWidth = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const labelId = useId();
   const url = value?.url || '';
 
   const handleRemove = () => {
@@ -107,8 +116,18 @@ export const LinkPicker = ({
         className={`link-picker ${className}`.trim()}
         style={fullWidthStyles.wrapper}
       >
-        {label && <label style={fullWidthStyles.label}>{label}</label>}
-        <div style={fullWidthStyles.control}>{control}</div>
+        <style>{INSPECTOR_LINK_CONTROL_CSS}</style>
+        {label && (
+          <label id={labelId} style={fullWidthStyles.label}>
+            {label}
+          </label>
+        )}
+        <div
+          style={fullWidthStyles.control}
+          aria-labelledby={label ? labelId : undefined}
+        >
+          {control}
+        </div>
       </div>
     );
   }
@@ -116,17 +135,21 @@ export const LinkPicker = ({
   return (
     <div className={className} style={{ position: 'relative' }}>
       {label && (
-        <label className="mb-1 block text-[10px] font-bold text-gray-400 uppercase">
+        <label
+          id={labelId}
+          className="mb-1 block text-[10px] font-bold text-gray-400 uppercase"
+        >
           {label}
         </label>
       )}
 
       <Button
         variant="secondary"
+        aria-labelledby={label ? labelId : undefined}
         onClick={() => setIsOpen(!isOpen)}
         className="!min-h-[46px] !w-full !justify-between !rounded !border !border-gray-300 !bg-white !px-3 !text-left !text-gray-700 !shadow-none hover:!bg-gray-50"
       >
-        <span className="truncate">{url || 'Select link...'}</span>
+        <span className="truncate">{url || __('Select link…', '__TEXT_DOMAIN__')}</span>
       </Button>
 
       {isOpen && (

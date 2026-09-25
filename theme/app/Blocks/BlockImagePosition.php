@@ -29,6 +29,12 @@ class BlockImagePosition
         'bottom-right'  => 'right bottom',
     ];
 
+    /** @return string[] */
+    public static function positions(): array
+    {
+        return array_keys(self::CSS_VALUES);
+    }
+
     public static function objectClass(string $position): string
     {
         return self::OBJECT_CLASSES[$position] ?? 'object-center';
