@@ -22,6 +22,7 @@ skills/
   project-init/SKILL.md            # kit-import skill — imported to <project>/.claude/skills/
   fotos/SKILL.md                   # block screenshot generator — imported to <project>/.claude/skills/
   site-settings-wizard/SKILL.md    # interactive wizard for Site Settings — imported to <project>/.claude/skills/
+  motion/SKILL.md                  # /motion: adds the Motion tab to Site Settings, only when asked — imported to <project>/.claude/skills/
 global-skills/
   commit-rules.md                  # commit convention — NOT per-project; recommend installing to ~/.claude/skills/ (user-level)
 _docs/
@@ -71,6 +72,7 @@ the manifest **is** the source of truth either way.
 | `skills/project-init/` | `<theme>/.claude/skills/project-init/` | Copy the whole folder — or use it to drive this very import (see below) |
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy the whole folder — block screenshot generator (Chrome headless → webp + svg fallback) |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — adds a tab to the Site Settings page (Secure Custom Fields), only when asked |
+| `skills/motion/` | `<theme>/.claude/skills/motion/` | Copy the whole folder — `/motion` adds the Motion tab to Site Settings, only when asked |
 | `_docs/examples.md` | `<theme>/_docs/examples.md` | Reference patterns the AI uses for grounding |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Pre-launch checklist for go-live |
 | `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | The Site Settings pattern (SCF page, empty by default; tabs on request) |

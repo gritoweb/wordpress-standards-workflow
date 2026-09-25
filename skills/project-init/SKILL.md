@@ -84,6 +84,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/project-init/` | `<theme>/.claude/skills/project-init/` | Copy whole folder; ask before overwriting |
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy whole folder; ask before overwriting |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy whole folder; ask before overwriting |
+| `skills/motion/` | `<theme>/.claude/skills/motion/` | Copy whole folder; ask before overwriting |
 | `_docs/examples.md` | `<theme>/_docs/examples.md` | Ask before overwriting if present |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Ask before overwriting if present |
 | `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | Ask before overwriting if present |
