@@ -2,6 +2,23 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Figma design system skill (phases 0 to 2)
+
+### Added
+- **`figma-design-system`.** Builds the design system from a Figma file:
+  phase 0 inventories the file into `_docs/figma-map.md` (the cache later
+  phases read first), phase 1 writes `css-foundation-wizard`'s files with
+  Figma's values (same token names), phase 2 the buttons, the card and the
+  components the file defines. Each phase proposes one batch, waits for a
+  yes, and is verified on the private Styleguide page. Adapted from the Sage
+  Site Kit, without its grounds, contrast gate, Gravity CSS, test harnesses
+  and header/footer/blocks phases. `project-init` imports it.
+
+### Verified
+- No reference left to pieces this kit doesn't have (grounds,
+  `contrast-pairs.json`, `kit.config.json`, Gravity, conformance, patterns):
+  `grep -rn` over the skill returns nothing. 753 lines, down from 2015.
+
 ## 2026-09-25 — New projects' Site Settings: Header and Footer link lists
 
 ### Added
