@@ -2,14 +2,6 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
-## 2026-09-25 — /motion adds the Motion tab on request
-
-### Added
-- **`/motion` skill.** Copies the ready-made Motion tab
-  (`site-settings-wizard/templates/group_site_settings_motion.json`) into the
-  theme's `acf-json/`, so an editor can change the motion defaults in Site
-  Settings. Nothing adds it on its own; `project-init` imports the skill.
-
 ## 2026-09-25 — Site Settings on Secure Custom Fields, empty by default
 
 ### Changed

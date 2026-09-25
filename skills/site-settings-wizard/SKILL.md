@@ -44,7 +44,7 @@ for — no "while we're here" Header/Footer/Socials. For each field: label,
 `name` (snake_case), SCF type (`text`, `email`, `url`, `link`, `image`,
 `number`, `true_false`, `select`), default, and for numbers `min`/`max`.
 
-**Motion** is ready-made (also `/motion`): copy `<skill>/templates/group_site_settings_motion.json`
+**Motion** is ready-made: copy `<skill>/templates/group_site_settings_motion.json`
 to `acf-json/group_site_settings_motion.json` as is. Its field names are the
 ones `app/Blocks/BlockMotion.php` already reads, with the same defaults, so
 nothing else changes.
