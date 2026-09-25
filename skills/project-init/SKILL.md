@@ -215,7 +215,7 @@ Phase 0 answer. Do not run any of these commands.
    identity in `style.css` — `Theme Name`, `Author`, `Text Domain`, and **reset
    `Version` to `1.0.0`**; match `package.json`'s `name`. (Re-verified by the
    launch list at go-live.)
-5. `lando wp theme activate <theme>`.
+5. `lando wp theme activate <theme>`, then `lando wp plugin install secure-custom-fields --activate` (the Site Settings page runs on it).
 6. Review and commit the copied kit files through the normal git flow —
    **never push without the project owner's permission**.
 7. Build theme assets (Step below).
@@ -257,7 +257,7 @@ Phase 0 answer. Do not run any of these commands.
    not `sage`).
 6. Copy kit standards into `wp-content/themes/<theme>/` per Phase 1 table.
    If the kit repository was cloned from GitHub, **delete the cloned kit directory immediately** (`rm -rf ...`) so the WordPress root remains clean.
-7. `lando wp theme activate <theme>`.
+7. `lando wp theme activate <theme>`, then `lando wp plugin install secure-custom-fields --activate` (the Site Settings page runs on it).
 8. Optionally `git init` + an initial commit inside `wp-content/themes/<theme>` — local only, never push without permission.
 9. Build theme assets (Step below).
 10. **Creating Home Page with Sample Blocks** (when requested by user prompt) —

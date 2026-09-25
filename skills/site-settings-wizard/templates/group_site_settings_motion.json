@@ -1,0 +1,152 @@
+{
+    "key": "group_site_settings_motion",
+    "title": "Site Settings \u2014 Motion",
+    "fields": [
+        {
+            "key": "field_site_settings_motion_tab",
+            "label": "Motion",
+            "name": "",
+            "type": "tab",
+            "placement": "top",
+            "endpoint": 0
+        },
+        {
+            "key": "field_site_settings_motion_duration",
+            "label": "Animation duration",
+            "name": "motion_duration",
+            "type": "number",
+            "instructions": "A block field left empty uses these values.",
+            "default_value": 1000,
+            "min": 0,
+            "max": 3000,
+            "step": 1,
+            "append": "ms"
+        },
+        {
+            "key": "field_site_settings_motion_delay",
+            "label": "Start delay",
+            "name": "motion_delay",
+            "type": "number",
+            "instructions": "",
+            "default_value": 250,
+            "min": 0,
+            "max": 3000,
+            "step": 1,
+            "append": "ms"
+        },
+        {
+            "key": "field_site_settings_motion_stagger",
+            "label": "Delay between items",
+            "name": "motion_stagger",
+            "type": "number",
+            "instructions": "",
+            "default_value": 250,
+            "min": 0,
+            "max": 1000,
+            "step": 1,
+            "append": "ms"
+        },
+        {
+            "key": "field_site_settings_motion_distance",
+            "label": "Travel distance",
+            "name": "motion_distance",
+            "type": "number",
+            "instructions": "",
+            "default_value": 32,
+            "min": 0,
+            "max": 2000,
+            "step": 1,
+            "append": ""
+        },
+        {
+            "key": "field_site_settings_motion_distance_unit",
+            "label": "Distance unit",
+            "name": "motion_distance_unit",
+            "type": "select",
+            "choices": {
+                "px": "Pixels",
+                "vw": "Screen width"
+            },
+            "default_value": "px",
+            "return_format": "value",
+            "allow_null": 0,
+            "multiple": 0,
+            "ui": 0
+        },
+        {
+            "key": "field_site_settings_motion_ease",
+            "label": "Easing",
+            "name": "motion_ease",
+            "type": "select",
+            "choices": {
+                "ease-out": "Ease out",
+                "ease-in-out": "Ease in and out",
+                "ease": "Ease"
+            },
+            "default_value": "ease-out",
+            "return_format": "value",
+            "allow_null": 0,
+            "multiple": 0,
+            "ui": 0
+        },
+        {
+            "key": "field_site_settings_motion_hover_button",
+            "label": "Button hover effect",
+            "name": "hover_button",
+            "type": "select",
+            "choices": {
+                "lift": "Fade and lift",
+                "fade": "Fade",
+                "none": "None"
+            },
+            "default_value": "fade",
+            "return_format": "value",
+            "allow_null": 0,
+            "multiple": 0,
+            "ui": 0
+        },
+        {
+            "key": "field_site_settings_motion_hover_link",
+            "label": "Link hover effect",
+            "name": "hover_link",
+            "type": "select",
+            "choices": {
+                "underline": "Underline",
+                "fade": "Fade",
+                "none": "None"
+            },
+            "default_value": "underline",
+            "return_format": "value",
+            "allow_null": 0,
+            "multiple": 0,
+            "ui": 0
+        },
+        {
+            "key": "field_site_settings_motion_hover_duration",
+            "label": "Hover speed",
+            "name": "hover_duration",
+            "type": "number",
+            "instructions": "",
+            "default_value": 250,
+            "min": 0,
+            "max": 1000,
+            "step": 1,
+            "append": "ms"
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "options_page",
+                "operator": "==",
+                "value": "site-settings"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "seamless",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "active": true
+}

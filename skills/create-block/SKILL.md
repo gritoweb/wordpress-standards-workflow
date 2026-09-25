@@ -92,7 +92,7 @@ wrong domain/path into every file.
 | 0.10 | `package.json` `devDependencies` has `react@^18` AND `react-dom@^18`. **React pinned to ^18, not ^19** — React 19 breaks Gutenberg (element-symbol mismatch with WP's React 18). |
 | 0.11 | `app/Blocks/BlockCategories.php` exists. Template at `<skill>/templates/BlockCategories.php`. **First-run only**: ask `"Vou criar uma categoria pros seus blocos. Quer chamar de 'Custom Blocks' (default) ou outro nome?"`, copy template, edit `TITLE` and `SLUG` (lowercase + hyphens) if dev picked a different name. The actual `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). Subsequent runs: grep `const SLUG = '...'` from the existing file. |
 | 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `RemoveButton.jsx`, `RemoveImageButton.jsx`, `coreIcons.jsx`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. If missing: copy from `<skill>/templates/components/backend/*`, replacing `__TEXT_DOMAIN__` with `<text-domain>` and `__THEME_SLUG__` with `<theme-slug>` in every copied file. |
-| 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php`, `app/Blocks/BlockEntrance.php` and `app/Blocks/BlockMotion.php` exist. Templates at `<skill>/templates/`. `BlockEntrance.php` must expose `fromBlock()`, `root()` and `part()` — an older copy that only has `resolve()` (it prints `data-entrance-type`) is **incompatible** with `EntranceControl`/`entranceCanvas.js`: replace it. |
+| 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php`, `app/Blocks/BlockEntrance.php`, `app/Blocks/BlockMotion.php` and `app/Settings/SiteSettings.php` exist. Templates at `<skill>/templates/`. `BlockEntrance.php` must expose `fromBlock()`, `root()` and `part()` — an older copy that only has `resolve()` (it prints `data-entrance-type`) is **incompatible** with `EntranceControl`/`entranceCanvas.js`: replace it. |
 | 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers three Blade directives: `paddingClasses` → `\App\Blocks\BlockPadding::resolve(...)`, `entrance` → `\App\Blocks\BlockEntrance::root(...)` and `entrancePart` → `\App\Blocks\BlockEntrance::part(...)` (see "Infra bootstrap templates"). |
 | 0.18 | `resources/css/components/entrance.css` exists (template `<skill>/templates/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). `resources/css/components/hover.css` exists (template `<skill>/templates/hover.css`) and is `@import`ed by `resources/css/app.css` — **not** inside `@layer`, it must beat Tailwind's transition utilities. |
 | 0.19 | `resources/js/modules/entrance.js` exists (template `<skill>/templates/entrance.js`) and `resources/js/app.js` has `import { initEntrance } from './modules/entrance';` plus a top-level `initEntrance();` call (module scripts are deferred). Without it the front end never adds `data-entered` and the head script's 5s safety net is the only thing that un-hides the page. |
@@ -607,6 +607,7 @@ End with a summary table listing every file created/modified.
 ├── BlockImagePosition.php          → copied to app/Blocks/BlockImagePosition.php (check 0.15)
 ├── BlockEntrance.php               → copied to app/Blocks/BlockEntrance.php (check 0.15)
 ├── BlockMotion.php                 → copied to app/Blocks/BlockMotion.php (check 0.15)
+├── SiteSettings.php                → copied to app/Settings/SiteSettings.php (check 0.15)
 ├── entrance.css                    → copied to resources/css/components/entrance.css (check 0.18)
 ├── hover.css                       → copied to resources/css/components/hover.css (check 0.18)
 ├── entrance.js                     → copied to resources/js/modules/entrance.js (check 0.19)
@@ -641,7 +642,7 @@ Copied infra files carry placeholders that must be replaced on copy — none may
 |---|---|---|
 | `__BLOCK_TITLE__` | `preview.svg` | the block's `<Title>` |
 | `__BLOCK_NAMESPACE__` | `BlockManager.php` | the namespace confirmed in check 0.1 |
-| `__TEXT_DOMAIN__` | every copied component that calls `__()`, and `BlockMotion.php` | `<text-domain>` |
+| `__TEXT_DOMAIN__` | every copied component that calls `__()`, and `SiteSettings.php` | `<text-domain>` |
 | `__THEME_SLUG__` | `IconPicker.jsx` | `<theme-slug>` |
 
 Every generated `block.jsx` imports `PaddingControls`; image / link / array blocks add the matching imports as needed.
@@ -1059,10 +1060,13 @@ import { initEntrance } from './modules/entrance';
 initEntrance();
 ```
 
-`BlockMotion::register()` is called from `app/blocks.php` (template already
-does it). It adds **Appearance › Customize › Motion** — the same options and
-defaults as the White Summers reference — plus the `html.ws-entrance` head
-script and the same values inside the editor canvas:
+`app/blocks.php` (template already does it) calls `SiteSettings::register()`,
+which adds the empty **Site Settings** page (Secure Custom Fields), and
+`BlockMotion::register()`, which prints the values below — the White Summers
+defaults — plus the `html.ws-entrance` head script and the same values inside
+the editor canvas. There's no Motion tab by default: the code's defaults
+apply. When the dev asks to change them from the admin, `site-settings-wizard`
+adds the **Motion** tab and `BlockMotion` reads it:
 
 | Option | Default | Prints |
 |---|---|---|
@@ -1076,7 +1080,7 @@ script and the same values inside the editor canvas:
 | Hover speed | 250 ms | `--hover-duration` |
 
 Never hard-code these values in a block — a block field left empty inherits
-them, so changing the Customizer changes the whole site.
+them, so changing the defaults (or the Motion tab, once added) changes the whole site.
 
 #### Entrance animation wiring (every block)
 
@@ -1100,7 +1104,7 @@ The contract is shared by `BlockEntrance.php`, `entranceCanvas.js`,
 - **Every block declares its preset** in `block.json` → `attributes.entrance`
   (`"type": "object"`, `"default": {…}`), picked from this table by what the
   block *is* — copy the row, don't invent numbers. `null` = inherit
-  Customizer › Motion. These are the White Summers presets:
+  the site's Motion defaults. These are the White Summers presets:
 
   | Block kind | `default` |
   |---|---|
@@ -1119,7 +1123,7 @@ The contract is shared by `BlockEntrance.php`, `entranceCanvas.js`,
 - **Buttons:** every CTA `<a>` gets the `btn` class next to its Tailwind
   classes, and **no** `transition-*`, `duration-*`, `hover:scale-*` or
   `hover:-translate-*` utilities — the hover motion comes from `hover.css`
-  (Customize › Motion › Button hover effect). Colour changes on hover
+  (the site's button hover effect, `BlockMotion`). Colour changes on hover
   (`hover:bg-*`) stay on the button.
 - Only the values in `entranceCanvas.js` exist: types `none | fade | slide |
   fade-slide`, directions `up | down | left | right`, units `px | vw`,

@@ -2,6 +2,28 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Site Settings on Secure Custom Fields, empty by default
+
+### Changed
+- **Site Settings runs on SCF.** `project-init` installs and activates
+  Secure Custom Fields. `app/Settings/SiteSettings.php` (copied by
+  `create-block`, check 0.15, registered from `app/blocks.php`) adds an
+  **empty** Site Settings page and is the one reader for its fields
+  (`SiteSettings::field($name, $default)`). With SCF off it returns the
+  default, so the site never breaks without the plugin.
+- **A tab is added only when asked.** `site-settings-wizard` builds the tab
+  the dev asked for as `acf-json/group_site_settings_<tab>.json`, and nothing
+  else. Motion has a ready-made tab (`group_site_settings_motion.json`).
+- **Motion leaves the Customizer.** `BlockMotion` reads `SiteSettings`; with
+  no Motion tab it prints the same White Summers defaults as before.
+
+### Verified
+- On a local Lando site with SCF (`wp eval-file`): with no Motion tab,
+  `--e-duration:1000ms` and the other defaults; with the Motion group loaded
+  and `motion_duration` 500 / unit `vw` saved, `--e-duration:500ms` and
+  `--e-distance:32vw`. With no `get_field()` (plain PHP) the defaults print
+  without an error.
+
 ## 2026-09-25 — The alert component keeps its props
 
 ### Fixed
