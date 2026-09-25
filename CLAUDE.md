@@ -42,6 +42,15 @@
 
 ---
 
+## Kit log
+
+Whenever you work around the kit, fix a kit bug, or hit a kit instruction
+that was wrong or missing, add **one line** to `_docs/kit-log.md`: what
+happened and the file. Don't fix the kit from inside the project — log it and
+move on; it goes back into the kit after the site ships.
+
+---
+
 ## Git
 
 To write a commit, use the `commit-rules` SKILL (message format, types, flow). If it isn't installed, follow the guard-rails in **Critical Rules**: one subject per commit, English, never push without permission, no co-author.

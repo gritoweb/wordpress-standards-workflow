@@ -86,6 +86,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy whole folder; ask before overwriting |
 | `_docs/examples.md` | `<theme>/_docs/examples.md` | Ask before overwriting if present |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Ask before overwriting if present |
+| `_docs/kit-log.md` | `<theme>/_docs/kit-log.md` | Only if absent — it holds the project's own entries |
 | `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | Ask before overwriting if present |
 | `_docs/editor-fidelity-checklist.md` | `<theme>/_docs/editor-fidelity-checklist.md` | Ask before overwriting if present |
 | `gitignore.example` | `<theme>/.gitignore` | **Only if `<theme>/.gitignore` doesn't exist yet** — never overwrite an existing one |

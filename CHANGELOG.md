@@ -2,6 +2,17 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Kit log and harvest: each site improves the kit
+
+### Added
+- **Kit log.** `project-init` copies `_docs/kit-log.md` (only if absent), and
+  `CLAUDE.md` › Kit log asks for one line each time the kit was wrong or
+  lacking: what happened and the file. Nobody fixes the kit mid-project.
+- **Harvest checklist.** `docs/kit-harvest.md` (kit repo only): after a site
+  ships, sort its log into fix / lesson / wait-for-a-second-site /
+  site-specific, and Luis approves each item before it becomes a commit.
+  Adapted from the Sage Site Kit, without its conformance tooling.
+
 ## 2026-09-25 — New projects get an empty Site Settings; cleanup runs after the theme
 
 ### Changed

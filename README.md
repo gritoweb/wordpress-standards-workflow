@@ -73,6 +73,7 @@ the manifest **is** the source of truth either way.
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — adds a tab to the Site Settings page (Secure Custom Fields), only when asked |
 | `_docs/examples.md` | `<theme>/_docs/examples.md` | Reference patterns the AI uses for grounding |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Pre-launch checklist for go-live |
+| `_docs/kit-log.md` | `<theme>/_docs/kit-log.md` | Only if absent — the project's log of what the kit got wrong or lacked |
 | `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | The Site Settings pattern (SCF page, empty by default; tabs on request) |
 | `_docs/editor-fidelity-checklist.md` | `<theme>/_docs/editor-fidelity-checklist.md` | Canvas fidelity checklist |
 | `gitignore.example` | `<theme>/.gitignore` | **Only if** `<theme>/.gitignore` does not exist yet — never overwrite |
@@ -123,6 +124,7 @@ cp -R "$KIT/skills/html-qa-smoketest" .claude/skills/
 cp -R "$KIT/skills/create-block" .claude/skills/
 cp "$KIT/_docs/examples.md"     ./_docs/examples.md
 cp "$KIT/_docs/launch-list.md"  ./_docs/launch-list.md
+cp -n "$KIT/_docs/kit-log.md"    ./_docs/kit-log.md
 # only if the project has no .gitignore yet:
 cp "$KIT/gitignore.example" ./.gitignore
 ```
