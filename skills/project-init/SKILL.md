@@ -51,9 +51,12 @@ that themselves. Never writes to a remote or production environment.
 
 1. Lando + WordPress: Scenario B steps 1–4.
 2. Sage scaffold and theme identity: Scenario B step 5.
-3. Copy the kit into the theme (Phase 1 table), then delete the clone.
-4. `lando wp theme activate <theme>`, then **Clear install defaults**, after
-   activation.
+3. `lando wp theme activate <theme>`, then run **`kit-install.sh`** from the
+   kit clone (below): it copies the Phase 1 files, `create-block`'s Phase 0
+   files, the header/footer and the Styleguide files, clears the install
+   defaults and creates the private Styleguide page. Then delete the clone.
+4. The Sage wiring the script doesn't touch: `create-block` Phase 0 (its
+   checks name each edit) and Phase 1c's `setup.php` lines.
 5. CSS foundation and the private Styleguide page: Phase 1b.
 6. Header and footer: Phase 1c.
 7. Blocks, each with `create-block`: read `docs/examples/README.md` once,
@@ -80,7 +83,32 @@ Phase 1 is identical for both.
 
 ---
 
+## kit-install.sh — the mechanical part in one run
+
+From the project root, with the theme active and the kit cloned outside the
+project (run it from the clone, before deleting it):
+
+```bash
+bash <kit>/skills/project-init/kit-install.sh --theme wp-content/themes/<theme> \
+  --namespace <namespace> --text-domain <text-domain> --wp "lando wp" [--pantheon]
+```
+
+It copies every file in the Phase 1 table, `create-block`'s Phase 0 files
+(`app/Blocks/*`, `app/blocks.php`, the backend components, entrance/hover,
+`button-link`, the scripts), the Phase 1c header/footer (only over Sage's
+stock ones) and the Styleguide template/composer, filling the placeholders.
+It **never overwrites** a file — it lists what was already there for you to
+compare — and **never edits Sage's own files** (`functions.php`,
+`setup.php`, `app.js`, `editor.js`, `app.css`, the service provider): those
+stay with `create-block` Phase 0 and Phase 1c. With `--wp` it also runs
+**Clear install defaults**, creates the private Styleguide page once, and
+exits non-zero unless the widget and open-comment counts are 0 and the page
+is private. Safe to run twice.
+
 ## Phase 1 — Copy kit files into the theme
+
+`kit-install.sh` does this whole table; the table stays as the reference for
+what goes where.
 
 Copy the following from the kit into the target theme (`wp-content/themes/<theme>/`). Before
 overwriting any file that **already exists** at the destination, stop,

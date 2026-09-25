@@ -2,6 +2,26 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — kit-install.sh: the mechanical setup in one command
+
+### Added
+- **`skills/project-init/kit-install.sh`**, run from the kit clone: copies
+  the Phase 1 files, `create-block`'s Phase 0 files, the header/footer
+  (only over Sage's stock ones) and the Styleguide template/composer, filling
+  `__TEXT_DOMAIN__` / `__BLOCK_NAMESPACE__` / `__THEME_SLUG__`; with `--wp`
+  it clears the install defaults and creates the private Styleguide page.
+  It never overwrites a file (it lists them) and never edits Sage's own
+  files, which stay with `create-block` Phase 0 and Phase 1c. It fails on a
+  leftover placeholder, a widget or open comment, or a missing page.
+  `project-init`'s new-project order runs it instead of ~30 manual steps.
+
+### Verified
+- On a fresh Lando WordPress + Sage 11: 176 files copied in 16 s (Sage's own
+  `.gitignore` kept), namespace and text domain filled, no placeholder
+  left, header and footer replaced, widget/comment counts 0, Styleguide
+  private; a second run overwrote nothing, kept one Styleguide page, and
+  exited 0.
+
 ## 2026-09-25 — create-block split into a core and four references
 
 ### Changed
