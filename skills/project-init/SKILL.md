@@ -281,8 +281,8 @@ Phase 0 answer. Do not run any of these commands.
     lando wp option update default_comment_status closed
     lando wp option update default_ping_status closed
     lando wp comment list --format=ids | xargs -r lando wp comment delete --force
-    lando wp post list --post_type=any --comment_status=open --format=ids \
-      | xargs -r -I{} lando wp post update {} --comment_status=closed --ping_status=closed
+    lando wp post list --post_type=any --post_status=any --comment_status=open --format=ids \
+      | xargs -r lando wp post update --comment_status=closed --ping_status=closed
     ```
 13. **Smoke check before handing off** — open the home at desktop and mobile
     width: header menu works (Phase 1c), nothing renders under the content

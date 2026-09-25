@@ -2,6 +2,20 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Comments close on drafts and private pages too
+
+### Fixed
+- **project-init step 12 closes every post's comments.** `post list --post_type=any`
+  only returns published posts, so drafts and private pages kept comments open;
+  it now passes `--post_status=any`. `xargs -I{}` also passed every ID as one
+  argument (`15 12 13`), which fails as soon as two posts are open; plain
+  `xargs` passes one ID per argument.
+
+### Verified
+- On a local Lando site, a published page and a draft with comments open:
+  the new command closed both (`Updated post 2`, `Updated post 3`), and a
+  second `post list --comment_status=open --format=count` returned 0.
+
 ## 2026-09-24 — The canvas adapts to its width instead of forcing one
 
 With list view and settings open on a laptop the editor canvas is
