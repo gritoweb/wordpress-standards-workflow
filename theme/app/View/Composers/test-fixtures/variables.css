@@ -1,0 +1,20 @@
+/* Fixture for StyleGuide.test.mjs. A small, representative slice of the
+   shape resources/css/global/variables.css uses: @theme ramps plus :root
+   semantic aliases. Not the real design system. */
+
+@theme {
+  --color-yellow-50: #fdfaed;
+  --color-yellow-500: #e8cb52;
+
+  --text-h1: 6rem;
+  --text-h1--line-height: 1;
+  --text-h1--font-weight: 700;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.3;
+}
+
+:root {
+  --color-primary: var(--color-yellow-500);
+  --color-ink: #33342a;
+}

@@ -1,0 +1,287 @@
+/*
+ * Selection controls — radio, checkbox and switch.
+ *
+ * The border is always ink: it has to clear 3:1 at rest, and the accent
+ * ramp usually can't (a light accent measures under 2:1 on paper). Only the
+ * FILL reads `--sel-accent`, so :checked, :hover and :focus-visible write
+ * to one property and can never disagree about it; disabled is the one
+ * state that sets its own greys directly, ordered last so it wins.
+ *
+ * Gravity Forms renders bare `<input type="radio">`/`<input
+ * type="checkbox">` inside `.gchoice` with no class of ours, so every rule
+ * matches both the theme class and the plugin's element through `:is()`.
+ */
+
+@layer components {
+  :is(.sel-radio, .gform_wrapper .gchoice input[type="radio"]),
+  :is(
+    .sel-check,
+    .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+  ),
+  :is(.sel-switch, input[type="checkbox"][role="switch"]) {
+    --sel-accent: var(--color-primary);
+
+    appearance: none;
+    flex: none;
+    margin: 0;
+    display: inline-block;
+    vertical-align: middle;
+    background-color: var(--color-light);
+    border: 2px solid var(--color-ink);
+    cursor: pointer;
+    transition:
+      background-color var(--hover-duration) ease,
+      border-color var(--hover-duration) ease;
+  }
+
+  :is(.sel-radio, .gform_wrapper .gchoice input[type="radio"]),
+  :is(
+    .sel-check,
+    .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+  ) {
+    position: relative;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  :is(.sel-radio, .gform_wrapper .gchoice input[type="radio"]) {
+    border-radius: 999px;
+  }
+
+  :is(
+    .sel-check,
+    .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+  ) {
+    border-radius: var(--radius-button);
+  }
+
+  /* On — the radio keeps its ground and shows a dot; the checkbox floods. */
+  :is(.sel-radio, .gform_wrapper .gchoice input[type="radio"]):checked::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 999px;
+    background-color: var(--sel-accent);
+  }
+
+  :is(
+    .sel-check,
+    .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+  ):checked,
+  :is(
+    .sel-check,
+    .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+  ):indeterminate {
+    background-color: var(--sel-accent);
+  }
+
+  /* The check and the minus are drawn geometry, not a masked icon. */
+  :is(
+      .sel-check,
+      .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+    ):checked::after {
+    content: "";
+    position: absolute;
+    top: 0.0625rem;
+    left: 0.3125rem;
+    width: 0.3125rem;
+    height: 0.625rem;
+    border: solid var(--color-light);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  /* :indeterminate wins over :checked — setting .indeterminate leaves
+     .checked alone in the DOM, and a partial selection is what the minus
+     means. */
+  :is(
+      .sel-check,
+      .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+    ):indeterminate::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 0.625rem;
+    height: 2px;
+    border: 0;
+    background-color: var(--color-light);
+    transform: none;
+  }
+
+  /* Fill hue on hover/focus, both saying the same thing so neither can
+     override the other into an unintended state. */
+  :is(.sel-radio, .gform_wrapper .gchoice input[type="radio"]):hover:not(
+      :disabled
+    ),
+  :is(
+      .sel-check,
+      .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+    ):hover:not(:disabled),
+  :is(.sel-switch, input[type="checkbox"][role="switch"]):hover:not(:disabled),
+  :is(.sel-radio, .gform_wrapper .gchoice input[type="radio"]):focus-visible,
+  :is(
+    .sel-check,
+    .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+  ):focus-visible,
+  :is(.sel-switch, input[type="checkbox"][role="switch"]):focus-visible {
+    --sel-accent: var(--color-ink);
+  }
+
+  /* The shared focus ring: 3px at 50%, flush against the border (no
+     offset would paint the page ground into the seam). Stays the accent
+     color in every state, which is what reads it as focus rather than
+     part of the control's own color. */
+  :is(.sel-radio, .gform_wrapper .gchoice input[type="radio"]):focus-visible,
+  :is(
+    .sel-check,
+    .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+  ):focus-visible,
+  :is(.sel-switch, input[type="checkbox"][role="switch"]):focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 50%, transparent);
+    outline-offset: 0;
+  }
+
+  /* Disabled, last word: its own greys rather than a tint of the accent. */
+  :is(.sel-radio, .gform_wrapper .gchoice input[type="radio"]):disabled,
+  :is(
+    .sel-check,
+    .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+  ):disabled {
+    background-color: color-mix(in srgb, var(--color-ink) 40%, var(--color-light));
+    border-color: color-mix(in srgb, var(--color-ink) 52%, var(--color-light));
+    cursor: not-allowed;
+  }
+
+  :is(
+      .sel-radio,
+      .gform_wrapper .gchoice input[type="radio"]
+    ):disabled:checked::after {
+    background-color: color-mix(in srgb, var(--color-ink) 52%, var(--color-light));
+  }
+
+  :is(
+      .sel-check,
+      .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+    ):disabled:checked,
+  :is(
+      .sel-check,
+      .gform_wrapper .gchoice input[type="checkbox"]:not([role="switch"])
+    ):disabled:indeterminate {
+    background-color: color-mix(in srgb, var(--color-ink) 52%, var(--color-light));
+    border-color: color-mix(in srgb, var(--color-ink) 52%, var(--color-light));
+  }
+
+  /*
+   * Switch — a checkbox wearing role="switch": stays a real checkbox for
+   * the keyboard and assistive tech, only the paint changes. 40 x 24 track,
+   * pill radius; the thumb grows and travels right when checked.
+   */
+  :is(.sel-switch, input[type="checkbox"][role="switch"]) {
+    position: relative;
+    width: 2.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    background-color: color-mix(in srgb, var(--color-ink) 14%, var(--color-light));
+    border-color: color-mix(in srgb, var(--color-ink) 64%, var(--color-light));
+  }
+
+  :is(.sel-switch, input[type="checkbox"][role="switch"])::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0.125rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 999px;
+    background-color: color-mix(in srgb, var(--color-ink) 64%, var(--color-light));
+    transform: translateY(-50%);
+    transition:
+      left var(--hover-duration) ease,
+      width var(--hover-duration) ease,
+      height var(--hover-duration) ease,
+      background-color var(--hover-duration) ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :is(.sel-switch, input[type="checkbox"][role="switch"])::after {
+      transition: none;
+    }
+  }
+
+  :is(.sel-switch, input[type="checkbox"][role="switch"]):checked {
+    background-color: var(--sel-accent);
+    border-color: var(--sel-accent);
+  }
+
+  :is(.sel-switch, input[type="checkbox"][role="switch"]):checked::after {
+    left: calc(100% - 1.25rem);
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: var(--color-light);
+  }
+
+  /* Off is the one control whose hue can't ride on --sel-accent: the track
+     stays grey-200 at rest, and only the outline and thumb darken. */
+  :is(.sel-switch, input[type="checkbox"][role="switch"]):not(
+      :checked
+    ):hover:not(:disabled),
+  :is(.sel-switch, input[type="checkbox"][role="switch"]):not(
+      :checked
+    ):focus-visible {
+    border-color: color-mix(in srgb, var(--color-ink) 74%, var(--color-light));
+  }
+
+  :is(.sel-switch, input[type="checkbox"][role="switch"]):not(
+      :checked
+    ):hover:not(:disabled)::after,
+  :is(.sel-switch, input[type="checkbox"][role="switch"]):not(
+      :checked
+    ):focus-visible::after {
+    background-color: color-mix(in srgb, var(--color-ink) 74%, var(--color-light));
+  }
+
+  :is(.sel-switch, input[type="checkbox"][role="switch"]):disabled {
+    background-color: transparent;
+    border-color: color-mix(in srgb, var(--color-ink) 24%, var(--color-light));
+    cursor: not-allowed;
+  }
+
+  :is(.sel-switch, input[type="checkbox"][role="switch"]):disabled::after {
+    background-color: color-mix(in srgb, var(--color-ink) 40%, var(--color-light));
+  }
+
+  :is(.sel-switch, input[type="checkbox"][role="switch"]):disabled:checked {
+    background-color: color-mix(in srgb, var(--color-ink) 40%, var(--color-light));
+    border-color: color-mix(in srgb, var(--color-ink) 40%, var(--color-light));
+  }
+
+  :is(
+      .sel-switch,
+      input[type="checkbox"][role="switch"]
+    ):disabled:checked::after {
+    background-color: var(--color-light);
+  }
+
+  /* A choice label is the control's name, not a field name: body size, not the small field label. */
+  .gform_wrapper .gchoice {
+    gap: 0.375rem;
+  }
+
+  .gform_wrapper .gchoice label {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    color: color-mix(in srgb, var(--color-ink) 84%, var(--color-light));
+  }
+
+  .gform_wrapper .gchoice:has(:disabled) label {
+    color: color-mix(in srgb, var(--color-ink) 52%, var(--color-light));
+    cursor: not-allowed;
+  }
+}

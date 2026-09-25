@@ -1,0 +1,49 @@
+/*
+ * Social icons. Masked so they take the link's text color; give the link
+ * an aria-label since the icon carries no text. The network list a project
+ * actually shows comes from Site Settings config, not from the set of
+ * classes below — add an icon here for any network a project needs.
+ */
+
+@layer components {
+  .social-icon {
+    display: inline-block;
+    color: inherit;
+    width: 1.5rem;
+    height: 1.5rem;
+    position: relative;
+    transition: color var(--hover-duration) ease;
+  }
+
+  /* The mask lives on a pseudo-element so it never clips the link's own
+     focus outline. */
+  .social-icon::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: currentColor;
+    mask: no-repeat center / contain;
+  }
+
+  .social-icon-linkedin::before {
+    mask-image: url("@images/icons/social/linkedin.svg");
+  }
+
+  .social-icon-instagram::before {
+    mask-image: url("@images/icons/social/instagram.svg");
+  }
+
+  .social-icon-facebook::before {
+    mask-image: url("@images/icons/social/facebook.svg");
+  }
+
+  .social-icon-x::before {
+    mask-image: url("@images/icons/social/x.svg");
+  }
+
+  /* A network outside the fixed SOCIAL_NETWORKS set (HeaderFooterSettings::socials()'s
+     "other" entry) — a generic link glyph, not a blank mask. */
+  .social-icon-other::before {
+    mask-image: url("@images/icons/link.svg");
+  }
+}

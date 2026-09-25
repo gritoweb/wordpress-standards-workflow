@@ -1,0 +1,113 @@
+{
+  "skill_name": "figma-design-system",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We're starting a new site. Sage is installed in wp-content/themes/acme-2026, and kit.config.json is already filled in. Here's the Figma file: FIGMA_FILE_LINK. Set up the design system from Figma, start with the inventory and the base CSS.",
+      "expected_output": "A state-check table first; then _docs/figma-map.md written in the fixed-shape template with every page and artboard, node IDs, MCP URLs, a per-page mobile board column, a readiness report, and questions for design; a confirmation batch before any theme file is written; then resources/css/global/{variables,base,typography,helpers,forms}.css, app.css and editor.css imports appended below the stock lines, font loading handled, Gravity Forms filters in app/filters.php only if the plugin is installed; resources/css/contrast-pairs.json written and scripts/contrast-pairs.test.mjs run; the user asked to run npm run build; no npm/lando/git run by the agent.",
+      "files": [],
+      "expectations": [
+        "The agent reports a project state table before asking the user anything",
+        "_docs/figma-map.md exists and contains 'File key:', '## Pages', '## Artboards', '## Canonical nodes', '## Readiness report', and '## Questions for design'",
+        "The Artboards table has a Mobile board column, and any page-classified artboard with no mobile sibling is listed as a gap",
+        "The map has a '## Design system boards' table with the six rows Typography, Color, Spacing, Buttons, Forms, Components in that order, and a board the file lacks stays in the table as derived or pending",
+        "The agent asks the user to confirm the style guide page and canonical nodes before phase 1",
+        "resources/css/global/variables.css exists with an @theme block and no values outside tokens",
+        "base.css, typography.css, helpers.css, forms.css exist and contain no raw hex or px values",
+        "helpers.css contains '@utility container'",
+        "base.css wraps tag styles in '@layer base'",
+        "app.css still begins with the stock '@import \"tailwindcss\"' line and has the global imports appended in order",
+        "global/forms-gravity.css exists only if wp-content/plugins/gravityforms/ is present in the project; otherwise it is not written and app.css has no @import for it",
+        "resources/css/contrast-pairs.json exists with fg/bg/kind entries and scripts/contrast-pairs.test.mjs is reported as run",
+        "The agent never ran npm, composer, lando, or git",
+        "Derived or inferred values are marked as such in the map's token mapping",
+        "No class, file, or comment names a real client or agency"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The Figma map is already in _docs/figma-map.md and the designer confirmed the style guide page. Build the base CSS from it now: variables, base tags, typography, container, forms. Fonts are Google Fonts.",
+      "expected_output": "The agent reads the map instead of re-walking Figma, pulls only the style guide nodes, shows a token mapping table and the five files in one confirmation batch, writes them, wires app.css and editor.css, enqueues Google Fonts in app/setup.php, adds the GF filters only if Gravity Forms is installed, writes contrast-pairs.json, and asks the user to run the build.",
+      "files": [],
+      "expectations": [
+        "The agent does not call get_metadata on pages already in the map",
+        "A token mapping table (Figma name → CSS token) is shown before writing",
+        "Google Fonts enqueue is added to app/setup.php, not a CSS @import url()",
+        "The five global files are written in resources/css/global/",
+        "Gaps are handled by tier and recorded, not invented silently",
+        "resources/css/contrast-pairs.json is written or updated as part of this phase's verify step",
+        "The token mapping table has a row for every name in foundation.md's Required tokens, and no required token name is renamed to match Figma",
+        "variables.css keeps every token name the kit shipped; only values change"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The designer just sent over a replacement Figma file for the same project (same file name, new link). Our map still points at the old one.",
+      "expected_output": "The agent recognizes this as the re-inventory phase (0b), reads references/re-inventory.md, walks the new file, builds a diff table of old vs. new node IDs by name and shape rather than assuming node IDs still match, and updates the map in place, moving superseded rows to _docs/figma-map-history.md rather than appending a second copy of any section to the live map.",
+      "files": [],
+      "expectations": [
+        "The agent does not treat 'same node ID' as proof of an unchanged page, since Figma reassigns IDs on file replacement",
+        "A diff table (old node ID, new node ID, status) is shown before any map edit",
+        "_docs/figma-map-history.md receives the superseded file key, link, and any removed rows, dated",
+        "The live _docs/figma-map.md keeps its fixed section shape rather than growing an additional dated block",
+        "The agent does not edit any CSS, Blade, or block file directly in this phase; it only flags what's now stale for a later phase"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Build the buttons and the header CTA from the confirmed Figma nodes.",
+      "expected_output": "Phase 2 button variants are named by role (.btn-primary, .btn-secondary, .btn-on-dark, .btn-link), never by the Figma color name; padding-only sizing unless the Figma node fixes a literal height, in which case min-height is called out explicitly. The header CTA is read from the kit's existing header partial and SiteSettings accessor (headerCtaText()/headerCtaUrl()) rather than hardcoded text in the Blade view, and the header phase brings the kit's shell to the comp rather than rewriting it from a blank file.",
+      "files": [],
+      "expectations": [
+        "No button class or file is named after a color (no .btn-yellow, no button-earth.css)",
+        "Button classes follow the role convention: primary, inverted, on-dark (and link-on-dark if a link-style variant exists)",
+        "min-height on a button is used only when the agent says the Figma node fixes a literal height, and it's called out in the confirmation batch",
+        "The header CTA's text and URL are read through a SiteSettings-style accessor, not a literal string in the Blade view",
+        "No get_field call appears directly in a Blade view or composer for a Site-Settings-owned value",
+        "The header is built from _docs/patterns/header.md and the comp, and no file from the kit's examples/ is copied into the theme"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Plan out the page blocks from the confirmed page designs and hand the first one to create-block.",
+      "expected_output": "Phase 4 produces a block inventory referencing kit.config.json's blockCategory rather than a project-specific literal, a ground attribute sourced from kit.config.json's grounds array where a section sits on a named ground, and a handoff that points to _docs/editor-contract.md for framework-provided attributes (padding defaults, entrance, image position) instead of describing BlockManager internals inline.",
+      "files": [],
+      "expectations": [
+        "The block category in the handoff and inventory comes from kit.config.json, not a hardcoded agency or client name",
+        "The handoff lists a ground attribute only when the map records a matching entry in kit.config.json's grounds array",
+        "The handoff does not invent a per-block padding editor control; it hands over the comp's padding as a default",
+        "The agent references _docs/editor-contract.md for framework behavior rather than re-explaining BlockManager, entrance, or grounds from scratch",
+        "The handoff has a Pattern line that names a page from _docs/patterns/README.md, or 'none' with a reason",
+        "No card is planned as a phase-2 component; a card belongs to its block"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Can you check if we're missing any templates on this Sage theme and do the 404 page?",
+      "expected_output": "The agent runs the state check first, confirms phases 1 through 3 are done (or says which aren't), reads references/audit.md, and runs the audit: enumerates what the site needs from the content architecture, WordPress's own states, and the page designs, builds the themed 404 (from a board if one exists, derived from the design system otherwise), and reports a template audit table with an action on every row.",
+      "files": [],
+      "expectations": [
+        "The agent runs the state check before touching any file",
+        "The 404 is built from the display type, .btn classes, and container utility already in the theme, not new one-off values",
+        "Every row in the template audit table has a non-empty Action column",
+        "The agent does not register any post type to close a finding; it reports the finding instead",
+        "The 404 is built from _docs/patterns/404.md and the comp (or derived and marked derived), and the kit's examples/views/404.blade.php is not copied into the theme"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "The designer changed the primary color and the h2 size in the Figma file. The file key is the same. The theme already has phases 1 to 4 built. Update the design system.",
+      "expected_output": "The agent follows SKILL.md's 'When the design system changes mid-project': a scoped re-inventory of the changed boards, a token diff shown before writing, a style guide re-check plus a search for what reads the changed tokens, and a contrast gate run. It edits variables.css values only and never edits a block or the header to match.",
+      "files": [],
+      "expectations": [
+        "The agent re-reads only the boards that changed instead of re-walking every page, and updates the map's Design system boards and Tokens found in place",
+        "A token diff table (name, old value, new value, source) is shown and confirmed before variables.css is written",
+        "variables.css keeps every required token name, and only the changed values differ",
+        "The agent searches resources/ for what reads the changed tokens and checks the header, the footer, and one block per consumer",
+        "contrast-pairs.json is updated for the changed color pairs and the contrast test is run or the dev is asked to run it",
+        "No block, header, or footer file is edited to match the token change",
+        "The agent never ran npm, composer, lando, or git"
+      ]
+    }
+  ]
+}

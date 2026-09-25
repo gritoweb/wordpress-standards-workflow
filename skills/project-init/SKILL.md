@@ -84,6 +84,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/project-init/` | `<theme>/.claude/skills/project-init/` | Copy whole folder; ask before overwriting |
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy whole folder; ask before overwriting |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy whole folder; ask before overwriting |
+| `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy whole folder; ask before overwriting |
 | `_docs/examples.md` | `<theme>/_docs/examples.md` | Ask before overwriting if present |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Ask before overwriting if present |
 | `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | Ask before overwriting if present |
@@ -136,7 +137,7 @@ test themes built from the kit had no `resources/css/global/` at all). So,
 as soon as the Sage theme exists (Scenario B: after step 5; Scenario A:
 after step 4), before the header:
 
-1. **Run the `css-foundation-wizard` skill** in the theme root. It asks for
+1. **With a Figma file, run the `figma-design-system` skill** (phases 0–2) — it writes the same files with Figma's values. **Otherwise run the `css-foundation-wizard` skill** in the theme root. It asks for
    the client's style guide and writes `resources/css/global/` and
    `components/button.css` with every token of its contract, wires
    `app.css`/`editor.css`. `scripts/check-css-foundation.mjs` came with `theme/` (Phase 1).

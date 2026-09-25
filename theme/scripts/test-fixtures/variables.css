@@ -1,0 +1,33 @@
+/* Color tokens — Tailwind v4 @theme. Type tokens live in typography.css. */
+@theme {
+  /* ── Brand & neutrals ───────────────────────────────────── */
+  --color-ink: #1f2328;
+  --color-muted: #59636e;
+  --color-light: #fff;
+  --color-surface: #f6f8fa;
+  --color-border: #d1d9e0;
+  --color-primary: #1a73e8;
+  --color-primary-light: #e8f0fe;
+
+  /* ── States ─────────────────────────────────────────────── */
+  --color-success: #1a7f37;
+  --color-warning: #9a6700;
+  --color-danger: #cf222e;
+
+  /* ── Link, focus, placeholder (derived unless the guide has them) ── */
+  --color-link: var(--color-primary);
+  --color-link-hover: color-mix(in srgb, var(--color-primary) 80%, var(--color-ink));
+  --color-focus: var(--color-primary);
+  --color-placeholder: var(--color-muted);
+
+  /* ── On a dark ground (grounds.css swaps these in) ──────── */
+  --color-muted-on-dark: color-mix(in srgb, var(--color-light) 75%, var(--color-ink));
+  --color-link-on-dark: var(--color-light);
+  --color-link-hover-on-dark: color-mix(in srgb, var(--color-light) 85%, var(--color-primary));
+  --color-focus-on-dark: var(--color-light);
+
+  /* ── Shape ──────────────────────────────────────────────── */
+  --radius-card: 1rem;
+  --radius-button: 0.5rem;
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.08);
+}

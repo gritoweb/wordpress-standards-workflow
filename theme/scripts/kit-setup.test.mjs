@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+import { cascade } from './css-cascade.mjs';
+import { contrastRatio, parseColor } from './contrast.mjs';
 import { validateConfig, applyReplacements, findPlaceholders, renamePlaceholders, generateGrounds, groundsCss } from './kit-setup.mjs';
 
 const SCRIPT = fileURLToPath(new URL('./kit-setup.mjs', import.meta.url));
@@ -186,6 +188,84 @@ test('main (no --check) writes grounds.css alongside filling placeholders', () =
   const css = readFileSync(join(root, 'resources', 'css', 'global', 'grounds.css'), 'utf8');
   assert.equal(css, groundsCss(GOOD_CONFIG.grounds));
   rmSync(root, { recursive: true, force: true });
+});
+
+const VARIABLES = readFileSync(fileURLToPath(new URL('./test-fixtures/variables.css', import.meta.url)), 'utf8')
+  // css-cascade reads rules, and Tailwind treats @theme as :root.
+  .replace(/^@theme(\s+static)?\s*\{/m, ':root {');
+
+// What a browser computes for `prop` on the last element of `witness` (an
+// ancestor path such as `html .ground-ink a`). A custom property's var()s
+// resolve where it is declared, then the computed value inherits: that is
+// why redefining --color-ink on a ground never changes an alias declared
+// on :root, and why a same-element `background: var(--color-ink)` sees the
+// element's own redefinition.
+function computed(sheet, witness, prop) {
+  const path = witness.split(' ');
+  const at = (index, name) => {
+    for (let i = index; i >= 0; i--) {
+      const decl = sheet.winner(path.slice(0, i + 1).join(' '), name);
+      if (decl) return fill(decl.value, i);
+    }
+    return undefined;
+  };
+  const fill = (value, index) =>
+    value.replace(/var\((--[\w-]+)\)/g, (_, name) => at(index, name));
+  const decl = sheet.winner(witness, prop);
+  return decl ? fill(decl.value, path.length - 1) : at(path.length - 1, prop);
+}
+
+const sheetFor = (grounds) => cascade(`${VARIABLES}\n${groundsCss(grounds)}`);
+const GROUNDS = [
+  { name: 'primary', token: '--color-primary', light: true },
+  { name: 'ink', token: '--color-ink', light: false },
+];
+const rgb = (value) => {
+  const { r, g, b } = parseColor(value);
+  return [r, g, b];
+};
+
+test('a ground paints its own token, coloured by "light"', () => {
+  const sheet = sheetFor(GROUNDS);
+
+  assert.equal(computed(sheet, 'html .ground-primary', 'background-color'), computed(sheet, 'html', '--color-primary'));
+  assert.equal(computed(sheet, 'html .ground-primary', 'color'), computed(sheet, 'html', '--color-ink'));
+});
+
+// The ground whose token is --color-ink also redefines --color-ink to light
+// for what sits inside it. Its own background must keep the raw ink.
+test('a dark ground whose token is a semantic alias it redefines still paints that alias\'s page value', () => {
+  const sheet = sheetFor(GROUNDS);
+  const ink = computed(sheet, 'html', '--color-ink');
+  const light = computed(sheet, 'html', '--color-light');
+
+  assert.equal(computed(sheet, 'html .ground-ink', 'background-color'), ink);
+  assert.equal(computed(sheet, 'html .ground-ink', 'color'), light);
+  assert.notEqual(ink, light);
+});
+
+test('a dark ground flips ink, links and the focus ring so each stays readable on its own background', () => {
+  const sheet = sheetFor(GROUNDS);
+  const bg = rgb(computed(sheet, 'html .ground-ink', 'background-color'));
+  const inside = (name) => rgb(computed(sheet, 'html .ground-ink a', name));
+
+  for (const [name, required] of [
+    ['--color-ink', 4.5],
+    ['--color-muted', 4.5],
+    ['--color-link', 4.5],
+    ['--color-link-hover', 4.5],
+    ['--color-focus', 3],
+  ]) {
+    assert.ok(contrastRatio(inside(name), bg) >= required, `${name} needs ${required}:1 on a dark ground`);
+  }
+});
+
+test('a light ground leaves ink, links and the focus ring as the page has them', () => {
+  const sheet = sheetFor(GROUNDS);
+
+  for (const name of ['--color-ink', '--color-muted', '--color-link', '--color-link-hover', '--color-focus']) {
+    assert.equal(computed(sheet, 'html .ground-primary a', name), computed(sheet, 'html', name), name);
+  }
 });
 
 test('groundsCss rejects a ground name that is not a lowercase slug', () => {

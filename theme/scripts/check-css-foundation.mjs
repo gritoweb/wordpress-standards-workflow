@@ -20,6 +20,9 @@ const HEADINGS = [1, 2, 3, 4, 5, 6];
 
 const VARIABLE_TOKENS = [
   ...['ink', 'muted', 'light', 'surface', 'border', 'primary', 'primary-light', 'success', 'warning', 'danger'].map((c) => `color-${c}`),
+  ...['link', 'link-hover', 'focus', 'placeholder'].map((c) => `color-${c}`),
+  // A dark ground (grounds.css) swaps each text alias for its twin.
+  ...['muted', 'link', 'link-hover', 'focus'].map((c) => `color-${c}-on-dark`),
   'radius-card',
   'radius-button',
   'shadow-card',
@@ -39,7 +42,7 @@ const TYPE_TOKENS = [
 ];
 const CLASSES = {
   [`${CSS}/global/typography.css`]: [...HEADINGS.map((n) => `heading-${n}`), 'font-eyebrow'],
-  [`${CSS}/components/button.css`]: ['btn', 'btn-primary', 'btn-secondary'],
+  [`${CSS}/components/button.css`]: ['btn', 'btn-primary', 'btn-secondary', 'btn-on-dark', 'btn-link'],
   [`${CSS}/components/card.css`]: ['card'],
 };
 // Two or more of these on one element is the card surface re-typed instead of `card`.
@@ -90,7 +93,7 @@ for (const [path, classes] of Object.entries(CLASSES)) {
   if (css && missing.length) problems.push(`${path} lacks contract classes: ${missing.map((c) => `.${c}`).join(', ')}`);
 }
 
-const wiring = [...GLOBAL.map((name) => `global/${name}`), 'components/button', 'components/card'];
+const wiring = [...GLOBAL.map((name) => `global/${name}`), 'global/grounds', 'components/button', 'components/card'];
 for (const entry of ['app', 'editor']) {
   const file = `${CSS}/${entry}.css`;
   const found = [...read(file).matchAll(/@import\s+["']\.\/([\w/-]+)\.css["']/g)].map((m) => m[1]);
@@ -100,6 +103,10 @@ for (const entry of ['app', 'editor']) {
 
 if (!/@import\s+["']\.\/editor\/canvas\.css["']/.test(read(`${CSS}/editor.css`))) {
   problems.push(`${CSS}/editor.css does not import ./editor/canvas.css — without it the canvas splits long words the page keeps whole`);
+}
+
+if (!existsSync(`${CSS}/contrast-pairs.json`)) {
+  problems.push(`${CSS}/contrast-pairs.json is missing — list the text/UI color pairs so scripts/contrast.mjs can check them`);
 }
 
 // The editor column must read the container token, or blocks are laid out narrower than on the page.

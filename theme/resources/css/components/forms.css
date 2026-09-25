@@ -1,0 +1,154 @@
+/*
+ * Native form elements only. A plugin's own field markup (Gravity Forms,
+ * for example) gets its own file — see components/forms-gravity.css — imported
+ * only on a project that uses it.
+ *
+ * State set: default (ink border), hover (grey border), focus (ink border
+ * + ring), filled (textarea only), error, disabled. Colors read the grey
+ * ramp directly (the form board is usually drawn on the neutral palette,
+ * not the page ground), everything else reads semantic aliases.
+ */
+
+@layer components {
+  input:where(
+    [type="text"],
+    [type="email"],
+    [type="tel"],
+    [type="url"],
+    [type="number"],
+    [type="password"],
+    [type="search"],
+    [type="date"]
+  ),
+  textarea,
+  select {
+    width: 100%;
+    min-height: 3rem;
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-weight: 400;
+    color: color-mix(in srgb, var(--color-ink) 92%, var(--color-light));
+    background-color: transparent;
+    border: 1px solid var(--color-ink);
+    border-radius: var(--radius-button);
+    padding: 0.5rem 0.75rem;
+    transition:
+      border-color var(--hover-duration) ease,
+      box-shadow var(--hover-duration) ease;
+  }
+
+  textarea {
+    display: block;
+    height: 6rem;
+    min-height: 6rem;
+    padding: 0.75rem;
+    resize: vertical;
+  }
+
+  input:where(
+      [type="text"],
+      [type="email"],
+      [type="tel"],
+      [type="url"],
+      [type="number"],
+      [type="password"],
+      [type="search"],
+      [type="date"]
+    ):hover:not(:disabled, :focus-visible),
+  textarea:hover:not(:disabled, :focus-visible),
+  select:hover:not(:disabled, :focus-visible) {
+    border-color: color-mix(in srgb, var(--color-ink) 40%, var(--color-light));
+  }
+
+  /* Filled, textarea only — the rest state stays Default ink; :where() adds
+     no specificity, so hover, focus and error still outrank it. `[placeholder]`
+     guards `:placeholder-shown`, which is otherwise always false on a
+     textarea that has no placeholder to begin with. */
+  textarea[placeholder]:not(:placeholder-shown):where(:not(:focus-visible)) {
+    border-width: 2px;
+    border-color: color-mix(in srgb, var(--color-ink) 64%, var(--color-light));
+  }
+
+  select {
+    appearance: none;
+    padding-right: 2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%23191919' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 0.75rem;
+  }
+
+  /* Focus — ink border plus a ring 2px clear of the box, flush (no offset):
+     an offset would paint the page ground into the seam. No halo: a field
+     only ever sits on paper or the accent ground, where the ink ring
+     already clears 3:1 alone. */
+  input:where(
+      [type="text"],
+      [type="email"],
+      [type="tel"],
+      [type="url"],
+      [type="number"],
+      [type="password"],
+      [type="search"],
+      [type="date"]
+    ):focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    border-width: 2px;
+    border-color: var(--color-ink);
+    outline: 3px solid color-mix(in srgb, var(--color-ink) 50%, transparent);
+    outline-offset: 0;
+    box-shadow: none;
+  }
+
+  input:where(
+      [type="text"],
+      [type="email"],
+      [type="tel"],
+      [type="url"],
+      [type="number"],
+      [type="password"],
+      [type="search"],
+      [type="date"]
+    ):disabled,
+  textarea:disabled,
+  select:disabled {
+    border-width: 2px;
+    border-color: color-mix(in srgb, var(--color-ink) 40%, var(--color-light));
+    background-color: color-mix(in srgb, var(--color-ink) 24%, var(--color-light));
+    color: color-mix(in srgb, var(--color-ink) 52%, var(--color-light));
+    cursor: not-allowed;
+  }
+
+  /* `opacity: 1` — Firefox dims placeholders by default, which would undo
+     the contrast `--color-placeholder` was chosen for. */
+  ::placeholder {
+    color: var(--color-placeholder);
+    opacity: 1;
+  }
+
+  /* Bold whether the markup calls it a label or a legend — a multi-input
+     field (an address, a name split into parts) renders as a fieldset
+     whose name is a `<legend>`, which takes no styling from `label`. */
+  label,
+  legend {
+    display: inline-block;
+    font-size: var(--text-small);
+    line-height: var(--text-small--line-height);
+    font-weight: 600;
+    color: color-mix(in srgb, var(--color-ink) 92%, var(--color-light));
+  }
+
+  fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+  }
+
+  legend {
+    padding: 0;
+  }
+
+  /* Radios, checkboxes and the switch are drawn in components/selection.css. */
+}

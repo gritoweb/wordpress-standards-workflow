@@ -32,6 +32,9 @@ to day (`.claude/skills/css-standards/SKILL.md` › **Style guide only**).
 
 ## Pre-conditions
 
+- The client has a **Figma file**? Use `figma-design-system` instead: it
+  writes these same files, with the values read from Figma.
+
 - Working directory = active Sage 11 theme root (must contain
   `vite.config.js`, `resources/`). If unsure, **ask** — don't guess.
 - It's built for first-time generation. If any file below already exists,
@@ -49,7 +52,8 @@ to day (`.claude/skills/css-standards/SKILL.md` › **Style guide only**).
 | `global/layout.css` | `html`/`body` structure, `.app` |
 | `global/base.css` | How unclassed non-text tags look (`body` color/background, `a`, lists…) — **no type** |
 | `global/container.css` | Container width tokens + `.container` — **the only place the container is defined** |
-| `components/button.css` | `.btn`, `.btn-primary`, `.btn-secondary` |
+| `components/button.css` | `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-on-dark`, `.btn-link` |
+| `contrast-pairs.json` | The text/UI color pairs `scripts/contrast.mjs` checks (WCAG AA) |
 | `components/card.css` | `.card` — the one card surface every block shares |
 
 All paths under `resources/css/`. Never at the root of `resources/css/`
@@ -84,6 +88,8 @@ silently falls back to browser defaults. The dev may add extra named colors
 |---|---|---|---|
 | `variables.css` | Color | `--color-ink` (text), `--color-muted` (secondary text), `--color-light` (page background), `--color-surface` (alternate section/card background), `--color-border`, `--color-primary`, `--color-primary-light` | `text-ink`, `text-muted`, `bg-light`, `bg-surface`, `border-border`, `text-primary`, `bg-primary-light` |
 | `variables.css` | State | `--color-success`, `--color-warning`, `--color-danger` | `text-danger`, `border-danger`, … (form errors, notices) |
+| `variables.css` | Link & focus | `--color-link`, `--color-link-hover`, `--color-focus` (focus ring), `--color-placeholder` (form placeholders) | `text-link`; read by `base.css`, buttons and forms |
+| `variables.css` | On dark | `--color-muted-on-dark`, `--color-link-on-dark`, `--color-link-hover-on-dark`, `--color-focus-on-dark` — what a dark ground (`grounds.css`) swaps in | none directly; `grounds.css` flips the aliases |
 | `variables.css` | Shape | `--radius-card`, `--radius-button`, `--shadow-card` | `rounded-card`, `rounded-button`, `shadow-card` |
 | `container.css` | Container | `--container-max-width`, `--container-padding-x` — in `:root`, not `@theme` (Tailwind's `--container-*` namespace would turn them into `max-w-*` utilities) | `container` |
 | `typography.css` | Font | `--font-display` (headings), `--font-body` | `font-display`, `font-body` |
@@ -91,7 +97,7 @@ silently falls back to browser defaults. The dev may add extra named colors
 | `typography.css` | Text | `--text-lead`, `--text-body`, `--text-small`, each with `--line-height` | `text-lead`, `text-body`, `text-small` |
 
 Plus the contract **classes**: `.heading-1` … `.heading-6` and `.font-eyebrow`
-(`typography.css`), `.btn`, `.btn-primary`, `.btn-secondary` (`button.css`),
+(`typography.css`), `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-on-dark`, `.btn-link` (`button.css`),
 `.card` (`card.css`).
 
 **How blocks use it:** a heading takes `heading-N` — one class that carries
@@ -159,6 +165,18 @@ with `color-mix()` or Tailwind's `/opacity`.
   --color-warning: #9a6700;
   --color-danger: #cf222e;
 
+  /* ── Link, focus, placeholder (derived unless the guide has them) ── */
+  --color-link: var(--color-primary);
+  --color-link-hover: color-mix(in srgb, var(--color-primary) 80%, var(--color-ink));
+  --color-focus: var(--color-primary);
+  --color-placeholder: var(--color-muted);
+
+  /* ── On a dark ground (grounds.css swaps these in) ──────── */
+  --color-muted-on-dark: color-mix(in srgb, var(--color-light) 75%, var(--color-ink));
+  --color-link-on-dark: var(--color-light);
+  --color-link-hover-on-dark: color-mix(in srgb, var(--color-light) 85%, var(--color-primary));
+  --color-focus-on-dark: var(--color-light);
+
   /* ── Shape ──────────────────────────────────────────────── */
   --radius-card: 1rem;
   --radius-button: 0.5rem;
@@ -167,6 +185,30 @@ with `color-mix()` or Tailwind's `/opacity`.
 ```
 
 Show it; ask **"ajustar algo (cor, raio, sombra)?"** before writing.
+
+Then write `resources/css/contrast-pairs.json` — every pair the site draws,
+`kind` `text` (4.5:1) or `ui` (3:1). The base set:
+
+```json
+[
+  { "fg": "--color-ink", "bg": "--color-light", "kind": "text", "label": "body on page" },
+  { "fg": "--color-ink", "bg": "--color-surface", "kind": "text", "label": "body on surface" },
+  { "fg": "--color-muted", "bg": "--color-light", "kind": "text", "label": "muted on page" },
+  { "fg": "--color-link", "bg": "--color-light", "kind": "text", "label": "link on page" },
+  { "fg": "--color-link-hover", "bg": "--color-light", "kind": "text", "label": "link hover on page" },
+  { "fg": "--color-light", "bg": "--color-primary", "kind": "text", "label": "primary button text" },
+  { "fg": "--color-focus", "bg": "--color-light", "kind": "ui", "label": "focus ring on page" },
+  { "fg": "--color-placeholder", "bg": "--color-light", "kind": "text", "label": "placeholder on page" },
+  { "fg": "--color-danger", "bg": "--color-light", "kind": "text", "label": "error on page" },
+  { "fg": "--color-light", "bg": "--color-ink", "kind": "text", "label": "text on a dark ground" },
+  { "fg": "--color-muted-on-dark", "bg": "--color-ink", "kind": "text", "label": "muted on a dark ground" },
+  { "fg": "--color-link-on-dark", "bg": "--color-ink", "kind": "text", "label": "link on a dark ground" },
+  { "fg": "--color-focus-on-dark", "bg": "--color-ink", "kind": "ui", "label": "focus ring on a dark ground" }
+]
+```
+
+A pair the client's guide draws below AA on purpose gets `"asDrawn": true`:
+it's reported, never fails, and fails again once it passes (stale flag).
 
 ---
 
@@ -398,8 +440,17 @@ value becomes a token in Step 2/3).
   }
 
   a {
-    color: var(--color-primary);
+    color: var(--color-link);
     text-underline-offset: 0.2em;
+  }
+
+  a:hover {
+    color: var(--color-link-hover);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
   }
 }
 ```
@@ -440,11 +491,14 @@ gutters only — block classes live with each block. Ask **"ajustar algo
 
 ## Step 7 — `components/button.css` and `components/card.css`
 
-Every CTA in every block is `btn btn-primary` or `btn btn-secondary`
-(`create-block`'s `ActionEditor` preview already renders `btn btn-primary`).
-Size comes from padding + type, never a height (`css-standards` ›
-**Interactive element sizing**). The hover **motion** is `hover.css`'s job
-(installed by `create-block`); this file owns look and hover **color**.
+Every CTA in every block is `btn` plus one role: `btn-primary`,
+`btn-secondary`, `btn-on-dark` (a CTA on a dark ground or photo — what
+`BlockAttributes::ctaButtonClass()` picks there) or `btn-link` (a text-style
+action, e.g. "Load more"). Size comes from padding + type, never a height
+(`css-standards` › **Interactive element sizing**). The hover **motion** is
+`hover.css`'s job (installed with the kit); this file owns look, hover
+**color**, focus, disabled, loading and the icon slot that `ActionEditor`'s
+icon choice prints (`btn-icon-arrow|external|download`, `btn-icon-before`).
 
 ```css
 @layer components {
@@ -464,6 +518,18 @@ Size comes from padding + type, never a height (`css-standards` ›
     cursor: pointer;
   }
 
+  /* An outline, so the ring never moves layout; --color-focus flips on a dark ground. */
+  .btn:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .btn-primary {
     background-color: var(--color-primary);
     color: var(--color-light);
@@ -481,11 +547,80 @@ Size comes from padding + type, never a height (`css-standards` ›
   .btn-secondary:hover {
     background-color: var(--color-primary-light);
   }
+
+  .btn-on-dark {
+    background-color: var(--color-light);
+    color: var(--color-ink);
+  }
+
+  .btn-on-dark:hover {
+    background-color: color-mix(in srgb, var(--color-light) 85%, var(--color-primary));
+  }
+
+  .btn-link {
+    padding-inline: 0;
+    background: none;
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .btn-link:hover {
+    color: var(--color-link-hover);
+  }
+
+  /* Icon slot: ActionEditor's icon choice, painted in the label color. */
+  .btn-icon-arrow { --btn-icon: url("@images/icons/arrow-right.svg"); }
+  .btn-icon-external { --btn-icon: url("@images/icons/external-link-24.svg"); }
+  .btn-icon-download { --btn-icon: url("@images/icons/download.svg"); }
+
+  .btn:is(.btn-icon-arrow, .btn-icon-external, .btn-icon-download):not(.btn-icon-before)::after,
+  .btn:is(.btn-icon-arrow, .btn-icon-external, .btn-icon-download).btn-icon-before::before {
+    content: "";
+    flex: none;
+    width: 1.25em;
+    height: 1.25em;
+    background-color: currentcolor;
+    mask: var(--btn-icon) no-repeat center / contain;
+  }
+
+  /* Loading keeps the button's size: the label goes transparent and a spinner shows. */
+  .btn[aria-busy="true"],
+  .btn-loading {
+    position: relative;
+    pointer-events: none;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .btn[aria-busy="true"]::after,
+  .btn-loading::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 1.25em;
+    height: 1.25em;
+    background-color: currentcolor;
+    -webkit-text-fill-color: initial;
+    mask: url("@images/icons/loader-spinner-sm.svg") no-repeat center / contain;
+    animation: btn-spin 0.8s linear infinite;
+  }
+
+  @keyframes btn-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn[aria-busy="true"]::after,
+    .btn-loading::after {
+      animation-duration: 2.4s;
+    }
+  }
 }
 ```
 
-Add a variant only when the style guide has one (e.g. `.btn-light` for dark
-sections).
+Add a variant only when the style guide has one. The icons ship with the kit
+in `resources/images/icons/`.
 
 `card.css` — the surface every repeater item, panel and highlighted box uses.
 Without it each block re-types `rounded-card border border-border bg-light
@@ -530,12 +665,24 @@ foundation in this order:
 @import "./global/layout.css";
 @import "./global/base.css";
 @import "./global/container.css";
+@import "./global/grounds.css";
 
 @import "./components/button.css";
 @import "./components/card.css";
+
+@import "./components/forms.css";
+@import "./components/selection.css";
+@import "./components/forms-gravity.css";
+@import "./components/social-icons.css";
+@import "./components/page-header.css";
+
+@import "./pages/archive.css";
 ```
 
-Later `components/` and `pages/` imports go below `card.css`.
+`grounds.css` is written by `kit-setup.mjs` from `kit.config.json` (a comment
+only while `grounds` is empty); the files after `card.css` ship with the kit's
+`theme/` and read only contract tokens. Later `components/` and `pages/`
+imports go below them.
 
 ### `resources/css/editor.css`
 
@@ -554,9 +701,15 @@ font on the page):
 @import "./global/layout.css";
 @import "./global/base.css";
 @import "./global/container.css";
+@import "./global/grounds.css";
 
 @import "./components/button.css";
 @import "./components/card.css";
+
+@import "./components/forms.css";
+@import "./components/selection.css";
+@import "./components/forms-gravity.css";
+@import "./components/social-icons.css";
 
 @import "./editor/canvas.css";
 
@@ -644,7 +797,17 @@ Run it from the theme root:
 node scripts/check-css-foundation.mjs
 ```
 
-It must exit 0 before the wizard is done: every contract token in its file,
+Then the contrast gate, from the theme root:
+
+```bash
+node scripts/contrast.mjs
+```
+
+One line per failing pair (`fail  link on page  3.9:1 < 4.5:1`); fix the
+token or, if the client's guide draws it that way, mark the pair
+`"asDrawn": true` and say so in the Handoff.
+
+The foundation check must exit 0 before the wizard is done: every contract token in its file,
 every contract class, both entrypoints wired, and no site file on the stock
 palette, stock type scale, `text-hN` or an arbitrary size. Exit 1 lists each
 problem as `file:line`; fix and re-run. The same script is `create-block`'s
@@ -654,7 +817,7 @@ blocking check 0.21 and runs in the pre-commit hook.
 
 ## Handoff
 
-A table of the seven files created, whether `app.css` / `editor.css` / `alert`
+A table of the files created (the seven CSS files and `contrast-pairs.json`), whether `app.css` / `editor.css` / `alert`
 were edited, where the fonts load from, the recurring-treatment classes
 added, and the check's output. Remind the dev to run `npm run build` (they
 run it — this skill doesn't).

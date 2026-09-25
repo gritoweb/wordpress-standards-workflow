@@ -53,6 +53,10 @@ Working record for the `refactor` branch port. Base = our file; theirs only adds
 | Canvas helpers | Theirs: `InlineField` (on our `AutoGrowingTextarea`), `CtaPreview`, `AddPrompt`, `InfoPanel`, `useRepeater` |
 | Page title | Both: our `front-page.blade.php` (no page header on the home) + their `partials/page-header` (sr-only `<h1>` on singular pages, visible on archives/search) |
 
-## Pending (Phase 4 button roles)
+## Design system (answered 2026-09-25)
 
-`btn-on-dark` (BlockAttributes::ctaButtonClass, ground.js) and `btn-link` (collection-paging partial) are their button role names; our contract has `.btn-primary` / `.btn-secondary`. Resolved with the button-role checkpoint.
+| Topic | Kept |
+|---|---|
+| Buttons | Ours (`.btn`, `.btn-primary`, `.btn-secondary`) + `.btn-on-dark` and `.btn-link` in our tokens; their focus, loading and icon states go into `.btn` |
+| Forms | Their `forms.css`, `selection.css`, `forms-gravity.css`, rewritten on our tokens (greys via `color-mix`); the contract gains only `--color-placeholder` |
+| Figma | Their `figma-design-system`, writing our contract; without Figma, `css-foundation-wizard` as today |

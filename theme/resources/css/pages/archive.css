@@ -1,0 +1,21 @@
+/*
+ * Structure only, for a template that renders a query — the blog index, an
+ * archive, search results, the 404 body. Keeps the list off the viewport
+ * edge and the footer clear of the last item; it isn't a designed listing.
+ */
+
+@layer components {
+  .entries {
+    padding-block: 0 3rem;
+  }
+
+  .entries > article + article {
+    margin-top: 2.5rem;
+  }
+
+  @media (width >= theme(--breakpoint-md)) {
+    .entries {
+      padding-block: 0 6rem;
+    }
+  }
+}

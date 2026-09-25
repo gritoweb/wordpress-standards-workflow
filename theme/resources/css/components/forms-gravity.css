@@ -1,0 +1,392 @@
+/*
+ * Gravity Forms styling. Import only on a project that uses the plugin —
+ * this file assumes its own CSS is switched off (see setup.php) and owns
+ * every state the plugin would otherwise draw itself, including the
+ * International phone field, which ships no usable default appearance.
+ *
+ * Ground contract: error color defaults to `--color-error`, which clears
+ * AA on both paper and the accent ground. A form on a dark ground wraps in
+ * `.on-dark` (the class a block's ground helper sets) to switch to
+ * a lighter mix of `--color-danger` that reads on a dark ground.
+ */
+
+@layer components {
+  .gform_wrapper .gform_fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem 2rem;
+  }
+
+  .gform_wrapper .gfield {
+    grid-column: 1 / -1;
+  }
+
+  /* The plugin's width classes need the 12-track grid back with its CSS off. */
+  @media (width >= theme(--breakpoint-md)) {
+    .gform_wrapper .gform_fields {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .gform_wrapper .gfield--width-half {
+      grid-column: span 6;
+    }
+
+    .gform_wrapper .gfield--width-third {
+      grid-column: span 4;
+    }
+
+    .gform_wrapper .gfield--width-two-thirds {
+      grid-column: span 8;
+    }
+
+    .gform_wrapper .gfield--width-quarter {
+      grid-column: span 3;
+    }
+
+    .gform_wrapper .gfield--width-three-quarter {
+      grid-column: span 9;
+    }
+  }
+
+  .gform_wrapper .gfield_label {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Set Form Settings > Required Field Indicator to "Text" for GF to output this. */
+  .gform_wrapper .gfield_required {
+    margin-left: 0.5rem;
+    font-weight: 400;
+    text-transform: none;
+    color: color-mix(in srgb, var(--color-ink) 92%, var(--color-light));
+  }
+
+  .gform_wrapper .gform_required_legend {
+    display: none;
+  }
+
+  .gform_wrapper .gfield_description {
+    margin-top: 0.5rem;
+    font-size: var(--text-small);
+    line-height: var(--text-small--line-height);
+    color: color-mix(in srgb, var(--color-ink) 84%, var(--color-light));
+  }
+
+  .gform_wrapper .ginput_complex {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 1rem 2rem;
+  }
+
+  /* A sub-label (inside a multi-input field) is not a field name. */
+  .gform_wrapper .ginput_complex label {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-weight: 400;
+    text-transform: none;
+  }
+
+  .gform_wrapper .gfield_checkbox,
+  .gform_wrapper .gfield_radio {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .gform_wrapper .gchoice {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .gform_wrapper .gchoice label {
+    font-weight: 400;
+    text-transform: none;
+  }
+
+  /* Error border is a graphical object (3:1, not 4.5:1), so it can afford
+     to outrank hover — the field keeps saying it's wrong under the pointer. */
+  .gform_wrapper .gfield_error input,
+  .gform_wrapper .gfield_error textarea,
+  .gform_wrapper .gfield_error select,
+  .gform_wrapper .gfield_error input:hover,
+  .gform_wrapper .gfield_error textarea:hover,
+  .gform_wrapper .gfield_error select:hover {
+    border-width: 2px;
+    border-color: var(--color-danger);
+  }
+
+  .gform_wrapper .validation_message,
+  .gform_wrapper .gform_validation_errors {
+    margin-top: 0.5rem;
+    font-size: var(--text-small);
+    line-height: var(--text-small--line-height);
+    color: var(--color-danger);
+  }
+
+  .gform_wrapper .gform_validation_errors {
+    margin-bottom: 1.5rem;
+  }
+
+  .on-dark .gform_wrapper .gfield_error input,
+  .on-dark .gform_wrapper .gfield_error textarea,
+  .on-dark .gform_wrapper .gfield_error select,
+  .on-dark .gform_wrapper .gfield_error input:hover,
+  .on-dark .gform_wrapper .gfield_error textarea:hover,
+  .on-dark .gform_wrapper .gfield_error select:hover,
+  .on-dark .gform_wrapper .gfield_error .gform-phone__input-wrapper,
+  .on-dark .gform_wrapper .gfield_error .gform-phone__input-wrapper:hover {
+    border-color: color-mix(in srgb, var(--color-danger) 60%, var(--color-light));
+  }
+
+  .on-dark .gform_wrapper .validation_message,
+  .on-dark .gform_wrapper .gform_validation_errors,
+  .on-dark .gform_wrapper .gform_submission_error {
+    color: color-mix(in srgb, var(--color-danger) 60%, var(--color-light));
+  }
+
+  /* GF renders the summary as an <h2>; it's a message, not a heading, so it
+     opts out of the theme's heading scale and balanced wrapping. */
+  .gform_wrapper .gform_submission_error {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-weight: 700;
+    letter-spacing: normal;
+    color: var(--color-danger);
+    text-wrap: wrap;
+  }
+
+  /* GF gives this container tabindex="-1" + autofocus and focuses it on
+     every validation render so a screen reader announces it; nothing can
+     tab to it, so it needs no ring. */
+  .gform_wrapper .gform_validation_errors:focus,
+  .gform_wrapper .gform_validation_errors:focus-visible {
+    outline: none;
+  }
+
+  /* Each bad-field jump link takes the color of the error copy around it,
+     since base.css's link color reads as the ground itself on a dark ground. */
+  .gform_wrapper .gform_validation_error_link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  .gform_wrapper .gform_footer {
+    margin-top: 2rem;
+  }
+
+  .gform_confirmation_message {
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+  }
+
+  /*
+   * Phone field, "International (formatted)". GF ships CSS for the country
+   * button + formatted input + searchable country list that this project
+   * switches off, so every rule below is this file's own, targeting the
+   * comp's single bordered box rather than a button beside a second box.
+   */
+  .gform_wrapper .gform-phone {
+    position: relative;
+  }
+
+  .gform_wrapper .gform-phone__input-wrapper {
+    display: flex;
+    align-items: stretch;
+    min-height: 3rem;
+    border: 1px solid var(--color-ink);
+    border-radius: var(--radius-button);
+    background-color: transparent;
+  }
+
+  /* The comp draws one label over one box; GF's two sub-labels (button,
+     input) become the visually-hidden accessible names for each. */
+  .gform_wrapper .gform-phone .gform-field-label--type-sub {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* GF wraps the button and the input in a span each; those spans are the
+     flex items, or the controls float at content height inside the box. */
+  .gform_wrapper
+    .gform-phone__input-wrapper
+    > .ginput_country-selector_container,
+  .gform_wrapper .gform-phone__input-wrapper > .ginput_phone_container {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .gform_wrapper
+    .gform-phone__input-wrapper
+    > .ginput_country-selector_container {
+    flex: 0 0 auto;
+  }
+
+  .gform_wrapper .gform-phone__input-wrapper > .ginput_phone_container {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .gform_wrapper .gform-phone__country-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+    padding-inline: 0.75rem 0.5rem;
+    border: 0;
+    border-right: 1px solid var(--color-ink);
+    border-radius: 0;
+    background-color: transparent;
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-weight: 400;
+    color: color-mix(in srgb, var(--color-ink) 92%, var(--color-light));
+    cursor: pointer;
+  }
+
+  /* A border chevron, since this design system draws no glyph for it. */
+  .gform_wrapper .gform-phone__country-selector::after {
+    content: "";
+    width: 0.4rem;
+    height: 0.4rem;
+    margin-top: -0.2rem;
+    border-right: 1px solid currentcolor;
+    border-bottom: 1px solid currentcolor;
+    transform: rotate(45deg);
+  }
+
+  .gform_wrapper .gform-phone__country-selector[aria-expanded="true"]::after {
+    margin-top: 0.2rem;
+    transform: rotate(-135deg);
+  }
+
+  /* No flag sprite loaded; the dial code and country name carry the meaning. */
+  .gform_wrapper .gform-phone__flag-icon {
+    display: none;
+  }
+
+  /* The wrapper owns the field chrome, so the bare input carries none of it. */
+  .gform_wrapper .gform-phone__input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding-inline: 0.75rem;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+  }
+
+  .gform_wrapper .gform-phone__input:focus,
+  .gform_wrapper .gform-phone__input:focus-visible {
+    border: 0;
+    outline: none;
+    box-shadow: none;
+  }
+
+  .gform_wrapper .gform-phone__dropdown {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 0.25rem);
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 18rem;
+    border: 1px solid var(--color-ink);
+    border-radius: var(--radius-button);
+    background-color: var(--color-light);
+  }
+
+  .gform_wrapper .gform-phone__dropdown--hidden {
+    display: none;
+  }
+
+  .gform_wrapper .gform-phone__search-wrapper {
+    flex: 0 0 auto;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .gform_wrapper input.gform-phone__search {
+    min-height: 2.75rem;
+    padding-inline: 0.75rem;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .gform_wrapper .gform-phone__country-list {
+    flex: 1 1 auto;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+  }
+
+  .gform_wrapper .gform-phone__country-item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    font-weight: 400;
+    color: color-mix(in srgb, var(--color-ink) 92%, var(--color-light));
+    cursor: pointer;
+  }
+
+  .gform_wrapper .gform-phone__country-name {
+    flex: 1 1 auto;
+  }
+
+  .gform_wrapper .gform-phone__country-code {
+    flex: 0 0 auto;
+    color: var(--color-placeholder);
+  }
+
+  .gform_wrapper .gform-phone__country-item:hover,
+  .gform_wrapper .gform-phone__country-item:focus,
+  .gform_wrapper .gform-phone__country-item[aria-selected="true"] {
+    background-color: var(--color-primary);
+    outline: none;
+  }
+
+  .gform_wrapper .gform-phone__country-item[aria-selected="true"] {
+    font-weight: 700;
+  }
+
+  .gform_wrapper .gform-phone__input-wrapper:focus-within {
+    border-width: 2px;
+    border-color: var(--color-ink);
+    outline: 3px solid color-mix(in srgb, var(--color-ink) 50%, transparent);
+    outline-offset: 0;
+    box-shadow: none;
+  }
+
+  .gform_wrapper .gfield_error .gform-phone__input-wrapper,
+  .gform_wrapper .gfield_error .gform-phone__input-wrapper:hover {
+    border-width: 2px;
+    border-color: var(--color-danger);
+  }
+
+  .gform_wrapper .gform_validation_container,
+  .gform_wrapper .gfield_visibility_hidden {
+    display: none;
+  }
+
+  .gform_wrapper .screen-reader-text {
+    @apply sr-only;
+  }
+}

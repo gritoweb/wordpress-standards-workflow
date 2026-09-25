@@ -1,0 +1,37 @@
+/*
+ * The page title. It's the page's h1 on every page. Where the design
+ * supplies its own headings, the title is visually hidden with `sr-only`
+ * and this file never applies; where a template renders a query (blog
+ * index, archive, search, 404) nothing else on the page is a heading, so it
+ * renders for real.
+ */
+
+@layer components {
+  .page-header {
+    background-color: var(--color-light);
+    color: var(--color-ink);
+  }
+
+  .page-header__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-block: 3rem 2rem;
+  }
+
+  /* A search query is arbitrary text; let a long token break. */
+  .page-header__title {
+    overflow-wrap: anywhere;
+  }
+
+  .page-header__subtitle {
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  @media (width >= theme(--breakpoint-md)) {
+    .page-header__inner {
+      padding-block: 6rem 3rem;
+    }
+  }
+}
