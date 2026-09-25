@@ -582,6 +582,15 @@ Nothing to register: `BlockManager` registers every `resources/blocks/*/block.js
 
 ## Phase 4 — Hand off to the dev
 
+**Conformance first.** From the theme root, `node scripts/conformance.mjs <slug>`
+must report `0 error(s)`. It only reports — never edits: fix each `error` line
+(escaping, hostile input, accessibility, file structure, i18n, `block.json`);
+`warn` lines (canvas polish, naming, test coverage) are grouped per rule and
+may stay, `--verbose` lists them. A rule the block can't meet by design is
+skipped in `block.json` with a reason —
+`"__conformance": { "skip": { "RULE-ID": "why" } }` — and the skip prints on
+every run; a skip without a reason is an error.
+
 Tell the dev, in this order:
 
 1. **Build**: `npm run dev` (HMR) or `npm run build`.
@@ -1119,8 +1128,8 @@ The contract is shared by `BlockEntrance.php`, `entranceCanvas.js`,
 
   | Block kind | `default` |
   |---|---|
-  | Home / page hero (big heading over media) | `{"type":"fade","direction":"up","distance":24,"unit":"px","duration":700,"delay":null,"stagger":150}` |
-  | Text sections — intro, text+media split, statement, CTA/banner, news, contact | `{"type":"fade-slide","direction":"up","distance":null,"unit":"px","duration":null,"delay":null,"stagger":100}` |
+  | Home / page hero (big heading over media) | `{"type":"fade","direction":"up","distance":24,"unit":"px","duration":700,"delay":null,"stagger":150,"trigger":"section"}` |
+  | Text sections — intro, text+media split, statement, CTA/banner, news, contact | `{"type":"fade-slide","direction":"up","distance":null,"unit":"px","duration":null,"delay":null,"stagger":100,"trigger":"section"}` |
   | Grid of cards / team / features / testimonials (a repeater) | `{"type":"fade-slide","direction":"up","distance":null,"unit":"px","duration":null,"delay":null,"stagger":100,"trigger":"item"}` |
   | Horizontal highlights row | `{"type":"fade-slide","direction":"right","distance":48,"unit":"px","duration":600,"delay":null,"stagger":150,"trigger":"item"}` |
   | Logo wall (many small items) | `{"type":"fade","direction":"up","distance":null,"unit":"px","duration":500,"delay":null,"stagger":60}` |

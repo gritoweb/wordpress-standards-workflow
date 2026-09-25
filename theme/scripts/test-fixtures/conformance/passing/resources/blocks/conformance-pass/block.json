@@ -1,0 +1,70 @@
+{
+    "apiVersion": 3,
+    "name": "__BLOCK_NAMESPACE__/conformance-pass",
+    "title": "Conformance Pass",
+    "category": "__BLOCK_CATEGORY_SLUG__",
+    "icon": "megaphone",
+    "description": "A heading, body, image, entries and a button, built only from the shared components.",
+    "textdomain": "__TEXT_DOMAIN__",
+    "render": "file:./block.php",
+    "viewStyle": "file:./block.css",
+    "viewScript": "file:./block.js",
+    "supports": {
+        "anchor": true
+    },
+    "attributes": {
+        "isPreview": {
+            "type": "boolean",
+            "default": false
+        },
+        "heading": {
+            "type": "string",
+            "default": ""
+        },
+        "body": {
+            "type": "string",
+            "default": ""
+        },
+        "imageId": {
+            "type": "number",
+            "default": 0
+        },
+        "imageUrl": {
+            "type": "string",
+            "default": ""
+        },
+        "items": {
+            "type": "array",
+            "default": []
+        },
+        "ground": {
+            "type": "string",
+            "default": ""
+        },
+        "sectionDivider": {
+            "type": "string",
+            "default": "none"
+        },
+        "ctaText": {
+            "type": "string",
+            "default": ""
+        },
+        "ctaLink": {
+            "type": "object",
+            "default": { "url": "", "opensInNewTab": false }
+        },
+        "ctaIcon": {
+            "type": "string",
+            "default": "none"
+        },
+        "ctaIconPosition": {
+            "type": "string",
+            "default": "after"
+        }
+    },
+    "example": {
+        "attributes": {
+            "isPreview": true
+        }
+    }
+}

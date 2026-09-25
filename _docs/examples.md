@@ -107,7 +107,8 @@ An array of question/answer items. Demonstrates the **one-open-at-a-time** repea
         "unit": "px",
         "duration": null,
         "delay": null,
-        "stagger": 100
+        "stagger": 100,
+        "trigger": "section"
       }
     }
   },
@@ -142,14 +143,14 @@ foreach (is_array($attributes['items'] ?? null) ? $attributes['items'] : [] as $
     }
     $items[] = [
         'title' => $title,
-        'body'  => wp_kses_post($item['body'] ?? ''),
+        'body'  => \App\Blocks\BlockAttributes::newTabHints(wp_kses_post($item['body'] ?? '')),
     ];
 }
 
 echo view('blocks.accordion', [
     'anchor'      => sanitize_html_class($attributes['anchor'] ?? ''),
     'title'       => sanitize_text_field($attributes['title'] ?? ''),
-    'description' => wp_kses_post($attributes['description'] ?? ''),
+    'description' => \App\Blocks\BlockAttributes::newTabHints(wp_kses_post($attributes['description'] ?? '')),
     'items'       => $items,
     'entrance'    => \App\Blocks\BlockEntrance::fromBlock($attributes, __DIR__),
     ...\App\Blocks\BlockPadding::fromAttributes($attributes),
@@ -321,6 +322,7 @@ registerBlockType(metadata, {
                 value={title}
                 onChange={(value) => setAttributes({ title: value })}
                 heading
+                aria-label={__('Section title', '<text-domain>')}
                 placeholder={__('Section title…', '<text-domain>')}
                 className="heading-2"
               />
@@ -329,6 +331,7 @@ registerBlockType(metadata, {
                   tagName="div"
                   value={description}
                   onChange={(value) => setAttributes({ description: value })}
+                  aria-label={__('Short description', '<text-domain>')}
                   placeholder={__('Short description…', '<text-domain>')}
                   className="mt-4 text-body text-muted"
                 />
@@ -355,6 +358,7 @@ registerBlockType(metadata, {
                           updateItem(index, { title: value })
                         }
                         onFocus={() => setActiveItem(index)}
+                        aria-label={__('Question', '<text-domain>')}
                         placeholder={__('Question…', '<text-domain>')}
                         className={`heading-6 ${isOpen ? 'text-primary' : ''}`}
                       />
@@ -377,6 +381,7 @@ registerBlockType(metadata, {
                         tagName="div"
                         value={item.body}
                         onChange={(value) => updateItem(index, { body: value })}
+                        aria-label={__('Answer', '<text-domain>')}
                         placeholder={__('Answer…', '<text-domain>')}
                         className="border-t border-border px-5 pt-3 pb-5 text-small text-muted"
                       />
@@ -510,7 +515,7 @@ foreach (is_array($attributes['cards'] ?? null) ? $attributes['cards'] : [] as $
     }
     $cards[] = [
         'title'    => $title,
-        'body'     => wp_kses_post($card['body'] ?? ''),
+        'body'     => \App\Blocks\BlockAttributes::newTabHints(wp_kses_post($card['body'] ?? '')),
         'imageId'  => $imageId,
         'linkText' => sanitize_text_field($card['linkText'] ?? ''),
         'linkUrl'  => esc_url_raw($card['link']['url'] ?? ''),
@@ -521,7 +526,7 @@ foreach (is_array($attributes['cards'] ?? null) ? $attributes['cards'] : [] as $
 echo view('blocks.card-grid', [
     'anchor'      => sanitize_html_class($attributes['anchor'] ?? ''),
     'title'       => sanitize_text_field($attributes['title'] ?? ''),
-    'description' => wp_kses_post($attributes['description'] ?? ''),
+    'description' => \App\Blocks\BlockAttributes::newTabHints(wp_kses_post($attributes['description'] ?? '')),
     'cards'       => $cards,
     'entrance'    => \App\Blocks\BlockEntrance::fromBlock($attributes, __DIR__),
     ...\App\Blocks\BlockPadding::fromAttributes($attributes),
@@ -569,8 +574,8 @@ echo view('blocks.card-grid', [
             @endif
 
             @if ($card['linkText'] && $card['linkUrl'])
-              <a href="{{ esc_url($card['linkUrl']) }}" @if ($card['linkNew']) target="_blank" @endif
-                class="link mt-auto inline-flex pt-5 text-small font-semibold text-primary hover:underline">{{ $card['linkText'] }}</a>
+              <a href="{!! esc_url($card['linkUrl']) !!}" @if ($card['linkNew']) target="_blank" @endif
+                class="link mt-auto inline-flex pt-5 text-small font-semibold text-primary hover:underline">{{ $card['linkText'] }}@include('partials.new-tab-hint', ['new' => $card['linkNew']])</a>
             @endif
           </div>
         </article>
@@ -705,6 +710,7 @@ registerBlockType(metadata, {
               value={attributes.title}
               onChange={(value) => setAttributes({ title: value })}
               heading
+              aria-label={__('Section title', '<text-domain>')}
               placeholder={__('Section title…', '<text-domain>')}
               className="text-center heading-2"
             />
@@ -713,6 +719,7 @@ registerBlockType(metadata, {
                 tagName="div"
                 value={attributes.description}
                 onChange={(value) => setAttributes({ description: value })}
+                aria-label={__('Description', '<text-domain>')}
                 placeholder={__('Optional description…', '<text-domain>')}
                 className="mt-4 text-body text-muted"
               />
@@ -740,6 +747,7 @@ registerBlockType(metadata, {
                     value={card.title}
                     onChange={(value) => updateCard(index, { title: value })}
                     heading
+                    aria-label={__('Card title', '<text-domain>')}
                     placeholder={__('Card title…', '<text-domain>')}
                     className="heading-5"
                   />
@@ -747,6 +755,7 @@ registerBlockType(metadata, {
                     tagName="div"
                     value={card.body}
                     onChange={(value) => updateCard(index, { body: value })}
+                    aria-label={__('Card text', '<text-domain>')}
                     placeholder={__('Card text…', '<text-domain>')}
                     className="mt-3 text-small text-muted"
                   />
@@ -872,7 +881,8 @@ An array of quotes in a Swiper carousel. Demonstrates the **vendor library** rul
         "unit": "px",
         "duration": null,
         "delay": null,
-        "stagger": 100
+        "stagger": 100,
+        "trigger": "section"
       }
     }
   },
@@ -1153,6 +1163,7 @@ registerBlockType(metadata, {
             value={attributes.title}
             onChange={(value) => setAttributes({ title: value })}
             heading
+            aria-label={__('Section title', '<text-domain>')}
             placeholder={__('Section title…', '<text-domain>')}
             className="mb-10 text-center heading-2"
           />
@@ -1179,6 +1190,7 @@ registerBlockType(metadata, {
                     tagName="blockquote"
                     value={item.quote}
                     onChange={(value) => updateItem(index, { quote: value })}
+                    aria-label={__('Quote', '<text-domain>')}
                     placeholder={__('Quote…', '<text-domain>')}
                     className="flex-1 text-lead"
                   />
@@ -1202,12 +1214,14 @@ registerBlockType(metadata, {
                         onChange={(value) =>
                           updateItem(index, { author: value })
                         }
+                        aria-label={__('Name', '<text-domain>')}
                         placeholder={__('Name…', '<text-domain>')}
                         className="font-bold"
                       />
                       <AutoGrowingTextarea
                         value={item.role}
                         onChange={(value) => updateItem(index, { role: value })}
+                        aria-label={__('Role', '<text-domain>')}
                         placeholder={__('Role…', '<text-domain>')}
                         className="text-small text-muted"
                       />

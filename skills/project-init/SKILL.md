@@ -325,17 +325,24 @@ the theme's `package.json` (merge into the existing `scripts`):
 
 ```json
 {
-  "scripts": { "prepare": "node ./scripts/install-git-hooks.mjs" },
+  "scripts": {
+    "prepare": "node ./scripts/install-git-hooks.mjs",
+    "test": "node --test \"app/**/*.test.mjs\" \"resources/**/*.test.mjs\" \"scripts/**/*.test.mjs\""
+  },
   "lint-staged": {
     "{app,resources}/**/*.{css,blade.php,js,jsx}": "prettier --write"
   }
 }
 ```
 
+`npm test` runs the framework's tests, the contrast gate and block conformance
+(errors fail, warnings print). It renders Blade through the theme's `vendor/`,
+so it needs PHP on the host (or a Lando shell).
+
 ```bash
 cd wp-content/themes/<theme>
-npm i -D prettier prettier-plugin-tailwindcss @shufo/prettier-plugin-blade lint-staged
-npm install       # runs `prepare` → installs the pre-commit hook (format + CSS foundation check)
+npm i -D prettier prettier-plugin-tailwindcss @shufo/prettier-plugin-blade lint-staged postcss postcss-selector-parser
+npm install       # runs `prepare` → installs the pre-commit hook (format, CSS foundation, contrast, conformance)
 npm run dev       # development (HMR) — or:
 npm run build     # production build
 ```

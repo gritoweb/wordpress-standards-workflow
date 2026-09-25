@@ -1,35 +1,14 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { fileURLToPath } from 'node:url';
 
-const kit = join(dirname(fileURLToPath(import.meta.url)), '..');
-const wizard = readFileSync(join(kit, 'skills/css-foundation-wizard/SKILL.md'), 'utf8');
-
-// Every fenced block of `lang` under the heading, in order.
-function blocks(heading, lang) {
-  const from = wizard.indexOf(heading);
-  assert.ok(from >= 0, `wizard lacks "${heading}"`);
-  const next = wizard.indexOf('\n#', from + heading.length);
-  const section = wizard.slice(from, next === -1 ? undefined : next);
-  return [...section.matchAll(new RegExp('```' + lang + '\\n([\\s\\S]*?)```', 'g'))].map((m) => m[1]);
-}
+import { buildKitTheme, wizardBlocks as blocks } from './support.mjs';
 
 // A fresh theme: the kit's theme/ plus every file the wizard writes, verbatim from its code blocks.
 function buildTheme() {
-  const root = mkdtempSync(join(tmpdir(), 'foundation-install-'));
-  cpSync(join(kit, 'theme'), root, { recursive: true });
-  // A Sage theme has postcss through Vite; the kit's node_modules stands in for it.
-  symlinkSync(join(kit, 'node_modules'), join(root, 'node_modules'));
-  writeFileSync(join(root, 'style.css'), '/*\nTheme Name: Acme\nText Domain: acme-2026\n*/\n');
-  writeFileSync(join(root, 'vite.config.js'), 'export default {};\n');
-  writeFileSync(
-    join(root, 'kit.config.json'),
-    JSON.stringify({ prefix: 'acme', textDomain: 'acme-2026', themeSlug: 'acme-2026', blockNamespace: 'acme-2026', blockCategory: { slug: 'acme-2026', title: 'Acme Blocks' }, grounds: [{ name: 'ink', token: '--color-ink', light: false }] }),
-  );
+  const root = buildKitTheme({ grounds: [{ name: 'ink', token: '--color-ink', light: false }] });
   const css = (path, text) => {
     mkdirSync(dirname(join(root, 'resources/css', path)), { recursive: true });
     writeFileSync(join(root, 'resources/css', path), text);

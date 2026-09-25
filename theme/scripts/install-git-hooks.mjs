@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Installs a pre-commit hook that runs lint-staged and the CSS foundation check on THIS theme, in any layout:
+ * Installs a pre-commit hook that runs lint-staged, the CSS foundation check, the contrast gate and block conformance on THIS theme, in any layout:
  *   - theme IS the git root (standalone theme repo), or
  *   - theme is a SUBDIRECTORY (Pantheon / full-site repo).
  *
@@ -41,7 +41,10 @@ if [ ! -f scripts/check-css-foundation.mjs ]; then
   echo "pre-commit: scripts/check-css-foundation.mjs is missing — run the css-foundation-wizard skill." >&2
   exit 1
 fi
-node scripts/check-css-foundation.mjs
+node scripts/check-css-foundation.mjs || exit 1
+node scripts/contrast.mjs || exit 1
+# Errors block the commit; warnings only print.
+node scripts/conformance.mjs
 `,
   );
   chmodSync(hookPath, 0o755);
@@ -49,7 +52,7 @@ node scripts/check-css-foundation.mjs
   // core.hooksPath is resolved relative to the git root's working tree.
   execFileSync('git', ['-C', gitRoot, 'config', 'core.hooksPath', '.githooks']);
 
-  console.log(`[hooks] pre-commit installed → ${hookPath} (lint-staged + CSS foundation check in ./${cdTarget})`);
+  console.log(`[hooks] pre-commit installed → ${hookPath} (lint-staged, CSS foundation, contrast and conformance in ./${cdTarget})`);
 } catch {
   // Never break `npm install` if hooks can't be set up.
   process.exit(0);

@@ -2,6 +2,43 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Block conformance: errors fail, warnings print, nothing is edited
+
+The Sage Site Kit's conformance checks, adapted to this kit's components and
+decisions, so a generated block is tested against the kit's rules instead of
+trusted.
+
+### Added
+- `theme/scripts/conformance.mjs` (+ runtime, render harness, editor bundle):
+  ~60 rules over `block.json`, `block.php`, the Blade view and `block.jsx`.
+  **Errors** (escaping, hostile input, accessibility, file structure, i18n,
+  `block.json`, writes on mount, navigating anchors) fail; **warnings**
+  (canvas polish, naming, test coverage) print grouped per rule. CLI:
+  `node scripts/conformance.mjs [--verbose] [slug...]`, one line per error.
+  A block opts out of a rule in `block.json` with a reason.
+- Theme `npm test` script and the pre-commit hook run the contrast gate and
+  conformance after the CSS foundation check (errors block the commit).
+- Kit tests: every rule is proven by a case that breaks it (92 cases); the
+  blocks in `_docs/examples.md` must pass with 0 errors.
+
+### Changed
+- Rules that contradict this kit are gone: FILE-7 (a React import in every
+  `.jsx`; Sage compiles JSX without it) and INSP-4 (no padding control; our
+  blocks carry the Spacing panel). PHP-9 accepts an `is_array($entry)` guard
+  as well as `array_filter(..., 'is_array')`.
+- `_docs/examples.md`, fixed where conformance found real defects: canvas
+  fields get an `aria-label`; rich copy goes through
+  `BlockAttributes::newTabHints()` and the card link includes
+  `partials.new-tab-hint`; the card link prints `{!! esc_url() !!}` (Blade's
+  `{{ }}` double-encoded `&`); entrance presets carry `"trigger": "section"`
+  (also in `create-block`'s preset table).
+
+### Verified
+- `npm test` exit 0 (546 pass). The examples test fails when one fix is
+  reverted (the card link back to `{{ esc_url() }}`), then passes restored.
+- Conformance on the three reference blocks: 15 errors before the fixes, 0
+  after; about 2 s for three blocks.
+
 ## 2026-09-25 — Design system: our contract plus grounds, contrast, forms and Figma
 
 Our token contract stays; the Sage Site Kit's design-system pieces come in on

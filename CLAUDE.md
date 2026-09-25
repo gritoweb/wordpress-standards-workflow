@@ -63,6 +63,11 @@ editor, link field or text field in the sidebar** — no `ActionEditor`,
 `TextControl type="number"` setting is fine). `scripts/editor-fidelity.mjs`
 reports any it finds.
 
+**Conformance.** `node scripts/conformance.mjs` reports every block against the
+kit's rules without editing anything: an `error` blocks the commit (pre-commit
+hook), a `warn` only prints. Opt out of one rule per block in `block.json`
+(`__conformance.skip`) with a reason.
+
 **Block assets — the canonical rule:**
 
 - A block's **own** front-end CSS/JS is declared in `block.json` via
