@@ -2,6 +2,24 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — create-block split into a core and four references
+
+### Changed
+- **`create-block/SKILL.md` is the core (386 lines, was 1,277):**
+  pre-conditions, the Phase 0 checks, what to ask, what goes on the canvas
+  vs the sidebar, Phases 2–4 and the rules. The rest moved, unchanged, to
+  `references/` and is read only when needed: `attribute-inference.md`
+  (types, keyword table, button pair and other expansions),
+  `assets-and-anchors.md`, `templates.md` (from-scratch file templates) and
+  `infra.md` (Phase 0 files, entrance wiring, fidelity report, Sage wiring).
+  A table in the core says when to read each and where each section went;
+  references by section name in other skills point at the new file.
+  A test run read the old single file 10 times.
+
+### Verified
+- A script checked that every non-empty line of the old `SKILL.md` is in the
+  core or a reference file: 0 missing.
+
 ## 2026-09-25 — `_docs/` becomes `docs/`
 
 ### Changed

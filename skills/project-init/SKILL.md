@@ -321,8 +321,8 @@ Phase 0 answer. Do not run any of these commands.
 12. **Smoke check before handing off** — open the home at desktop and mobile
     width: header menu works (Phase 1c), nothing renders under the content
     but the footer you built (no stray widgets), and each block with an
-    entrance animation gains `data-entered` on scroll (`create-block` ›
-    "Entrance animation wiring"). In the editor: no block shows "This block
+    entrance animation gains `data-entered` on scroll (`create-block`
+    `references/infra.md` › "Entrance animation wiring"). In the editor: no block shows "This block
     has encountered an error", repeaters reorder/delete from the sidebar
     with the canvas updating at once. Report what was checked, not "should
     work".
