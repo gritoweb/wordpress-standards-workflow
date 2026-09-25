@@ -27,6 +27,10 @@ components) is **not** repeated here — it comes from
 - **Repeaters:** `ItemList` in a sidebar `PanelBody` is the only place to
   reorder, delete and add items. Array order is the only order. No item
   delete / add / reorder buttons on the canvas.
+- **Section buttons are components:** `ButtonPair` on the canvas (the
+  preview opens `ActionEditor` on click, never on select) and
+  `<x-button-link>` on the page (prints nothing without text and a link).
+  Never re-type the pair in a block.
 - **Remove controls are components:** `RemoveImageButton` (core "X") removes
   an image — `AttachmentImageControl` shows it on hover; `RemoveButton`
   (core trash) deletes anything else. Icons come from `coreIcons.jsx`; every

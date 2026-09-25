@@ -2,6 +2,24 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Section buttons as shared components
+
+### Added
+- **`ButtonPair.jsx`** (editor) and **`<x-button-link>`**
+  (`resources/views/components/button-link.blade.php`): the section button
+  once, instead of ~25 lines re-typed in each block. `ButtonPair` shows the
+  preview with the button's classes and opens `ActionEditor` on click, never
+  on select; `<x-button-link>` prints the `btn btn-<variant>` link only when
+  it has text and a link. Shipped with `create-block` (check 0.12).
+- `hero`, `section-intro`, `media-text` and `cta-band` use them; the rule is
+  in `_docs/examples/README.md` and `create-block` › Buttons.
+
+### Verified
+- On a local site with the four buttons filled: the page prints the four
+  links with `btn-primary` / `btn-secondary` and `target="_blank"` only on the
+  new-tab one; in the editor each button's editor is closed on select and
+  opens on click, no block error, no JS error. `check-css-foundation` exits 0.
+
 ## 2026-09-25 — Header in Tailwind, no header.css
 
 ### Changed

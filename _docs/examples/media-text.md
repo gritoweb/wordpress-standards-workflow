@@ -112,8 +112,7 @@ echo view('blocks.media-text', [
 
       @if ($ctaText && $ctaUrl)
         <div @entrancePart(2) class="mt-8">
-          <a href="{{ esc_url($ctaUrl) }}" @if ($ctaNew) target="_blank" @endif
-            class="btn btn-secondary">{{ $ctaText }}</a>
+          <x-button-link :text="$ctaText" :url="$ctaUrl" :new-tab="$ctaNew" variant="secondary" />
         </div>
       @endif
     </div>
@@ -145,7 +144,7 @@ import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { AutoGrowingTextarea } from '../components/backend/AutoGrowingTextarea.jsx';
 import { AttachmentImageControl } from '../components/backend/AttachmentImageControl.jsx';
-import { ActionEditor } from '../components/backend/ActionEditor.jsx';
+import { ButtonPair } from '../components/backend/ButtonPair.jsx';
 import { PaddingControls } from '../components/backend/PaddingControls.jsx';
 import { editorPaddingClasses } from '../components/backend/padding-presets.js';
 import { EntranceControl } from '../components/backend/EntranceControl.jsx';
@@ -160,8 +159,6 @@ import metadata from './block.json';
 
 registerBlockType(metadata, {
   edit({ attributes, setAttributes, clientId }) {
-    // Hooks run before the preview return, so their order never changes.
-    const [editingCta, setEditingCta] = useState(false);
     const blockProps = useBlockProps();
 
     if (attributes.isPreview) {
@@ -238,38 +235,13 @@ registerBlockType(metadata, {
                 />
               </div>
               <div {...entrancePartProps(entrance, 2)} className="mt-8">
-                {/* The button pair: the preview opens ActionEditor on click, never on select. */}
-                <span
-                  role="button"
-                  tabIndex={0}
-                  className="btn btn-secondary cursor-pointer"
-                  onClick={() => setEditingCta(!editingCta)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      setEditingCta(!editingCta);
-                    }
-                  }}
-                >
-                  {attributes.ctaText || __('+ Add button', '<text-domain>')}
-                </span>
-                {editingCta && (
-                  <div className="w-full max-w-xl text-left">
-                    <ActionEditor
-                      groupLabel={__('Button', '<text-domain>')}
-                      label={__('Button text', '<text-domain>')}
-                      linkLabel={__('Button link', '<text-domain>')}
-                      text={attributes.ctaText}
-                      link={attributes.ctaLink}
-                      onTextChange={(value) =>
-                        setAttributes({ ctaText: value })
-                      }
-                      onLinkChange={(value) =>
-                        setAttributes({ ctaLink: value })
-                      }
-                    />
-                  </div>
-                )}
+                <ButtonPair
+                  text={attributes.ctaText}
+                  link={attributes.ctaLink}
+                  className="btn btn-secondary"
+                  onTextChange={(value) => setAttributes({ ctaText: value })}
+                  onLinkChange={(value) => setAttributes({ ctaLink: value })}
+                />
               </div>
             </div>
 

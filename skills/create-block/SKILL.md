@@ -91,7 +91,7 @@ wrong domain/path into every file.
 | 0.9 | `resources/css/app.css` has `@source "../blocks/**/*.{php,jsx}";` **and** scans `app/` (`@source "../../app/";` — Sage's stock line). The padding / image-position classes are literals in `app/Blocks/*.php`; without that source Tailwind never generates them and Spacing silently does nothing. |
 | 0.10 | `package.json` `devDependencies` has `react@^18` AND `react-dom@^18`. **React pinned to ^18, not ^19** — React 19 breaks Gutenberg (element-symbol mismatch with WP's React 18). |
 | 0.11 | `app/Blocks/BlockCategories.php` exists. Template at `<skill>/templates/BlockCategories.php`. **First-run only**: ask `"Vou criar uma categoria pros seus blocos. Quer chamar de 'Custom Blocks' (default) ou outro nome?"`, copy template, edit `TITLE` and `SLUG` (lowercase + hyphens) if dev picked a different name. The actual `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). Subsequent runs: grep `const SLUG = '...'` from the existing file. |
-| 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `RemoveButton.jsx`, `RemoveImageButton.jsx`, `coreIcons.jsx`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. If missing: copy from `<skill>/templates/components/backend/*`, replacing `__TEXT_DOMAIN__` with `<text-domain>` and `__THEME_SLUG__` with `<theme-slug>` in every copied file. |
+| 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `RemoveButton.jsx`, `RemoveImageButton.jsx`, `coreIcons.jsx`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`, `ButtonPair.jsx`. And `resources/views/components/button-link.blade.php` (template `<skill>/templates/button-link.blade.php`). If missing: copy from `<skill>/templates/components/backend/*`, replacing `__TEXT_DOMAIN__` with `<text-domain>` and `__THEME_SLUG__` with `<theme-slug>` in every copied file. |
 | 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php`, `app/Blocks/BlockEntrance.php` and `app/Blocks/BlockMotion.php` exist. Templates at `<skill>/templates/`. `BlockEntrance.php` must expose `fromBlock()`, `root()` and `part()` — an older copy that only has `resolve()` (it prints `data-entrance-type`) is **incompatible** with `EntranceControl`/`entranceCanvas.js`: replace it. |
 | 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers three Blade directives: `paddingClasses` → `\App\Blocks\BlockPadding::resolve(...)`, `entrance` → `\App\Blocks\BlockEntrance::root(...)` and `entrancePart` → `\App\Blocks\BlockEntrance::part(...)` (see "Infra bootstrap templates"). |
 | 0.18 | `resources/css/components/entrance.css` exists (template `<skill>/templates/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). `resources/css/components/hover.css` exists (template `<skill>/templates/hover.css`) and is `@import`ed by `resources/css/app.css` — **not** inside `@layer`, it must beat Tailwind's transition utilities. |
@@ -362,7 +362,10 @@ Attributes:
     Selecting/replacing/removing the image happens in the sidebar (see
     above). Nothing here needs to be clickable, so there is no risk of an
     image dropzone swallowing clicks meant for selecting the block.
-  - **Buttons / CTAs:** see the "Button pair" rule above for the full
+  - **Buttons / CTAs:** a single section button is `<ButtonPair text link
+    onTextChange onLinkChange className="btn btn-secondary" />` on the canvas
+    and `<x-button-link :text :url :new-tab variant />` on the page — never
+    re-type the pair. See the "Button pair" rule above for the full
     reasoning (including three same-day mistakes worth reading before
     touching this again). Styled `<span>` preview on canvas; clicking it
     always opens `<ActionEditor>` **inline**, directly below the button —
@@ -615,11 +618,13 @@ End with a summary table listing every file created/modified.
 ├── entrance.js                     → copied to resources/js/modules/entrance.js (check 0.19)
 ├── editor-fidelity.mjs             → copied to scripts/editor-fidelity.mjs (check 0.20)
 ├── blocks.php                      → copied to app/blocks.php (check 0.6)
+├── button-link.blade.php           → copied to resources/views/components/button-link.blade.php (check 0.12)
 ├── preview.svg                     → copied per block (with __BLOCK_TITLE__ substituted)
 └── components/backend/             → copied to resources/blocks/components/backend/ (check 0.12)
     ├── AttachmentImageControl.jsx   ← default image control (X on hover, image icon when empty)
     ├── useAttachmentUrls.js         ← hook for resolving attachment URLs
     ├── ActionEditor.jsx             ← CTA label + link editor (canvas popover)
+    ├── ButtonPair.jsx               ← a section button on the canvas: preview + ActionEditor on click
     ├── AutoGrowingTextarea.jsx      ← inline heading/subtitle editor
     ├── editorCanvas.js              ← canvas constants (EDITOR_TYPE, emptyLink)
     ├── EntranceControl.jsx          ← entrance animation sidebar panel
