@@ -858,13 +858,28 @@ rule('A11Y-6', 'A11Y-6', 'A new-tab link says so', (ctx) => {
   return messages;
 });
 
+// The kit's hard rule (create-block): content is edited on the canvas; the sidebar holds configuration only.
+const CONTENT_EDITORS = ['ActionEditor', 'LinkPicker', 'LinkControl', 'RichText', 'AutoGrowingTextarea', 'InlineField', 'InlineHeading', 'ParagraphsField'];
+rule('INSP-7', 'INSP-7', 'No content editing in the sidebar', (ctx) =>
+  overRenders(ctx, (render) =>
+    [...new Set(render.rawNodes.filter((node) => node.inspector && CONTENT_EDITORS.includes(node.name)).map((node) => node.name))]
+      .map((name) => `${name} is inside InspectorControls; edit content on the canvas`),
+  { only: (render) => render.isSelected }));
+
+rule('INSP-8', 'INSP-8', 'Text settings in the sidebar', (ctx) =>
+  overRenders(ctx, (render) =>
+    render.rawNodes
+      .filter((node) => node.inspector && node.name === 'TextControl' && node.props.type !== 'number')
+      .map((node) => `a text TextControl (${unmark(node.props.label ?? '')}) is in the sidebar; text the page shows belongs on the canvas`),
+  { only: (render) => render.isSelected }));
+
 export const RULE_IDS = new Set(RULES.flatMap((entry) => entry.ids));
 
 // Warnings report without failing: canvas polish, naming and test coverage. Everything else is an error.
 export const WARN_RULES = new Set([
   'TEST-1', 'TEST-2', 'VIEW-2', 'VIEW-4-empty', 'VIEW-6', 'PHP-5', 'PHP-6', 'PHP-7', 'PHP-8', 'PHP-10',
   'GROUND-4', 'ENT-5', 'INSP-1', 'INSP-3', 'INSP-5', 'INSP-6', 'CANVAS-1', 'CANVAS-4', 'CANVAS-7',
-  'CTA-3', 'MEDIA-3', 'JSON-7', 'JSON-9',
+  'CTA-3', 'MEDIA-3', 'JSON-7', 'JSON-9', 'INSP-8',
 ]);
 const levelOf = (rule) => (WARN_RULES.has(rule) ? 'warn' : 'error');
 
@@ -934,9 +949,13 @@ export function listBlocks(blocksDir) {
 
 export const formatFailure = (failure) => `${label({ n: failure.n, ids: [failure.rule] })} ${failure.title}: ${failure.message}`;
 
-// CLI: `node scripts/conformance.mjs [--verbose] [slug...]` from the theme root. Reports only; never edits a file.
+// CLI: `node scripts/conformance.mjs [--verbose|--rules] [slug...]` from the theme root. Reports only; never edits a file.
 async function main() {
   const args = process.argv.slice(2);
+  if (args.includes('--rules')) {
+    for (const entry of RULES) console.log(`${levelOf(entry.ids[0]).padEnd(5)}  ${entry.ids.join(', ').padEnd(24)}  ${entry.title}${entry.scope === 'project' ? ' (theme-wide)' : ''}`);
+    return;
+  }
   const verbose = args.includes('--verbose');
   const themeRoot = process.cwd();
   const blocksDir = join(themeRoot, 'resources', 'blocks');

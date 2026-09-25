@@ -1,0 +1,28 @@
+/*
+ * Full-bleed media inside a `.container` row: pulls from the container's content edge to the section edge.
+ * `cqw`, not `vw` (vw counts the scrollbar); the section needs `container-type: inline-size`.
+ */
+:root {
+  --bleed-max: 41rem;
+}
+
+@utility bleed-x {
+  margin-inline: max(calc(50% - 50cqw), calc(-1 * var(--bleed-max)));
+}
+
+@utility bleed-start {
+  margin-inline-start: max(calc(50% - 50cqw), calc(-1 * var(--bleed-max)));
+  margin-inline-end: 0;
+}
+
+@utility bleed-end {
+  margin-inline-end: max(calc(50% - 50cqw), calc(-1 * var(--bleed-max)));
+  margin-inline-start: 0;
+}
+
+/* Past the cap (160rem = 2560px) the media detaches from the viewport edge, so that edge rounds too. */
+@container (width > 160rem) {
+  .bleed-media {
+    border-radius: var(--radius-card);
+  }
+}

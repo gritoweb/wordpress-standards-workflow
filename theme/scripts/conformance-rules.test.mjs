@@ -187,6 +187,11 @@ const BREAKS = [
   ['A11Y-6', 'rich copy is printed without the new-tab helper', (dir) => replaceOnce(dir, `${BLOCK}/block.php`, "BlockAttributes::newTabHints(wp_kses_post($attributes['body'] ?? ''))", "wp_kses_post($attributes['body'] ?? '')")],
   ['A11Y-6', 'a new-tab link has no hint', (dir) => replaceOnce(dir, VIEW, "@include('partials.new-tab-hint', ['new' => $ctaNew])", '')],
   ['A11Y-6', 'a second new-tab link shares the first one\'s hint', (dir) => replaceOnce(dir, VIEW, '    @endif\n  </div>\n</section>', '      <a class="conformance-pass__more" href="{!! esc_url($ctaUrl) !!}" @if ($ctaNew) target="_blank" @endif>{{ $ctaText }}</a>\n    @endif\n  </div>\n</section>')],
+  ['INSP-7', 'a content editor sits in the sidebar', (dir) => replaceOnce(dir, `${BLOCK}/block.jsx`, "<PanelBody title={__('Items', '__TEXT_DOMAIN__')} initialOpen={false}>", "<PanelBody title={__('Items', '__TEXT_DOMAIN__')} initialOpen={false}>\n            <InlineField label=\"Sidebar text\" value=\"\" onChange={() => {}} />")],
+  ['INSP-8', 'a text TextControl sits in the sidebar', (dir) => {
+    replaceOnce(dir, `${BLOCK}/block.jsx`, "import { PanelBody } from '@wordpress/components';", "import { PanelBody, TextControl } from '@wordpress/components';");
+    replaceOnce(dir, `${BLOCK}/block.jsx`, "<PanelBody title={__('Items', '__TEXT_DOMAIN__')} initialOpen={false}>", "<PanelBody title={__('Items', '__TEXT_DOMAIN__')} initialOpen={false}>\n            <TextControl label=\"Caption\" value=\"\" onChange={() => {}} />");
+  }],
   ['EDITOR-RENDER', 'block.jsx imports a package the bundler cannot find', (dir) => replaceOnce(dir, `${BLOCK}/block.jsx`, "import { registerBlockType } from '@wordpress/blocks';", "import { registerBlockType } from '@wordpress/blocks';\nimport missing from '@wordpress/not-a-package';")],
 ];
 

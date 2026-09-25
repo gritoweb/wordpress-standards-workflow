@@ -1,0 +1,49 @@
+/* Every slide's copy shares one grid cell, sized to the tallest, so switching never pushes the image down. */
+.hero__copies {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.hero__copy {
+  grid-area: 1 / 1;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--hero-transition-duration, 500ms) ease,
+    visibility 0s linear var(--hero-transition-duration, 500ms);
+}
+
+.hero__copy.is-active {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.hero[data-hero-transition='none'] .hero__copy {
+  transition: none;
+}
+
+/* Swiper's slides fill the frame the view gives them. */
+.hero__slides.swiper .swiper-slide {
+  height: 100%;
+}
+
+.hero__arrow {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__copy {
+    transition: none;
+  }
+}
+
+/* The chrome sits under the bleeding image, so its right gutter mirrors the container's. */
+.hero__chrome {
+  padding-right: var(--container-padding-x);
+}

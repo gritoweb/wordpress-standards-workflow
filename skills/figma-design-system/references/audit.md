@@ -21,7 +21,7 @@ This is the phase that catches what the comps never showed. A Figma file has pag
 
 ## Inputs
 
-From `_docs/figma-map.md`: the **Pages** table, the **Block inventory** (including its custom post type dependencies and its "not blocks" list), the **Canonical nodes**, and **Questions for design**. From the theme: `resources/views/`, `app/setup.php` and `app/site.php` (nav menu locations, `Footer::LOCATIONS` plus `primary_navigation`, are registered in `site.php`, never `setup.php`), and the project's `_docs/launch-list.md`.
+From `_docs/figma-map.md`: the **Pages** table, the **Block inventory** (including its custom post type dependencies and its "not blocks" list), the **Canonical nodes**, and **Questions for design**. From the theme: `resources/views/`, `app/setup.php` and `app/site.php` (nav menu locations: Sage registers `primary_navigation`; footer locations are registered in `app/site.php`, never `setup.php`), and the project's `_docs/launch-list.md`.
 
 Most of this phase reads the theme, not Figma. Expect a handful of Figma calls at most: a 404 board if one exists, and any state board a page design implies. Give the read estimate as usual, and say when the answer is "no board exists, this is derived."
 

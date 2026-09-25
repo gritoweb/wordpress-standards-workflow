@@ -1,0 +1,63 @@
+/*
+ * The wordmark and the scroll cue are single-colour marks drawn as CSS masks,
+ * the same technique .header__logo uses (see layout/header.css).
+ *
+ * The paths are relative, not the @images alias: this file is declared with
+ * file:./block.css and is served straight from source, never through Vite,
+ * so the alias would ship uncompiled. A relative URL resolves against this
+ * file's own location, which is the one thing guaranteed correct.
+ *
+ * The colour is currentColor, so a dark ground's `on-dark` text colour (or
+ * any future ground) carries the mark automatically — no ground-specific
+ * override needed here.
+ */
+.statement-hero__logo {
+  display: block;
+  width: 100%;
+  color: inherit;
+  /* The kit's placeholder wordmark ratio (see examples/images/logo.svg). */
+  aspect-ratio: 1366 / 127;
+  background-color: currentColor;
+  mask: url('../../images/logo.svg') no-repeat center / contain;
+}
+
+/* The stacked mobile wordmark keeps its own intrinsic ratio. */
+@media (width < 64rem) {
+  .statement-hero__logo {
+    aspect-ratio: 336 / 118;
+    mask-image: url('../../images/logo-stacked.svg');
+  }
+}
+
+.statement-hero__image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.statement-hero__cue {
+  display: block;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  background: none;
+  position: relative;
+  color: inherit;
+}
+
+/* The mask paints a pseudo-element: on the button itself it would clip the
+   button's own focus outline. */
+.statement-hero__cue::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: currentColor;
+  mask: url('../../images/icons/chevron-down.svg') no-repeat center / contain;
+}
+
+.statement-hero__cue:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}

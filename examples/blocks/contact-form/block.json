@@ -1,0 +1,90 @@
+{
+    "apiVersion": 3,
+    "name": "__BLOCK_NAMESPACE__/contact-form",
+    "title": "Contact Form",
+    "category": "__BLOCK_CATEGORY_SLUG__",
+    "icon": "email",
+    "description": "A form beside an image, closing a page. Gravity Forms when it's active, a shortcode otherwise.",
+    "textdomain": "__TEXT_DOMAIN__",
+    "render": "file:./block.php",
+    "viewStyle": "file:./block.css",
+    "supports": {
+        "anchor": true
+    },
+    "attributes": {
+        "isPreview": {
+            "type": "boolean",
+            "default": false
+        },
+        "heading": {
+            "type": "string",
+            "default": ""
+        },
+        "intro": {
+            "type": "string",
+            "default": ""
+        },
+        "ground": {
+            "type": "string",
+            "default": ""
+        },
+        "formId": {
+            "type": "number",
+            "default": 0
+        },
+        "formShortcode": {
+            "type": "string",
+            "default": ""
+        },
+        "imageId": {
+            "type": "number",
+            "default": 0
+        },
+        "imageUrl": {
+            "type": "string",
+            "default": ""
+        },
+        "mediaPosition": {
+            "type": "string",
+            "default": "right"
+        },
+        "imagePosition": {
+            "type": "string",
+            "default": "center"
+        },
+        "paddingVertDesktop": {
+            "type": "number",
+            "default": 112
+        },
+        "paddingVertMobile": {
+            "type": "number",
+            "default": 56
+        },
+        "paddingXDesktop": {
+            "type": "boolean",
+            "default": false
+        },
+        "paddingXMobile": {
+            "type": "boolean",
+            "default": false
+        },
+        "entrance": {
+            "type": "object",
+            "default": {
+                "type": "fade-slide",
+                "direction": "up",
+                "distance": null,
+                "unit": "px",
+                "duration": null,
+                "delay": null,
+                "stagger": 100,
+                "trigger": "section"
+            }
+        }
+    },
+    "example": {
+        "attributes": {
+            "isPreview": true
+        }
+    }
+}

@@ -1,0 +1,124 @@
+/*
+ * Plain CSS: block.css is served from source, never compiled by Vite.
+ *
+ * --color-focus is earth-900 by default. A dark ground needs the focus ring
+ * to stay visible against it, so a dark ground swaps the ring to the
+ * ground's own light token; a light ground keeps the ink ring.
+ */
+.logo-wall--dark {
+  --color-focus: var(--color-primary);
+}
+
+.logo-wall--light {
+  --color-focus: var(--color-ink);
+}
+
+.logo-wall__stack {
+  gap: 2rem;
+}
+
+.logo-wall__heading {
+  font-size: var(--text-h1-mobile);
+  line-height: var(--text-h1-mobile--line-height);
+  letter-spacing: var(--text-h1-mobile--letter-spacing);
+}
+
+.logo-wall__brand-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.logo-wall__brand-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem var(--brand-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.logo-wall__brand-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 1 var(--brand-cell);
+  min-width: 0;
+  height: var(--brand-height);
+  overflow: hidden;
+}
+
+.logo-wall__brand-logo a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.logo-wall__brand-img {
+  display: block;
+  flex: none;
+  width: var(--brand-width);
+  height: var(--brand-height);
+  max-width: none;
+  /* Width and height are independent editorial values, not always exactly
+     the natural ratio; object-fit:contain keeps the raster proportional
+     inside that box instead of stretching it to fill a slightly mismatched
+     pair. */
+  object-fit: contain;
+}
+
+@media (width >= 80rem) {
+  .logo-wall__stack {
+    gap: 4rem;
+  }
+
+  .logo-wall__heading {
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
+    letter-spacing: var(--text-h2--letter-spacing);
+  }
+
+  .logo-wall__brand-rows {
+    display: flex;
+    gap: 0;
+  }
+}
+
+@media (width < 80rem) {
+  .logo-wall__brand-rows {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1rem;
+  }
+
+  .logo-wall__brand-row {
+    display: contents;
+  }
+
+  .logo-wall__brand-logo {
+    height: auto;
+    min-height: 3.5rem;
+    overflow: visible;
+  }
+
+  /* The desktop width/height are editorial pixel values, some up to 600px —
+     too large for a two-column mobile grid. Scale from the mark's own
+     natural ratio (the <img>'s real width/height attributes) instead of a
+     second authored size. */
+  .logo-wall__brand-img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 3.5rem;
+  }
+}
+
+@media (width < 24rem) {
+  .logo-wall__brand-rows {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

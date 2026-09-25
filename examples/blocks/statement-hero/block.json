@@ -1,0 +1,66 @@
+{
+    "apiVersion": 3,
+    "name": "__BLOCK_NAMESPACE__/statement-hero",
+    "title": "Statement Hero",
+    "category": "__BLOCK_CATEGORY_SLUG__",
+    "icon": "align-wide",
+    "description": "Full-bleed opening panel: a logo, an image, or neither, above one large statement, with an optional scroll cue.",
+    "textdomain": "__TEXT_DOMAIN__",
+    "render": "file:./block.php",
+    "viewScript": "__PREFIX__-scroll-cue",
+    "viewStyle": "file:./block.css",
+    "supports": {
+        "anchor": true
+    },
+    "attributes": {
+        "isPreview": {
+            "type": "boolean",
+            "default": false
+        },
+        "paddingVertDesktop": {
+            "type": "number",
+            "default": 0
+        },
+        "paddingVertMobile": {
+            "type": "number",
+            "default": 0
+        },
+        "paddingXDesktop": {
+            "type": "boolean",
+            "default": false
+        },
+        "paddingXMobile": {
+            "type": "boolean",
+            "default": false
+        },
+        "ground": {
+            "type": "string",
+            "default": ""
+        },
+        "media": {
+            "type": "string",
+            "default": "none"
+        },
+        "imageId": {
+            "type": "number",
+            "default": 0
+        },
+        "imageUrl": {
+            "type": "string",
+            "default": ""
+        },
+        "heading": {
+            "type": "string",
+            "default": ""
+        },
+        "showScrollCue": {
+            "type": "boolean",
+            "default": false
+        }
+    },
+    "example": {
+        "attributes": {
+            "isPreview": true
+        }
+    }
+}

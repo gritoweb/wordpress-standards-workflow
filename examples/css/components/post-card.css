@@ -1,0 +1,66 @@
+/*
+ * Post grid card — thumbnail, title, meta, excerpt, CTA. Markup:
+ * partials/post-grid-card.blade.php, rendered by post-grid (and any future
+ * collection block reusing the same partial). The card carries its own
+ * surface/ink colors rather than switching on `.on-dark`, so it reads
+ * correctly on every ground without a dark-mode variant.
+ */
+
+@layer components {
+  .post-grid__grid {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .post-grid__stack {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .post-card {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+  }
+
+  .post-card__photo {
+    background-color: var(--color-light);
+  }
+
+  .post-card__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.5rem;
+  }
+
+  .post-card__title {
+    color: var(--color-ink);
+  }
+
+  .post-card__meta {
+    font-family: var(--font-body);
+    font-size: var(--text-small);
+    line-height: var(--text-small--line-height);
+    font-weight: var(--text-small--font-weight);
+    color: var(--color-ink);
+    opacity: 0.7;
+  }
+
+  .post-card__excerpt {
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  .post-card__cta {
+    margin-top: auto;
+  }
+}

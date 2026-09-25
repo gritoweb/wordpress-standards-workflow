@@ -33,17 +33,17 @@ class BlockPadding
     }
 
     /**
-     * The four padding values, with the BlockManager defaults.
+     * The four padding values; the optional defaults are the block.json ones, for a caller that builds $attributes by hand.
      *
      * @return array{paddingVertMobile: int, paddingVertDesktop: int, paddingXMobile: bool, paddingXDesktop: bool}
      */
-    public static function fromAttributes(array $attributes): array
+    public static function fromAttributes(array $attributes, int $desktop = 112, int $mobile = 56, bool $horizontal = true): array
     {
         return [
-            'paddingVertMobile'  => absint($attributes['paddingVertMobile'] ?? 56),
-            'paddingVertDesktop' => absint($attributes['paddingVertDesktop'] ?? 112),
-            'paddingXMobile'     => (bool) ($attributes['paddingXMobile'] ?? true),
-            'paddingXDesktop'    => (bool) ($attributes['paddingXDesktop'] ?? true),
+            'paddingVertMobile'  => absint($attributes['paddingVertMobile'] ?? $mobile),
+            'paddingVertDesktop' => absint($attributes['paddingVertDesktop'] ?? $desktop),
+            'paddingXMobile'     => (bool) ($attributes['paddingXMobile'] ?? $horizontal),
+            'paddingXDesktop'    => (bool) ($attributes['paddingXDesktop'] ?? $horizontal),
         ];
     }
 }

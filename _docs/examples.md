@@ -12,6 +12,11 @@ namespace), `<text-domain>`, `<category>`. Theme infrastructure
 (`BlockManager`, `BlockPadding`, `BlockEntrance`, `app/site.php`, the shared
 components) is **not** repeated here — it comes from the kit's `theme/`.
 
+> **More references.** `_docs/patterns/` has one page per recurring structure
+> (carousel, collection grid, background-photo band, …) and the kit keeps a
+> tested example of each at `<kitPath>/examples/blocks/`. The three blocks below
+> stay as the quick reference.
+
 ## Rules every block follows
 
 - **`block.php` shapes and sanitizes; Blade only prints.** Arrays are read

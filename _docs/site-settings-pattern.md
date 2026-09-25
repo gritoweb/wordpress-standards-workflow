@@ -94,8 +94,8 @@ The kit's `examples/` (at `kitPath` in `kit.config.json`) has the same setup bui
    fields.
 
 3. **Read it where it's needed**, through that class, never `get_field()`
-   directly. A Blade view reads it from a composer (see
-   `<kitPath>/examples/app/View/Composers/Header.php`); a block's `block.php` calls
+   directly. A Blade view reads it from a composer (`app/View/Composers/`);
+   a block's `block.php` calls
    `HeaderFooterSettings::supportEmail()` the same way.
 
 4. **Add a test.** At minimum: the getter falls back cleanly with no ACF
@@ -144,7 +144,5 @@ from each environment's own database.
   `acf-json/group___PREFIX___site_settings.json`, so a number's PHP clamp and
   its ACF field can't drift apart.
 
-The header and footer example has its own tests in the kit's `examples/`:
-`HeaderFooterSettings.test.mjs` for the getters, and `Header.test.mjs` and
-`Footer.test.mjs` for the composers that read them, including the header's
-`<li>` markup building (moved out of the Blade view; see `blade-standards`).
+The worked example has its own tests in the kit's `examples/`:
+`HeaderFooterSettings.test.mjs` for the getters.

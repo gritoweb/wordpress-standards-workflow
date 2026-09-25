@@ -1,0 +1,16 @@
+/*
+ * A logo flagged single-color is redrawn for its ground (BlockLogos::tintClass and logoTint.js).
+ * brightness(0) flattens any mark to black, then invert() sets its lightness from 0 (black) to 1 (white).
+ */
+:root {
+  --logo-mark-dark: 0.2;
+  --logo-mark-light: 1;
+}
+
+.logo-tint-dark {
+  filter: brightness(0) invert(var(--logo-mark-dark));
+}
+
+.logo-tint-light {
+  filter: brightness(0) invert(var(--logo-mark-light));
+}

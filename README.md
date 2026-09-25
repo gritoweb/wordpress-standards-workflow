@@ -27,6 +27,10 @@ global-skills/
   commit-rules.md                  # commit convention — NOT per-project; recommend installing to ~/.claude/skills/ (user-level)
 _docs/
   examples.md                      # canonical reference block (code) — imported to <project>/_docs/
+  patterns/                        # one page per recurring structure — imported to <project>/_docs/patterns/
+  editor-contract.md, entrance.md, content-types.md  # imported to <project>/_docs/
+examples/                          # tested reference builds (kit-only, never imported; see examples/README.md)
+tests/                             # kit-only tests (npm test at the kit root)
   launch-list.md                   # pre-launch checklist — imported to <project>/_docs/
 gitignore.example                  # base .gitignore template — imported as <project>/.gitignore (only if missing)
 prettier.config.example.js         # Prettier + Tailwind/Blade class sorting — copied to <theme>/prettier.config.js
@@ -55,7 +59,7 @@ the manifest **is** the source of truth either way.
 > - In standard WordPress installations with Sage 11, the codebase lives in `wp-content/themes/<theme>/`.
 > - All `.claude/skills/`, `CLAUDE.md`, and `_docs/` must be imported into `<theme>/` (`wp-content/themes/<theme>/`), **NEVER into the WordPress root**.
 > - **NEVER clone or leave the `wordpress-standards-workflow` repository inside the WordPress root.**
-> - If you clone this repository from GitHub to extract skills, copy the files to `<theme>/` and **delete the cloned kit directory immediately** (`rm -rf ...`).
+> - Clone this repository to a folder **outside** the WordPress project (e.g. `~/kits/wordpress-standards-workflow`) and keep it: `kitPath` in the theme's `kit.config.json` points at it, so the agent can read `examples/`.
 
 ### Import manifest
 
@@ -74,6 +78,8 @@ the manifest **is** the source of truth either way.
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — interactive wizard for Site Settings fields (SCF options page + typed accessor) |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy the whole folder — builds the css-foundation-wizard's files from a Figma file, phase by phase |
 | `_docs/examples.md` | `<theme>/_docs/examples.md` | Reference patterns the AI uses for grounding |
+| `_docs/patterns/` | `<theme>/_docs/patterns/` | Copy the whole folder — one page per recurring structure; `create-block` reads the closest one first |
+| `_docs/editor-contract.md`, `_docs/entrance.md`, `_docs/content-types.md` | `<theme>/_docs/` | Why the canvas works as it does, the entrance system, the content-type pattern |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Pre-launch checklist for go-live |
 | `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | The Site Settings pattern (SCF options page + typed accessor) |
 | `_docs/editor-fidelity-checklist.md` | `<theme>/_docs/editor-fidelity-checklist.md` | Canvas fidelity checklist |

@@ -1,0 +1,132 @@
+/*
+ * Plain CSS: block.css is served from source, never compiled by Vite.
+ */
+
+/* A LIST ITEM AND THE NEXT ONE ARE SEPARATE POINTS. base.css spaces
+   block-level siblings but not list items, so a body that includes a plain
+   <ul>/<ol> needs its own gap declared here. */
+.text-media__body li + li {
+  margin-top: 1lh;
+}
+
+.text-media__logos {
+  --tms-logo-cols: 2;
+  --tms-logo-gap: 2rem;
+
+  /*
+   * A basis of exactly (100% - gaps) / cols can round a fraction of a pixel
+   * over the line at fluid widths and wrap the last item of a full row onto
+   * a row of its own. A tenth of a pixel off each item is below perception
+   * and cannot round up.
+   */
+  --tms-logo-cell: calc(
+    (100% - (var(--tms-logo-cols) - 1) * var(--tms-logo-gap)) /
+      var(--tms-logo-cols) - 0.1px
+  );
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: var(--tms-logo-gap);
+  row-gap: 1.5rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (width < 24rem) {
+  .text-media__logos {
+    --tms-logo-cols: 1;
+  }
+}
+
+.text-media__logo {
+  display: flex;
+  flex: 0 0 var(--tms-logo-cell);
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  max-width: var(--tms-logo-cell);
+  /* block.php caps a mark at 70px tall (90px for one or two logos); 20px of
+     air, 10 each side, held constant across breakpoints since the cap
+     changes with logo count, never with viewport width. */
+  height: 5.625rem;
+}
+
+.text-media__logo-img {
+  /* The inline width and height are the drawn size, computed in block.php;
+     max-* only ever shrinks them, so the height cap holds. */
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+@media (width >= 64rem) {
+  .text-media__logos {
+    --tms-logo-cols: 3;
+    --tms-logo-gap: 3rem;
+
+    row-gap: 0;
+  }
+}
+
+@media (width >= 80rem) {
+  .text-media__logos {
+    --tms-logo-cols: 2;
+    --tms-logo-gap: 2rem;
+
+    row-gap: 1.5rem;
+  }
+}
+
+/* One or two logos: a single stacked, centred column with a taller cell
+   instead of splitting a lone mark across a row it doesn't fill. Wins at
+   any width — the selector's own specificity outranks every column rule
+   above, media query or not. */
+.text-media__logos:not(:has(> .text-media__logo:nth-child(3))) {
+  --tms-logo-cols: 1;
+}
+
+.text-media__logos:not(:has(> .text-media__logo:nth-child(3)))
+  > .text-media__logo {
+  height: 6.875rem;
+}
+
+/* Flatten the copy column on mobile so the media can sit before the CTA. A
+   flex row at xl keeps percentage bleed margins relative to the full row. */
+.text-media__col {
+  display: contents;
+}
+
+/* Phone order: copy, media, button — and the media leads when it bleeds. */
+.text-media__media {
+  order: 2;
+}
+
+.text-media__cta {
+  order: 3;
+}
+
+.text-media__row.is-bleed .text-media__media {
+  order: -1;
+}
+
+@media (width >= 80rem) {
+  .text-media__col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .text-media__media,
+  .text-media__cta,
+  .text-media__row.is-bleed .text-media__media {
+    order: 0;
+  }
+
+  .text-media__cta {
+    align-self: flex-start;
+  }
+}

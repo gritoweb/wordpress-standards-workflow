@@ -2,6 +2,51 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Tested examples and pattern pages, on this kit's rules
+
+The Sage Site Kit's examples and pattern pages, rebuilt on this kit's
+decisions (`docs/merge-decisions.md`) and tested.
+
+### Added
+- **`examples/`** (kit-only, never imported): eleven blocks (section intro,
+  CTA band, background-photo band, media and text split, carousel, opening
+  statement, collection grid, logo row, location with map, form embed,
+  disclosure list), the 404, the post card, a sample content type, and the
+  SCF groups (`HeaderFooterSettings` is the worked Site Settings example).
+  314 tests; `tests/examples-conformance.test.mjs` runs conformance over each.
+- **`_docs/patterns/`** (17 pages), `_docs/editor-contract.md`,
+  `_docs/entrance.md`, `_docs/content-types.md`, imported into projects;
+  `create-block` now starts from the closest pattern.
+- **Conformance INSP-7 (error)**: `ActionEditor`, `LinkPicker`, `LinkControl`,
+  `RichText`, `AutoGrowingTextarea`, `InlineField` or `ParagraphsField` inside
+  `InspectorControls` — the kit's no-content-in-the-sidebar rule, now enforced
+  (it was only reported by `editor-fidelity` in a live editor). INSP-8
+  (warning) for a text `TextControl` in the sidebar. `--rules` lists every rule
+  and its level.
+- `components/logo-tint.css` and `components/bleed.css` (the framework's logo
+  tint and full-bleed helpers `BlockLogos`/`logoTint.js` and the examples use).
+- `BlockPadding::fromAttributes()` takes optional block defaults
+  (`$desktop`, `$mobile`, `$horizontal`), for a caller that builds attributes
+  by hand.
+
+### Changed
+- Their examples moved onto our rules: every section and item button is
+  edited on the canvas (their sidebar **Button** panels, 7 of 11 blocks);
+  logo names and links on the canvas; the cta-banner photo in the sidebar's
+  **Background Media**; the hero's carousel on **Swiper** (vendor handle
+  enqueued only with 2+ slides, plain `block.js`, tested with a faked Swiper);
+  padding on our presets (56/112); our tokens and classes (`text-lead`,
+  `btn-secondary`, `--color-light`…).
+- `project-init` keeps the kit checkout **outside** the project (`kitPath`)
+  instead of deleting it.
+
+### Removed
+- Their header and footer examples: the header is the one `project-init`
+  installs; `_docs/patterns/header.md` now describes it.
+
+### Verified
+- `npm test` at the kit root: exit 0, 864 pass.
+
 ## 2026-09-25 — Block conformance: errors fail, warnings print, nothing is edited
 
 The Sage Site Kit's conformance checks, adapted to this kit's components and

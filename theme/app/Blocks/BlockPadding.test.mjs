@@ -12,6 +12,15 @@ const fromAttributes = (attrs, ...rest) =>
 const resolve = (vm, vd, xm, xd) =>
   callPhp('App\\Blocks\\BlockPadding::resolve', [vm, vd, xm, xd], env);
 
+test('fromAttributes falls back to the caller defaults when unset', () => {
+  assert.deepEqual(fromAttributes({}, 218, 96, false), {
+    paddingVertDesktop: 218,
+    paddingVertMobile: 96,
+    paddingXDesktop: false,
+    paddingXMobile: false,
+  });
+});
+
 test("fromAttributes's own defaults match BlockManager::globalAttributes()", () => {
   // block.json is the only source of a block's padding default — the PHP
   // default (112/56/true/true) only matters to a caller, such as a test,

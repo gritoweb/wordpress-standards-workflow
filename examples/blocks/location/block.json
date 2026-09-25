@@ -1,0 +1,152 @@
+{
+    "apiVersion": 3,
+    "name": "__BLOCK_NAMESPACE__/location",
+    "title": "Location",
+    "category": "__BLOCK_CATEGORY_SLUG__",
+    "icon": "location",
+    "description": "One office: its address, its primary contact, a directions button and a map.",
+    "textdomain": "__TEXT_DOMAIN__",
+    "render": "file:./block.php",
+    "viewStyle": "file:./block.css",
+    "viewScript": "file:./block.js",
+    "supports": {
+        "anchor": true
+    },
+    "attributes": {
+        "isPreview": {
+            "type": "boolean",
+            "default": false
+        },
+        "ground": {
+            "type": "string",
+            "default": ""
+        },
+        "city": {
+            "type": "string",
+            "default": ""
+        },
+        "officeLabel": {
+            "type": "string",
+            "default": ""
+        },
+        "addressLine1": {
+            "type": "string",
+            "default": ""
+        },
+        "addressLine2": {
+            "type": "string",
+            "default": ""
+        },
+        "phone": {
+            "type": "string",
+            "default": ""
+        },
+        "fax": {
+            "type": "string",
+            "default": ""
+        },
+        "contactLabel": {
+            "type": "string",
+            "default": "Primary Contact"
+        },
+        "contactName": {
+            "type": "string",
+            "default": ""
+        },
+        "contactRole": {
+            "type": "string",
+            "default": ""
+        },
+        "contactPhone": {
+            "type": "string",
+            "default": ""
+        },
+        "email": {
+            "type": "string",
+            "default": ""
+        },
+        "latitude": {
+            "type": "string",
+            "default": ""
+        },
+        "longitude": {
+            "type": "string",
+            "default": ""
+        },
+        "zoom": {
+            "type": "number",
+            "default": 15
+        },
+        "ctaText": {
+            "type": "string",
+            "default": "Get Directions"
+        },
+        "ctaLink": {
+            "type": "object",
+            "default": {
+                "url": "",
+                "opensInNewTab": true
+            }
+        },
+        "ctaIcon": {
+            "type": "string",
+            "default": "none",
+            "enum": [
+                "none",
+                "arrow",
+                "external",
+                "download"
+            ]
+        },
+        "ctaIconPosition": {
+            "type": "string",
+            "default": "after",
+            "enum": [
+                "after",
+                "before"
+            ]
+        },
+        "mediaPosition": {
+            "type": "string",
+            "default": "right"
+        },
+        "sectionDivider": {
+            "type": "string",
+            "default": "none"
+        },
+        "paddingVertDesktop": {
+            "type": "number",
+            "default": 112
+        },
+        "paddingVertMobile": {
+            "type": "number",
+            "default": 56
+        },
+        "paddingXDesktop": {
+            "type": "boolean",
+            "default": false
+        },
+        "paddingXMobile": {
+            "type": "boolean",
+            "default": false
+        },
+        "entrance": {
+            "type": "object",
+            "default": {
+                "type": "fade-slide",
+                "direction": "up",
+                "distance": null,
+                "unit": "px",
+                "duration": null,
+                "delay": null,
+                "stagger": 100,
+                "trigger": "item"
+            }
+        }
+    },
+    "example": {
+        "attributes": {
+            "isPreview": true
+        }
+    }
+}

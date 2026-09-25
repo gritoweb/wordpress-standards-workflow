@@ -2,7 +2,7 @@
 
 Builds the site's persistent chrome: the header with its navigation, the footer, the logo and social icons exported from Figma, and the first JavaScript the theme needs: the mobile menu. Every page renders this, so a mistake here is visible everywhere.
 
-The header and footer are **design, not design system**. Nothing here is installed code to adapt: you build both from the comp, using `_docs/patterns/header.md` and `_docs/patterns/footer.md` as the checklist of behavior to keep, and the tested examples in `<kitPath>/examples/views/sections/` as references for what a passing one looks like. The design system (tokens, button roles, `container`) is what you build them on.
+The header is the one `project-init` installs (Phase 1c: `sections/header.blade.php`, `components/header.css`, `modules/navigation.js`) — this phase **adapts it to the comp**, keeping its accessibility contract (toggle, `aria-expanded`, Escape), rather than writing a second header. The footer is built from the comp, with `_docs/patterns/footer.md` as the checklist. The design system (tokens, button roles, `container`) is what both sit on.
 
 The shell is the first phase that writes Blade, PHP, and JavaScript rather than only CSS. Follow `blade-standards` for the views and `css-standards` for the CSS; this file covers the Figma side and the parts those skills don't reach.
 
@@ -70,7 +70,7 @@ Use a `mask-image` when the icon has to take a color from CSS (hover states, a c
 
 ## Header Blade
 
-**Build from the pattern, not from Sage's stock placeholder and not from a copy.** `_docs/patterns/header.md` gives the skeleton, the behaviors that must not change (the toggle's accessibility contract, the dropdown and its Escape handling, the three scroll modes, the admin-bar offset), the tests to write, and a link to the tested example, `<kitPath>/examples/views/sections/header.blade.php`. Write the site's own `resources/views/sections/header.blade.php`, its composer, and its CSS from the comp and that page. The example shows what a header that passes those tests does. Its markup, class names, and copy belong to another site's design, so don't paste it in and edit it. If the comp needs a structure the pattern doesn't describe (a mega-menu panel, say), build it, keep the contract, and log it in `_docs/kit-log.md`.
+**Start from the installed header, not from Sage's stock placeholder.** `_docs/patterns/header.md` lists the behaviors that must not change (the toggle's accessibility contract, Escape, the primary menu location). Change the installed `sections/header.blade.php`, `components/header.css` and `navigation.js` to the comp's structure and tokens. If the comp needs a structure the installed header doesn't have (a dropdown, a mega-menu, a scrolled state), add it, keep the contract, and log it in `_docs/kit-log.md`.
 
 ```blade
 <header class="header" role="banner">
@@ -149,10 +149,10 @@ A sticky or scrolled header state is the same call: build it only if a board sho
 
 ## Footer Blade
 
-**Same rule as the header:** build from `_docs/patterns/footer.md`, whose example is `<kitPath>/examples/views/sections/footer.blade.php`. Read the footer node and build the comp's real structure (columns, a menu, social icons, a form, a legal row) on the pattern's rules, rather than starting from Sage's empty `.content-info`.
+**Build from `_docs/patterns/footer.md`.** Read the footer node and build the comp's real structure (columns, a menu, social icons, a form, a legal row) on the pattern's rules, rather than starting from Sage's empty `.content-info`.
 
 - **No widget area unless the comp shows one.** If the theme has `register_sidebar` calls and `dynamic_sidebar` output that no comp supports, say so and propose removing them rather than styling an empty region.
-- A footer menu is a second nav location, registered in `app/site.php` (never Sage's stock `app/setup.php`) alongside the primary one. The pattern's example registers generic `footer_column_*` locations (`Footer::LOCATIONS`): register as many as the comp has columns, with generic names, guard each with `has_nav_menu`, and add assigning them to the manual steps.
+- A footer menu is a second nav location, registered in `app/site.php` (never Sage's stock `app/setup.php`) alongside the primary one. Register generic `footer_column_*` locations: as many as the comp has columns, with generic names, guard each with `has_nav_menu`, and add assigning them to the manual steps.
 - Social links are a list of `<a>` elements with the exported icons and an accessible name each (`aria-label="Facebook"` or visually hidden text): an icon with no name is a bare link to a screen reader. The list of possible networks is code (a fixed set plus `other`, for a network outside it), not config: which networks show and their URLs are Site Settings values, added for the site by following `_docs/site-settings-pattern.md`.
 - Render the copyright year with `wp_date('Y')` (never `date()`, it ignores the site's timezone) and never a literal.
 - Contact details, the legal/business name, and any newsletter or CTA copy in the comp are content, not design: read them through `SiteSettings` (`_docs/site-settings-pattern.md` says which footer fields exist), never hardcode them in the Blade or the composer.

@@ -1,0 +1,31 @@
+{
+    "apiVersion": 3,
+    "name": "__BLOCK_NAMESPACE__/faq",
+    "title": "FAQ",
+    "category": "__BLOCK_CATEGORY_SLUG__",
+    "icon": "editor-help",
+    "description": "Questions that open to show their answers, with an optional heading, introduction, and button.",
+    "textdomain": "__TEXT_DOMAIN__",
+    "render": "file:./block.php",
+    "viewStyle": "file:./block.css",
+    "supports": {
+        "anchor": true
+    },
+    "attributes": {
+        "isPreview": { "type": "boolean", "default": false },
+        "heading": { "type": "string", "default": "" },
+        "intro": { "type": "string", "default": "" },
+        "items": { "type": "array", "default": [] },
+        "ground": { "type": "string", "default": "" },
+        "sectionDivider": { "type": "string", "default": "none" },
+        "ctaText": { "type": "string", "default": "" },
+        "ctaLink": { "type": "object", "default": { "url": "", "opensInNewTab": false } },
+        "ctaIcon": { "type": "string", "default": "none" },
+        "ctaIconPosition": { "type": "string", "default": "after" }
+    },
+    "example": {
+        "attributes": {
+            "isPreview": true
+        }
+    }
+}

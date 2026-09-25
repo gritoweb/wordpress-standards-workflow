@@ -37,7 +37,8 @@ const { ItemList } = await executeBundle(
       }
       // Runs the effect immediately (there's no real mount here) and stashes
       // its cleanup so a test can call it to simulate an unmount.
-      export function useEffect(fn) {
+      export function useLayoutEffect() {}
+export function useEffect(fn) {
         const cleanup = fn();
         if (cleanup) {
           globalThis.__effectCleanups = globalThis.__effectCleanups || [];

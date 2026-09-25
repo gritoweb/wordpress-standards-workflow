@@ -1,0 +1,132 @@
+{
+    "apiVersion": 3,
+    "name": "__BLOCK_NAMESPACE__/text-media",
+    "title": "Text and media split",
+    "category": "__BLOCK_CATEGORY_SLUG__",
+    "icon": "align-pull-left",
+    "description": "A two-column row: copy on one side, a photo or a panel of logos on the other.",
+    "textdomain": "__TEXT_DOMAIN__",
+    "render": "file:./block.php",
+    "viewStyle": "file:./block.css",
+    "supports": {
+        "anchor": true
+    },
+    "attributes": {
+        "isPreview": {
+            "type": "boolean",
+            "default": false
+        },
+        "paddingVertDesktop": {
+            "type": "number",
+            "default": 112
+        },
+        "paddingVertMobile": {
+            "type": "number",
+            "default": 56
+        },
+        "paddingXDesktop": {
+            "type": "boolean",
+            "default": false
+        },
+        "paddingXMobile": {
+            "type": "boolean",
+            "default": false
+        },
+        "eyebrow": {
+            "type": "string",
+            "default": ""
+        },
+        "heading": {
+            "type": "string",
+            "default": ""
+        },
+        "body": {
+            "type": "string",
+            "default": ""
+        },
+        "scale": {
+            "type": "string",
+            "default": "feature"
+        },
+        "sectionDivider": {
+            "type": "string",
+            "default": "none"
+        },
+        "mediaPosition": {
+            "type": "string",
+            "default": "right"
+        },
+        "mediaType": {
+            "type": "string",
+            "default": "image"
+        },
+        "mediaBleed": {
+            "type": "boolean",
+            "default": false
+        },
+        "mediaRatio": {
+            "type": "string",
+            "default": "auto"
+        },
+        "imageId": {
+            "type": "number",
+            "default": 0
+        },
+        "imageUrl": {
+            "type": "string",
+            "default": ""
+        },
+        "imagePosition": {
+            "type": "string",
+            "default": "center"
+        },
+        "ground": {
+            "type": "string",
+            "default": ""
+        },
+        "logos": {
+            "type": "array",
+            "default": []
+        },
+        "ctaText": {
+            "type": "string",
+            "default": ""
+        },
+        "ctaLink": {
+            "type": "object",
+            "default": { "url": "", "opensInNewTab": false }
+        },
+        "ctaIcon": {
+            "type": "string",
+            "default": "none",
+            "enum": ["none", "arrow", "external", "download"]
+        },
+        "ctaIconPosition": {
+            "type": "string",
+            "default": "after",
+            "enum": ["after", "before"]
+        },
+        "items": {
+            "type": "array",
+            "default": []
+        },
+        "entrance": {
+            "type": "object",
+            "default": {
+                "type": "fade-slide",
+                "direction": "up",
+                "distance": null,
+                "unit": "px",
+                "duration": null,
+                "delay": null,
+                "stagger": 100,
+                "trigger": "section"
+            }
+        }
+    },
+    "example": {
+        "attributes": {
+            "isPreview": true
+        }
+    }
+}

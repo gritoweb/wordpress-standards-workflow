@@ -1,0 +1,95 @@
+{
+    "apiVersion": 3,
+    "name": "__BLOCK_NAMESPACE__/cta-banner",
+    "title": "CTA Banner",
+    "category": "__BLOCK_CATEGORY_SLUG__",
+    "icon": "cover-image",
+    "description": "A full-bleed photo band or panel with a centred heading, an optional line of copy and one button.",
+    "textdomain": "__TEXT_DOMAIN__",
+    "render": "file:./block.php",
+    "supports": {
+        "anchor": true
+    },
+    "attributes": {
+        "isPreview": {
+            "type": "boolean",
+            "default": false
+        },
+        "heading": {
+            "type": "string",
+            "default": ""
+        },
+        "subtitle": {
+            "type": "string",
+            "default": ""
+        },
+        "ground": {
+            "type": "string",
+            "default": ""
+        },
+        "bgImageId": {
+            "type": "number",
+            "default": 0
+        },
+        "bgImageUrl": {
+            "type": "string",
+            "default": ""
+        },
+        "bgImagePosition": {
+            "type": "string",
+            "default": "center"
+        },
+        "layout": {
+            "type": "string",
+            "default": "band"
+        },
+        "textTone": {
+            "type": "string",
+            "default": "dark"
+        },
+        "scrim": {
+            "type": "boolean",
+            "default": false
+        },
+        "ctaText": {
+            "type": "string",
+            "default": ""
+        },
+        "ctaLink": {
+            "type": "object",
+            "default": {
+                "url": "",
+                "opensInNewTab": false
+            }
+        },
+        "ctaIcon": {
+            "type": "string",
+            "default": "none"
+        },
+        "ctaIconPosition": {
+            "type": "string",
+            "default": "after"
+        },
+        "paddingVertDesktop": {
+            "type": "number",
+            "default": 112
+        },
+        "paddingVertMobile": {
+            "type": "number",
+            "default": 56
+        },
+        "paddingXDesktop": {
+            "type": "boolean",
+            "default": true
+        },
+        "paddingXMobile": {
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "example": {
+        "attributes": {
+            "isPreview": true
+        }
+    }
+}

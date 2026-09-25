@@ -674,6 +674,8 @@ foundation in this order:
 @import "./components/selection.css";
 @import "./components/forms-gravity.css";
 @import "./components/social-icons.css";
+@import "./components/logo-tint.css";
+@import "./components/bleed.css";
 @import "./components/page-header.css";
 
 @import "./pages/archive.css";
@@ -710,6 +712,8 @@ font on the page):
 @import "./components/selection.css";
 @import "./components/forms-gravity.css";
 @import "./components/social-icons.css";
+@import "./components/logo-tint.css";
+@import "./components/bleed.css";
 
 @import "./editor/canvas.css";
 

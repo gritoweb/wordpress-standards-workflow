@@ -1,0 +1,103 @@
+{
+    "apiVersion": 3,
+    "name": "__BLOCK_NAMESPACE__/post-grid",
+    "title": "Post Grid",
+    "category": "__BLOCK_CATEGORY_SLUG__",
+    "icon": "grid-view",
+    "description": "Cards from a post type, with sorting and paging. The kit's content-type pattern \u2014 see _docs/content-types.md to add a type.",
+    "textdomain": "__TEXT_DOMAIN__",
+    "render": "file:./block.php",
+    "viewScript": "__PREFIX__-collection-paging",
+    "viewStyle": "__PREFIX__-collection-paging",
+    "supports": {
+        "anchor": true
+    },
+    "attributes": {
+        "isPreview": {
+            "type": "boolean",
+            "default": false
+        },
+        "contentType": {
+            "type": "string",
+            "default": "__PREFIX___person"
+        },
+        "includeIds": {
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "default": []
+        },
+        "excludeIds": {
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "default": []
+        },
+        "orderby": {
+            "type": "string",
+            "enum": [
+                "manual",
+                "title",
+                "date"
+            ],
+            "default": "manual"
+        },
+        "columns": {
+            "type": "number",
+            "default": 3
+        },
+        "postsPerPage": {
+            "type": "number",
+            "default": 0
+        },
+        "pagination": {
+            "type": "string",
+            "enum": [
+                "pager",
+                "loadMore"
+            ],
+            "default": "loadMore"
+        },
+        "moreText": {
+            "type": "string",
+            "default": "Load More"
+        },
+        "linkText": {
+            "type": "string",
+            "default": "Read More"
+        },
+        "ground": {
+            "type": "string",
+            "default": ""
+        },
+        "sectionDivider": {
+            "type": "string",
+            "enum": [
+                "none",
+                "above",
+                "below"
+            ],
+            "default": "none"
+        },
+        "entrance": {
+            "type": "object",
+            "default": {
+                "type": "fade-slide",
+                "direction": "up",
+                "distance": null,
+                "unit": "px",
+                "duration": null,
+                "delay": null,
+                "stagger": null,
+                "trigger": "item"
+            }
+        }
+    },
+    "example": {
+        "attributes": {
+            "isPreview": true
+        }
+    }
+}

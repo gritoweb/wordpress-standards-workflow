@@ -144,6 +144,13 @@ The framework's source is the kit's `theme/` folder; the wiring snippets are in 
 
 ## Phase 1 — Collect block requirements
 
+**Start from a pattern.** Read `_docs/patterns/README.md`, pick the page whose
+**When it applies** matches the block, and read it plus its tested example at
+`<kitPath>/examples/blocks/<slug>/` (`kitPath` in `kit.config.json`). Build the
+block's own markup from that page's parts and the shared components — never
+copy the example. No pattern fits: compose from the section intro's parts and
+say so in the plan.
+
 > **Source of truth: this skill's templates and `_docs/examples.md` only.**
 > Never copy a block, component or CSS from another project on the machine
 > (a sibling theme, an earlier test site): those were built with an older

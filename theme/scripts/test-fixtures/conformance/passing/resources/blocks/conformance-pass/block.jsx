@@ -67,22 +67,6 @@ registerBlockType(metadata, {
             <DividerControl value={sectionDivider} onChange={(value) => setAttributes({ sectionDivider: value })} />
           </PanelBody>
 
-          <PanelBody title={__('Button', '__TEXT_DOMAIN__')} initialOpen={false}>
-            <ActionEditor
-              groupLabel={__('Button editing', '__TEXT_DOMAIN__')}
-              label={__('Button label', '__TEXT_DOMAIN__')}
-              linkLabel={__('Button destination', '__TEXT_DOMAIN__')}
-              text={ctaText}
-              link={ctaLink}
-              icon={ctaIcon}
-              iconPosition={ctaIconPosition}
-              stacked
-              onTextChange={(value) => setAttributes({ ctaText: value })}
-              onLinkChange={(value) => setAttributes({ ctaLink: value })}
-              onIconChange={(value) => setAttributes({ ctaIcon: value })}
-              onIconPositionChange={(value) => setAttributes({ ctaIconPosition: value })}
-            />
-          </PanelBody>
         </InspectorControls>
 
         <EntranceControl attributes={attributes} setAttributes={setAttributes} clientId={clientId} />
@@ -138,16 +122,33 @@ registerBlockType(metadata, {
             </div>
           )}
 
-          <CtaPreview
-            {...entrancePartProps(entrance, part.cta)}
-            className="mt-6"
-            text={ctaText}
-            link={ctaLink}
-            icon={ctaIcon}
-            iconPosition={ctaIconPosition}
-            ground={ground}
-            isSelected={isSelected}
-          />
+          <div {...entrancePartProps(entrance, part.cta)}>
+            <CtaPreview
+              className="mt-6"
+              text={ctaText}
+              link={ctaLink}
+              icon={ctaIcon}
+              iconPosition={ctaIconPosition}
+              ground={ground}
+              isSelected={isSelected}
+            />
+            {/* The button is edited on the canvas, never in the sidebar. */}
+            {isSelected && (
+              <ActionEditor
+                groupLabel={__('Button editing', '__TEXT_DOMAIN__')}
+                label={__('Button label', '__TEXT_DOMAIN__')}
+                linkLabel={__('Button destination', '__TEXT_DOMAIN__')}
+                text={ctaText}
+                link={ctaLink}
+                icon={ctaIcon}
+                iconPosition={ctaIconPosition}
+                onTextChange={(value) => setAttributes({ ctaText: value })}
+                onLinkChange={(value) => setAttributes({ ctaLink: value })}
+                onIconChange={(value) => setAttributes({ ctaIcon: value })}
+                onIconPositionChange={(value) => setAttributes({ ctaIconPosition: value })}
+              />
+            )}
+          </div>
         </EditorSection>
       </>
     );

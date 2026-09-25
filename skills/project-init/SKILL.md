@@ -28,9 +28,9 @@ that themselves. Never writes to a remote or production environment.
 - The kit repo (this repo, or a checkout/copy of it) is reachable on disk or via git.
 - **Target is ALWAYS the active Sage 11 theme root** (`wp-content/themes/<theme>/`), **NEVER the WordPress CMS root**. The theme is the versioned project where blocks, Blade templates, Vite, package.json, and CSS reside. All `.claude/skills/`, `CLAUDE.md`, `_docs/`, and git versioning must live inside the theme directory (`wp-content/themes/<theme>/`).
 - **Zero repository clutter in WordPress root**: If an AI assistant or developer clones this repository (`wordpress-standards-workflow`) from GitHub (e.g. `git clone https://github.com/gritoweb/wordpress-standards-workflow`), it must:
-  1. Clone to a temporary folder outside the project (or `./.temp-kit`);
+  1. Clone it to a folder **outside** the WordPress project (e.g. `~/kits/wordpress-standards-workflow`), never inside the WordPress root or `wp-content/`;
   2. Copy the required skills, docs, and configs into `wp-content/themes/<theme>/`;
-  3. **Immediately delete the cloned kit directory** (`rm -rf ...`).
+  3. **Keep that checkout**: `kitPath` in `kit.config.json` points at it, so the agent reads `examples/` and the patterns' references there during the project.
   Under no circumstances should the `wordpress-standards-workflow` git repository be left sitting inside the WordPress root or inside `wp-content/`.
 
 ---
@@ -87,6 +87,8 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy whole folder; ask before overwriting |
 | `_docs/examples.md` | `<theme>/_docs/examples.md` | Ask before overwriting if present |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Ask before overwriting if present |
+| `_docs/patterns/` | `<theme>/_docs/patterns/` | Copy whole folder; ask before overwriting |
+| `_docs/editor-contract.md`, `_docs/entrance.md`, `_docs/content-types.md` | `<theme>/_docs/` | Ask before overwriting if present |
 | `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | Ask before overwriting if present |
 | `_docs/editor-fidelity-checklist.md` | `<theme>/_docs/editor-fidelity-checklist.md` | Ask before overwriting if present |
 | `gitignore.example` | `<theme>/.gitignore` | **Only if `<theme>/.gitignore` doesn't exist yet** — never overwrite an existing one |
@@ -271,7 +273,7 @@ Phase 0 answer. Do not run any of these commands.
 5. Scaffold Sage (same commands as Scenario A step 4 — name it `<theme>`,
    not `sage`).
 6. Copy kit standards into `wp-content/themes/<theme>/` per Phase 1 table.
-   If the kit repository was cloned from GitHub, **delete the cloned kit directory immediately** (`rm -rf ...`) so the WordPress root remains clean.
+   The kit checkout lives outside the project (see Pre-conditions) and stays there — `kitPath` points at it; nothing is left in the WordPress root.
 7. `lando wp theme activate <theme>`, then `lando wp plugin install secure-custom-fields --activate` (Site Settings runs on SCF).
 8. Optionally `git init` + an initial commit inside `wp-content/themes/<theme>` — local only, never push without permission.
 9. Build theme assets (Step below).

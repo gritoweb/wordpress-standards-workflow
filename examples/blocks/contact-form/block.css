@@ -1,0 +1,48 @@
+/*
+ * Contact form — a form beside an image. Plain CSS: served from source, so
+ * no @apply/@reference here.
+ */
+
+.contact-form__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3rem;
+}
+
+@media (width >= 80rem) {
+  .contact-form__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 4rem;
+    align-items: start;
+  }
+
+  /* The media side swaps which track each column sits in, not just which
+     one comes first in the DOM. */
+  .contact-form--media-left .contact-form__media {
+    order: -1;
+  }
+}
+
+.contact-form__media {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+}
+
+.contact-form__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.contact-form__form {
+  width: 100%;
+}
+
+/* A single long word (an editor-entered heading or intro) would otherwise
+   push the section sideways at the heading's size. */
+.contact-form__heading,
+.contact-form__intro {
+  overflow-wrap: anywhere;
+}

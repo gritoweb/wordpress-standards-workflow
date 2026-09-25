@@ -1,0 +1,58 @@
+{
+  "key": "group___PREFIX___maps",
+  "title": "Maps",
+  "fields": [
+    {
+      "key": "field___PREFIX___maps_api_key",
+      "label": "Google Maps API key",
+      "name": "maps_api_key",
+      "type": "text",
+      "instructions": "The location block draws no map without a key. Leave empty to hide every map on the site."
+    },
+    {
+      "key": "field___PREFIX___maps_style",
+      "label": "Map style",
+      "name": "maps_style",
+      "type": "select",
+      "wrapper": {
+        "width": "50"
+      },
+      "choices": {
+        "google": "Google default",
+        "branded": "Muted"
+      },
+      "default_value": "google",
+      "return_format": "value",
+      "allow_null": 0,
+      "ui": 0
+    },
+    {
+      "key": "field___PREFIX___maps_hide_business",
+      "label": "Hide businesses",
+      "name": "maps_hide_business",
+      "type": "true_false",
+      "instructions": "Hide shop, business and transit points of interest so only streets, water and the office pin show.",
+      "wrapper": {
+        "width": "50"
+      },
+      "ui": 1,
+      "default_value": 1
+    }
+  ],
+  "location": [
+    [
+      {
+        "param": "options_page",
+        "operator": "==",
+        "value": "site-settings"
+      }
+    ]
+  ],
+  "menu_order": 1,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "active": true,
+  "show_in_rest": 0
+}

@@ -46,7 +46,7 @@ Working record for the `refactor` branch port. Base = our file; theirs only adds
 | `BlockManager` registration | Theirs: glob over `resources/blocks/*/block.json` + asset version stamp; `create-block` no longer edits `BlockManager` |
 | Entrance defaults | Ours: 1000/250/250 ms, literal ease (Tailwind's `--ease-out` shadows it) |
 | `ws-` names | Theirs: `entrance`, `data-row`, `data-drag-handle` |
-| Per-item link | Ours: text on the canvas, destination in the sidebar for the active item (baaaabe); `ItemLinkTrigger` is not ported |
+| Per-item link | Ours (current `create-block` rule): `<ActionEditor stacked>` inline on the canvas under the item. The first answer was given on a wrong description (sidebar, baaaabe, later reverted by 7a9e232/af11e96) and was re-asked. `ItemLinkTrigger` is not ported |
 | `ItemList` remove confirm | Ours by the base rule: no confirm, Ctrl+Z undoes |
 | Blade directives | Theirs: `App\Providers\BlockDirectivesServiceProvider`, added once to `functions.php`; Sage's `ThemeServiceProvider` stays stock |
 | Canvas root | Theirs, adapted: `EditorSection` prints our `EDITOR_BLOCK_FRAME` and our `editorPaddingClasses()` |
@@ -60,3 +60,6 @@ Working record for the `refactor` branch port. Base = our file; theirs only adds
 | Buttons | Ours (`.btn`, `.btn-primary`, `.btn-secondary`) + `.btn-on-dark` and `.btn-link` in our tokens; their focus, loading and icon states go into `.btn` |
 | Forms | Their `forms.css`, `selection.css`, `forms-gravity.css`, rewritten on our tokens (greys via `color-mix`); the contract gains only `--color-placeholder` |
 | Figma | Their `figma-design-system`, writing our contract; without Figma, `css-foundation-wizard` as today |
+| Logo name (alt) | On the canvas under each logo (`InlineField`, shown while selected), never a sidebar text field |
+| `BlockPadding::fromAttributes` | Ours + their optional caller defaults (`$desktop`, `$mobile`, `$horizontal`), additive |
+| Kit clone | Kept **outside** the WordPress project; `kitPath` points at it (was: delete after import). Nothing in the WP root, as before |

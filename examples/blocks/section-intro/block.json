@@ -1,0 +1,87 @@
+{
+    "apiVersion": 3,
+    "name": "__BLOCK_NAMESPACE__/section-intro",
+    "title": "Section Intro",
+    "category": "__BLOCK_CATEGORY_SLUG__",
+    "icon": "editor-aligncenter",
+    "description": "A heading and body copy, aligned and scaled on a ground, with an optional button and divider.",
+    "textdomain": "__TEXT_DOMAIN__",
+    "render": "file:./block.php",
+    "supports": {
+        "anchor": true
+    },
+    "attributes": {
+        "isPreview": {
+            "type": "boolean",
+            "default": false
+        },
+        "heading": {
+            "type": "string",
+            "default": ""
+        },
+        "body": {
+            "type": "string",
+            "default": ""
+        },
+        "align": {
+            "type": "string",
+            "default": "center"
+        },
+        "measure": {
+            "type": "string",
+            "default": "default"
+        },
+        "bodyScale": {
+            "type": "string",
+            "default": "standard"
+        },
+        "ground": {
+            "type": "string",
+            "default": ""
+        },
+        "sectionDivider": {
+            "type": "string",
+            "default": "none"
+        },
+        "ctaText": {
+            "type": "string",
+            "default": ""
+        },
+        "ctaLink": {
+            "type": "object",
+            "default": {
+                "url": "",
+                "opensInNewTab": false
+            }
+        },
+        "ctaIcon": {
+            "type": "string",
+            "default": "none"
+        },
+        "ctaIconPosition": {
+            "type": "string",
+            "default": "after"
+        },
+        "paddingVertDesktop": {
+            "type": "number",
+            "default": 112
+        },
+        "paddingVertMobile": {
+            "type": "number",
+            "default": 56
+        },
+        "paddingXDesktop": {
+            "type": "boolean",
+            "default": true
+        },
+        "paddingXMobile": {
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "example": {
+        "attributes": {
+            "isPreview": true
+        }
+    }
+}

@@ -1,0 +1,133 @@
+{
+  "key": "group___PREFIX___header_footer",
+  "title": "Header and footer",
+  "fields": [
+    {
+      "key": "field___PREFIX___tab_header",
+      "label": "Header",
+      "name": "",
+      "type": "tab",
+      "placement": "top"
+    },
+    {
+      "key": "field___PREFIX___header_cta_enabled",
+      "label": "Show header button",
+      "name": "header_cta_enabled",
+      "type": "true_false",
+      "instructions": "Turn off to hide the button. The link is kept.",
+      "ui": 1,
+      "default_value": 0
+    },
+    {
+      "key": "field___PREFIX___header_cta_link",
+      "label": "Header button link",
+      "name": "header_cta_link",
+      "type": "link",
+      "instructions": "Label and URL for the header button. Example: Contact.",
+      "return_format": "array",
+      "conditional_logic": [
+        [
+          {
+            "field": "field___PREFIX___header_cta_enabled",
+            "operator": "==",
+            "value": "1"
+          }
+        ]
+      ]
+    },
+    {
+      "key": "field___PREFIX___header_scroll",
+      "label": "Scroll behavior",
+      "name": "header_scroll",
+      "type": "select",
+      "instructions": "How the header behaves as visitors scroll. Normal is the default.",
+      "wrapper": {
+        "width": "50"
+      },
+      "choices": {
+        "normal": "Normal",
+        "sticky": "Sticky",
+        "scroll-up": "Sticky on scroll up"
+      },
+      "default_value": "normal",
+      "return_format": "value",
+      "allow_null": 0,
+      "ui": 0
+    },
+    {
+      "key": "field___PREFIX___tab_footer",
+      "label": "Footer",
+      "name": "",
+      "type": "tab",
+      "placement": "top"
+    },
+    {
+      "key": "field___PREFIX___footer_legal_name",
+      "label": "Legal name",
+      "name": "footer_legal_name",
+      "type": "text",
+      "instructions": "Shown in the footer copyright line. Defaults to the site title."
+    },
+    {
+      "key": "field___PREFIX___tab_socials",
+      "label": "Socials",
+      "name": "",
+      "type": "tab",
+      "placement": "top"
+    },
+    {
+      "key": "field___PREFIX___social_linkedin",
+      "label": "LinkedIn URL",
+      "name": "social_linkedin",
+      "type": "url"
+    },
+    {
+      "key": "field___PREFIX___social_instagram",
+      "label": "Instagram URL",
+      "name": "social_instagram",
+      "type": "url"
+    },
+    {
+      "key": "field___PREFIX___social_facebook",
+      "label": "Facebook URL",
+      "name": "social_facebook",
+      "type": "url"
+    },
+    {
+      "key": "field___PREFIX___social_x",
+      "label": "X URL",
+      "name": "social_x",
+      "type": "url"
+    },
+    {
+      "key": "field___PREFIX___social_other",
+      "label": "Other link URL",
+      "name": "social_other",
+      "type": "url",
+      "instructions": "URL for one extra footer and header link. Leave empty to hide it."
+    },
+    {
+      "key": "field___PREFIX___social_other_label",
+      "label": "Other link label",
+      "name": "social_other_label",
+      "type": "text",
+      "instructions": "Describes that link for screen readers. Example: Our newsletter."
+    }
+  ],
+  "location": [
+    [
+      {
+        "param": "options_page",
+        "operator": "==",
+        "value": "site-settings"
+      }
+    ]
+  ],
+  "menu_order": 1,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "active": true,
+  "show_in_rest": 0
+}

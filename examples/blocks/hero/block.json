@@ -1,0 +1,103 @@
+{
+    "apiVersion": 3,
+    "name": "__BLOCK_NAMESPACE__/hero",
+    "title": "Hero",
+    "category": "__BLOCK_CATEGORY_SLUG__",
+    "icon": "format-image",
+    "description": "Page hero with one or more slides, each with an eyebrow, heading and image.",
+    "textdomain": "__TEXT_DOMAIN__",
+    "render": "file:./block.php",
+    "viewScript": "file:./block.js",
+    "viewStyle": "file:./block.css",
+    "supports": {
+        "anchor": true
+    },
+    "attributes": {
+        "isPreview": {
+            "type": "boolean",
+            "default": false
+        },
+        "paddingVertDesktop": {
+            "type": "number",
+            "default": 0
+        },
+        "paddingVertMobile": {
+            "type": "number",
+            "default": 0
+        },
+        "paddingXDesktop": {
+            "type": "boolean",
+            "default": false
+        },
+        "paddingXMobile": {
+            "type": "boolean",
+            "default": false
+        },
+        "ground": {
+            "type": "string",
+            "default": ""
+        },
+        "eyebrow": {
+            "type": "string",
+            "default": ""
+        },
+        "heading": {
+            "type": "string",
+            "default": ""
+        },
+        "body": {
+            "type": "string",
+            "default": ""
+        },
+        "caption": {
+            "type": "string",
+            "default": ""
+        },
+        "layout": {
+            "type": "string",
+            "default": "eyebrow-above"
+        },
+        "slides": {
+            "type": "array",
+            "default": []
+        },
+        "transition": {
+            "type": "string",
+            "default": "fade"
+        },
+        "loop": {
+            "type": "boolean",
+            "default": true
+        },
+        "autoplay": {
+            "type": "boolean",
+            "default": false
+        },
+        "autoplayDelay": {
+            "type": "number",
+            "default": 5000
+        },
+        "transitionDuration": {
+            "type": "number",
+            "default": 500
+        },
+        "entrance": {
+            "type": "object",
+            "default": {
+                "type": "fade-slide",
+                "direction": "up",
+                "distance": 32,
+                "unit": "px",
+                "duration": 600,
+                "delay": 100,
+                "stagger": 120,
+                "trigger": "section"
+            }
+        }
+    },
+    "example": {
+        "attributes": {
+            "isPreview": true
+        }
+    }
+}

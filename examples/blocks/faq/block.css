@@ -1,0 +1,52 @@
+.faq__list {
+  border-top: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
+}
+
+.faq__item {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
+}
+
+.faq__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-block: 1.25rem;
+  list-style: none;
+}
+
+.faq__summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A chevron drawn from two borders, so it takes the ground's text color. */
+.faq__summary::after {
+  content: '';
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  margin-right: 0.25rem;
+  border-right: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor;
+  transform: rotate(45deg);
+  transition: transform var(--hover-duration) ease;
+}
+
+.faq__item[open] > .faq__summary::after {
+  transform: rotate(-135deg);
+}
+
+.faq__question {
+  margin: 0;
+}
+
+.faq__answer {
+  padding-bottom: 1.5rem;
+  max-width: 48rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq__summary::after {
+    transition: none;
+  }
+}
