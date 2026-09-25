@@ -83,8 +83,8 @@ wrong domain/path into every file.
 | 0.1 | `app/Blocks/BlockManager.php` exists. Template at `<skill>/templates/BlockManager.php`. **First-run only**: ask `"Qual namespace pros blocos? Sugiro '<theme-slug>'. Ele vai no nome de cada bloco salvo no conteúdo, então não dá pra trocar depois sem migrar os posts."`, then replace `__BLOCK_NAMESPACE__` with the answer (lowercase, `[a-z0-9-]`). |
 | 0.2 | `resources/blocks/` exists |
 | 0.3 | `resources/views/blocks/` exists |
-| 0.4 | `resources/js/vendor/` exists |
-| 0.5 | `resources/css/vendor/` exists |
+| 0.4 | (removed: vendor libs live in `resources/vendor/<lib>/`, created only when a block needs one) |
+| 0.5 | (removed, see 0.4) |
 | 0.6 | `app/blocks.php` is the **central block-bootstrap file** — must (a) exist, (b) contain top-level `BlockCategories::register();` and `BlockMotion::register();`, (c) contain `add_action('init', function () { (new BlockManager())->register(); });`, (d) be loaded by `functions.php`'s `collect([...])` array (see 0.6.1). Template at `<skill>/templates/blocks.php`. |
 | 0.6.1 | `functions.php`'s `collect([...])` array includes `'blocks'`. Without it, `app/blocks.php` never loads. If `functions.php` doesn't use the `collect([...])` pattern at all, **bail out** — needs manual wiring. |
 | 0.8 | `resources/js/editor.js` calls `import.meta.glob('../blocks/*/block.jsx', { eager: true });` (Vite compiles the **editor** JSX only — front-end `block.js`/`block.css` are served from source via `file:`, see "Block asset loading") |
@@ -104,8 +104,8 @@ wrong domain/path into every file.
 | # | Check |
 |---|-------|
 | 0.13 | `vite.config.js` `base:` points to the theme's actual path (e.g. `/wp-content/themes/<active-theme>/public/build/`). Sage's default ships with `/app/themes/sage/public/build/` (Bedrock) which **breaks asset URLs** in standard WP. **Warn**, don't auto-fix. |
-| 0.14 | **Global-enqueue smell.** Scan `app/**.php` + `functions.php` for `wp_enqueue_script(`/`wp_enqueue_style(` *outside* `resources/blocks/*/block.php`. Theme handles (`app`, `editor`) are fine; vendor-lib-looking handles (`swiper`, `gsap`, …) loaded globally are a smell — warn with file:line, recommend the canonical pattern from `.claude/skills/blade-standards/SKILL.md` (register in `setup.php`, enqueue in `block.php`). |
-| 0.17 | **Leftover `sage` identity.** Scan `app/`, `resources/blocks/` and `resources/views/` (excluding `resources/{js,css}/vendor/`) for the text domain `'sage'`, `"textdomain": "sage"`, `THEME_SLUG = 'sage'`, or unsubstituted `__TEXT_DOMAIN__` / `__THEME_SLUG__` / `__BLOCK_NAMESPACE__`. Themes bootstrapped by older kit versions carry these (and `IconPicker` 404s every icon). **Warn** with file:line and the replacement (`<text-domain>` / `<theme-slug>`); don't auto-fix. Never flag `$namespace` itself — an existing block namespace is stored in post content and must not change. |
+| 0.14 | **Global-enqueue smell.** Scan `app/**.php` + `functions.php` for `wp_enqueue_script(`/`wp_enqueue_style(` *outside* `resources/blocks/*/block.php`. Theme handles (`app`, `editor`) are fine; vendor-lib-looking handles (`splide`, `swiper`, `gsap`, …) loaded globally are a smell — warn with file:line, recommend the canonical pattern from `.claude/skills/blade-standards/SKILL.md` (register in `app/blocks.php`, enqueue in `block.php`). |
+| 0.17 | **Leftover `sage` identity.** Scan `app/`, `resources/blocks/` and `resources/views/` (excluding `resources/vendor/` and an older theme's `resources/{js,css}/vendor/`) for the text domain `'sage'`, `"textdomain": "sage"`, `THEME_SLUG = 'sage'`, or unsubstituted `__TEXT_DOMAIN__` / `__THEME_SLUG__` / `__BLOCK_NAMESPACE__`. Themes bootstrapped by older kit versions carry these (and `IconPicker` 404s every icon). **Warn** with file:line and the replacement (`<text-domain>` / `<theme-slug>`); don't auto-fix. Never flag `$namespace` itself — an existing block namespace is stored in post content and must not change. |
 
 ### Bootstrap UX
 
@@ -428,7 +428,7 @@ Attributes:
 
 ### What the skill does NOT ask
 
-**Vendor libs** are a deliberate dev decision, not block scaffolding. The skill generates blocks without lib boilerplate; if the dev adds Swiper etc. afterward, they follow the pattern in `_docs/examples/testimonial-carousel.md` (`wp_register_*` in `setup.php` + `wp_enqueue_*` in `block.php`). Phase 0's smell detector watches for the wrong pattern over time.
+**Vendor libs** are a deliberate dev decision, not block scaffolding. The skill generates blocks without lib boilerplate; if the dev adds a carousel etc. afterward, they follow the pattern in `_docs/examples/testimonial-carousel.md` (`wp_register_*` in `app/blocks.php` + `wp_enqueue_*` in `block.php`). Phase 0's smell detector watches for the wrong pattern over time.
 
 ### Validations (cheap, fail fast)
 
@@ -482,13 +482,15 @@ Two kinds of asset, two mechanisms — never mix them:
      (no `import`), gated on `DOMContentLoaded`.
    - Never register these in `setup.php`. `block.json` is the whole wiring.
 
-2. **Third-party vendor libs** (Swiper, GSAP, …): **`wp_register_script` /
-   `wp_register_style` in `app/setup.php`** (declare only — nothing loads), then
+2. **Third-party vendor libs** (Splide, GSAP, …): **`wp_register_script` /
+   `wp_register_style` in `app/blocks.php`** (declare only — nothing loads), then
    **`wp_enqueue_script` / `wp_enqueue_style` in the block's `block.php`** (only
    the blocks that use it; WP dedupes by handle so N blocks share one copy).
-   Vendor bundles are committed under `resources/{js,css}/vendor/` and referenced
-   with `get_theme_file_uri(...)` — not a CDN. The block's `block.js` consumes
-   the lib via its global (e.g. `window.Swiper`), which is guaranteed available
+   Vendor bundles are self-hosted under `resources/vendor/<lib>/` and referenced
+   with `get_theme_file_uri(...)` — not a CDN. Splide ships with this skill:
+   copy `<skill>/templates/vendor/splide/` to `resources/vendor/splide/` when a
+   block needs a carousel, never before. The block's `block.js` consumes
+   the lib via its global (e.g. `window.Splide`), which is guaranteed available
    because classic vendor scripts execute before the block's `DOMContentLoaded`
    handler.
 
@@ -541,20 +543,20 @@ to ask.
    `<section @if ($anchor) id="{{ $anchor }}" @endif class="<slug>">`.
 
 **Dynamic ids go on an inner element — never the section.** When a block needs
-its own unique id at render time (e.g. a Swiper instance: `id="swiper-{$block_id}"`
+its own unique id at render time (e.g. a carousel instance: `id="carousel-{$block_id}"`
 targeted by `block.js`), putting it on the `<section>` would collide with — and
 overwrite — the editor's anchor id. Always emit dynamic ids on a nested `<div>`
 so the section's `id` stays reserved for the anchor:
 
 ```blade
 <section @if ($anchor) id="{{ $anchor }}" @endif class="<slug>">
-    <div id="swiper-{{ $uid }}" class="<slug>__carousel swiper">
+    <div id="carousel-{{ $uid }}" class="<slug>__carousel splide">
         {{-- slides --}}
     </div>
 </section>
 ```
 
-(Generate `$uid` in `block.php` — e.g. `wp_unique_id('swiper-')` — and pass it
+(Generate `$uid` in `block.php` — e.g. `wp_unique_id('carousel-')` — and pass it
 to the view; never reuse the anchor for it.)
 
 ---
@@ -580,9 +582,9 @@ End with a summary table listing every file created/modified.
 
 ## Behavior Rules
 
-- **Tailwind-first; `block.css` / `block.js` are optional** — put one-off styling (padding, flex, sizing, positioning) as Tailwind utilities in the **Blade markup**. Generate `block.css` + wire `viewStyle` **only** when the block needs genuinely reusable/semantic CSS or a third-party lib override (e.g. re-coloring Swiper's bullets) — never for one-off layout. Likewise generate `block.js` + wire `viewScript` **only** when the block has real front-end behavior. A purely presentational block ships neither file and neither `view*` field.
+- **Tailwind-first; `block.css` / `block.js` are optional** — put one-off styling (padding, flex, sizing, positioning) as Tailwind utilities in the **Blade markup**. Generate `block.css` + wire `viewStyle` **only** when the block needs genuinely reusable/semantic CSS or a third-party lib override (e.g. re-coloring Splide's bullets) — never for one-off layout. Likewise generate `block.js` + wire `viewScript` **only** when the block has real front-end behavior. A purely presentational block ships neither file and neither `view*` field.
 - **Comments follow `CLAUDE.md` in every emitted file** — comment the *why*, never the *what*. Ship **no** boilerplate "what" comments (`{{-- View-only --}}`, `// gets the title`) and **no** leftover commented-out example code. The inline `//` / `{{-- --}}` guidance and commented-out snippets in the templates below are **scaffolding for you** — replace them with real code or delete them; they must not survive verbatim into the generated block. Keep only genuine, non-obvious "why" notes (e.g. the anchor-id rationale).
-- **Anchor support on every block** — `supports.anchor: true`, id emitted on the `<section>` wrapper only; dynamic/unique ids (Swiper, etc.) go on an inner `<div>` so they never collide with the anchor (see "Anchor support").
+- **Anchor support on every block** — `supports.anchor: true`, id emitted on the `<section>` wrapper only; dynamic/unique ids (carousel, etc.) go on an inner `<div>` so they never collide with the anchor (see "Anchor support").
 - **Use `view()`** (global Acorn helper), not `\Roots\view()`.
 - **Sanitization**: `absint()` for unsigned numerics, `(bool)` for booleans, `sanitize_text_field()` for plain strings, `wp_kses_post()` only for trusted HTML.
 - **Don't reformat existing files** — keep diffs minimal.
@@ -714,7 +716,7 @@ if (!defined('ABSPATH')) {
 
 // The block's own block.css/block.js are auto-enqueued by WordPress via
 // block.json's file: fields — nothing to do here for those.
-// Only third-party vendor libs get enqueued here (registered in app/setup.php):
+// Only third-party vendor libs get enqueued here (registered in app/blocks.php):
 // wp_enqueue_script('<handle>');
 // wp_enqueue_style('<handle>');
 
@@ -959,13 +961,13 @@ registerBlockType(metadata, {
 #### `resources/blocks/<slug>/block.js`
 
 Plain vanilla — **no `import`**. Consume vendor libs via their global (e.g.
-`window.Swiper`); gate init on `DOMContentLoaded` so vendor scripts have run.
+`window.Splide`); gate init on `DOMContentLoaded` so vendor scripts have run.
 
 ```js
 // No frontend behavior yet. Example when a vendor lib is used:
 // document.addEventListener('DOMContentLoaded', () => {
 //   document.querySelectorAll('.<slug>').forEach((el) => {
-//     if (typeof window.Swiper !== 'undefined') new window.Swiper(el, { /* ... */ });
+//     if (typeof window.Splide !== 'undefined') new window.Splide(el, { /* ... */ }).mount();
 //   });
 // });
 ```
@@ -983,7 +985,7 @@ break). Use `var(--...)` tokens. Example of a legitimate use — overriding a
 vendor lib's internals, scoped under the block's root class:
 
 ```css
-.<slug> .swiper-pagination-bullet-active {
+.<slug> .splide__pagination__page.is-active {
     background-color: var(--color-primary);
 }
 ```
@@ -999,7 +1001,7 @@ vendor lib's internals, scoped under the block's root class:
          prints its own style="" — never add a second style attribute here.
          Each visible part gets @entrancePart(<running index>), in the same
          order block.jsx uses (see "Entrance animation wiring"). --}}
-    {{-- Anchor id stays on this <section>; any dynamic/unique id (e.g. a Swiper
+    {{-- Anchor id stays on this <section>; any dynamic/unique id (e.g. a carousel
          instance id) goes on an INNER element so it can't collide — see
          "Anchor support". This note is guidance: keep it only if the block
          actually emits a dynamic id, else drop it. --}}
@@ -1219,21 +1221,18 @@ manually.
 
 If `functions.php` doesn't use the `collect([...])` pattern (heavily customized theme), **bail out** — needs manual wiring.
 
-#### `app/setup.php` — vendor libs only (vanilla Sage role, no block bootstrap)
+#### Vendor libs — registered in `app/blocks.php`, only when a block needs one
+
+`app/setup.php` stays Sage's. When a block needs a library, self-host it under
+`resources/vendor/<lib>/` and append its registration to `app/blocks.php`.
+Registration != enqueue: nothing loads until a `block.php` enqueues the handle.
+Splide (the kit's carousel library) ships in `<skill>/templates/vendor/splide/`:
 
 ```php
-/**
- * Register vendor libs. Registration != enqueue — nothing loads here.
- * Each block.php that needs a lib calls wp_enqueue_script/style for the handle.
- */
+// Splide self-hosted in resources/vendor/splide/ (no CDN); enqueued per-block in each block.php.
 add_action('init', function () {
-    // Example (Swiper):
-    // wp_register_script('swiper',
-    //     get_theme_file_uri('resources/js/vendor/swiper-bundle.min.js'),
-    //     [], '11.0', true);
-    // wp_register_style('swiper',
-    //     get_theme_file_uri('resources/css/vendor/swiper-bundle.min.css'),
-    //     [], '11.0');
+    wp_register_style('splide', get_theme_file_uri('resources/vendor/splide/css/splide-core.min.css'), [], '4.1.4');
+    wp_register_script('splide', get_theme_file_uri('resources/vendor/splide/js/splide.min.js'), [], '4.1.4', true);
 });
 ```
 

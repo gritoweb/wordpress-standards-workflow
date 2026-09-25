@@ -79,12 +79,13 @@ reports any it finds.
   serves them **from source** — so `block.css` is **plain CSS** (no
   `@apply`/`@reference`) and `block.js` is **plain vanilla** (no `import`).
   Vite never touches them; it compiles only the editor's `block.jsx`.
-- **Third-party vendor libs** (Swiper, GSAP, …) are committed under
-  `resources/{js,css}/vendor/`, **registered** in `app/setup.php`
+- **Third-party vendor libs** (Splide, GSAP, …) are self-hosted under
+  `resources/vendor/<lib>/` (no CDN), **registered** in `app/blocks.php`
   (`wp_register_script`/`wp_register_style`), and **enqueued** in the
   `block.php` of each block that uses them (`wp_enqueue_*`). Never enqueue a
   vendor lib globally. The block's `block.js` consumes it via its global
-  (e.g. `window.Swiper`).
+  (e.g. `window.Splide`). Older themes that register in `app/setup.php`
+  keep working; don't move them.
 
 ---
 

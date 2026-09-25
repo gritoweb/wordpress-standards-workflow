@@ -1,6 +1,6 @@
 # Reference block: Testimonial carousel (vendor library) — `testimonial-carousel`
 
-An array of quotes in a Swiper carousel. Demonstrates the **vendor library** rule (file in `resources/{js,css}/vendor/`, registered in `app/setup.php`, enqueued only in this `block.php`), a plain `block.js`/`block.css` served from source through `block.json`, an editor canvas that looks like the front end (two slides and the same pagination bullets, no scrollbar; the sidebar list moves it to the selected slide, editing a visible slide never moves it), and autoplay set in the sidebar (off on hover and for reduced motion).
+An array of quotes in a Splide carousel. Demonstrates the **vendor library** rule (self-hosted in `resources/vendor/splide/`, registered in `app/blocks.php`, enqueued only in this `block.php`), a plain `block.js`/`block.css` served from source through `block.json`, an editor canvas that looks like the front end (two slides and the same pagination bullets, no scrollbar; the sidebar list moves it to the selected slide, editing a visible slide never moves it), and autoplay set in the sidebar (off on hover and for reduced motion).
 
 ## `resources/blocks/testimonial-carousel/block.json`
 
@@ -91,8 +91,8 @@ if (!defined('ABSPATH')) {
 }
 
 // Vendor lib registered in app/setup.php; enqueued here so it loads only where this block renders.
-wp_enqueue_script('swiper');
-wp_enqueue_style('swiper');
+wp_enqueue_script('splide');
+wp_enqueue_style('splide');
 
 $attributes = $attributes ?? [];
 
@@ -131,43 +131,42 @@ echo view('blocks.testimonial-carousel', [
 
 ```blade
 <section @if ($anchor) id="{{ $anchor }}" @endif
-  class="testimonial-carousel @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop) bg-surface"
-  @entrance($entrance)>
+  class="testimonial-carousel @paddingClasses($paddingVertMobile, $paddingVertDesktop, $paddingXMobile, $paddingXDesktop) bg-surface" @entrance($entrance)>
   <div class="container">
     @if ($title)
-      <h2 @entrancePart(0) class="mb-10 text-center heading-2">{{ $title }}</h2>
+      <h2 @entrancePart(0) class="heading-2 mb-10 text-center">{{ $title }}</h2>
     @endif
 
     @if ($items)
-      {{-- The anchor id stays on the section; Swiper only needs the data hook. --}}
-      <div @entrancePart(1) class="testimonial-carousel__slider swiper" data-testimonial-carousel
-        data-autoplay="{{ $autoplayMs }}">
-        <div class="swiper-wrapper">
-          @foreach ($items as $item)
-            <figure class="swiper-slide !h-auto">
-              <div class="card flex h-full flex-col p-8">
-                <blockquote class="flex-1 text-lead">{!! $item['quote'] !!}</blockquote>
+      {{-- The anchor id stays on the section; Splide only needs the data hook. --}}
+      <div @entrancePart(1) class="testimonial-carousel__slider splide" data-testimonial-carousel
+        data-autoplay="{{ $autoplayMs }}" aria-label="{{ $title ?: __('Testimonials', '<text-domain>') }}">
+        <div class="splide__track">
+          <ul class="splide__list">
+            @foreach ($items as $item)
+              <li class="splide__slide">
+                <figure class="card m-0 flex h-full flex-col p-8">
+                  <blockquote class="flex-1 text-lead">{!! $item['quote'] !!}</blockquote>
 
-                <figcaption class="mt-6 flex items-center gap-4">
-                  @if ($item['avatarId'])
-                    {!! wp_get_attachment_image($item['avatarId'], 'thumbnail', false, [
-                        'class' => 'h-12 w-12 rounded-full object-cover',
-                        'loading' => 'lazy',
-                    ]) !!}
-                  @endif
-                  <span>
-                    <span class="block font-bold">{{ $item['author'] }}</span>
-                    @if ($item['role'])
-                      <span class="block text-small text-muted">{{ $item['role'] }}</span>
+                  <figcaption class="mt-6 flex items-center gap-4">
+                    @if ($item['avatarId'])
+                      {!! wp_get_attachment_image($item['avatarId'], 'thumbnail', false, [
+                          'class' => 'h-12 w-12 rounded-full object-cover',
+                          'loading' => 'lazy',
+                      ]) !!}
                     @endif
-                  </span>
-                </figcaption>
-              </div>
-            </figure>
-          @endforeach
+                    <span>
+                      <span class="block font-bold">{{ $item['author'] }}</span>
+                      @if ($item['role'])
+                        <span class="block text-small text-muted">{{ $item['role'] }}</span>
+                      @endif
+                    </span>
+                  </figcaption>
+                </figure>
+              </li>
+            @endforeach
+          </ul>
         </div>
-
-        <div class="testimonial-carousel__pagination swiper-pagination !relative mt-8"></div>
       </div>
     @endif
   </div>
@@ -206,7 +205,7 @@ import metadata from './block.json';
 // Same layout as block.js on a desktop viewport: two slides, 24px apart.
 const GAP = 24;
 
-// Swiper's breakpoint (block.js): one slide below 768px, two from 768px — read on the canvas iframe, not the admin window.
+// Splide's breakpoint (block.js): one slide below 768px, two from 768px — read on the canvas iframe, not the admin window.
 const useSlidesPerView = (ref) => {
   const [perView, setPerView] = useState(1);
   useEffect(() => {
@@ -254,7 +253,7 @@ registerBlockType(metadata, {
     );
     const rootEntrance = entranceRootProps(entrance);
 
-    // Swiper's page count: one bullet per position the first visible slide can take.
+    // Splide's page count with perMove 1: one bullet per position the first visible slide can take.
     const pages = Math.max(1, items.length - perView + 1);
     const page = Math.min(firstVisible, pages - 1);
     const selected = Math.min(activeItem, Math.max(items.length - 1, 0));
@@ -263,8 +262,7 @@ registerBlockType(metadata, {
     const selectSlide = (index) => {
       setActiveItem(index);
       if (index < page) setFirstVisible(index);
-      else if (index > page + perView - 1)
-        setFirstVisible(index - perView + 1);
+      else if (index > page + perView - 1) setFirstVisible(index - perView + 1);
     };
 
     const updateItem = (index, patch) =>
@@ -351,11 +349,15 @@ registerBlockType(metadata, {
             onChange={(value) => setAttributes({ title: value })}
             heading
             placeholder={__('Section title…', '<text-domain>')}
-            className="mb-10 text-center heading-2"
+            className="heading-2 mb-10 text-center"
           />
 
-          {/* The front end's carousel, driven by the bullets and the sidebar list instead of Swiper. */}
-          <div {...entrancePartProps(entrance, 1)} ref={viewportRef} className="overflow-hidden">
+          {/* The front end's carousel, driven by the bullets and the sidebar list instead of Splide. */}
+          <div
+            {...entrancePartProps(entrance, 1)}
+            ref={viewportRef}
+            className="overflow-hidden"
+          >
             <div
               className="flex transition-transform duration-300 ease-out"
               style={{
@@ -377,7 +379,7 @@ registerBlockType(metadata, {
                     value={item.quote}
                     onChange={(value) => updateItem(index, { quote: value })}
                     placeholder={__('Quote…', '<text-domain>')}
-                    className="flex-1 text-lead"
+                    className="text-lead flex-1"
                   />
 
                   <figcaption className="mt-6 flex items-center gap-4">
@@ -447,33 +449,34 @@ registerBlockType(metadata, {
 ## `resources/blocks/testimonial-carousel/block.js`
 
 ```js
-// Served from source (no import): Swiper is the vendor script registered in app/setup.php.
+// Served from source (no import): Splide is the vendor script registered in app/setup.php.
 document.addEventListener('DOMContentLoaded', () => {
-  if (typeof window.Swiper === 'undefined') return;
+  if (typeof window.Splide === 'undefined') return;
 
   const reducedMotion = window.matchMedia(
     '(prefers-reduced-motion: reduce)',
   ).matches;
 
   document.querySelectorAll('[data-testimonial-carousel]').forEach((slider) => {
+    if (slider.dataset.splideMounted) return;
+    slider.dataset.splideMounted = '1';
     const delay = Number(slider.dataset.autoplay) || 0;
 
-    new window.Swiper(slider, {
-      slidesPerView: 1,
-      spaceBetween: 24,
-      breakpoints: { 768: { slidesPerView: 2 } },
-      // Rewind instead of loop: loop needs more slides than are visible.
+    new window.Splide(slider, {
+      perPage: 1,
+      // One position per slide, the same page count the editor canvas shows.
+      perMove: 1,
+      gap: '24px',
+      mediaQuery: 'min',
+      breakpoints: { 768: { perPage: 2 } },
+      // Rewind instead of loop: loop clones slides and needs more than are visible.
       rewind: true,
-      autoplay:
-        delay > 0 && !reducedMotion
-          ? { delay, pauseOnMouseEnter: true, disableOnInteraction: false }
-          : false,
-      pagination: {
-        el: slider.querySelector('.swiper-pagination'),
-        clickable: true,
-      },
-      a11y: { enabled: true },
-    });
+      arrows: false,
+      pagination: true,
+      autoplay: delay > 0 && !reducedMotion,
+      interval: delay || 5000,
+      pauseOnHover: true,
+    }).mount();
   });
 });
 ```
@@ -481,29 +484,38 @@ document.addEventListener('DOMContentLoaded', () => {
 ## `resources/blocks/testimonial-carousel/block.css`
 
 ```css
-.testimonial-carousel .swiper-pagination-bullet {
-  background-color: var(--color-border);
-  opacity: 1;
+.testimonial-carousel .splide__pagination {
+  gap: 8px;
+  margin-top: 2rem;
 }
 
-.testimonial-carousel .swiper-pagination-bullet-active {
+.testimonial-carousel .splide__pagination__page {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background-color: var(--color-border);
+  cursor: pointer;
+}
+
+.testimonial-carousel .splide__pagination__page.is-active {
   background-color: var(--color-primary);
 }
 ```
 
-## `app/setup.php` (append)
+## Vendor library: Splide (only when a block needs a carousel)
 
-The library files are committed as `resources/js/vendor/swiper-bundle.min.js` and
-`resources/css/vendor/swiper-bundle.min.css` (Swiper 11, pre-built distributables).
+Copy `.claude/skills/create-block/templates/vendor/splide/` to `resources/vendor/splide/` (Splide 4.1.4, the pre-built `splide.min.js` and `splide-core.min.css`, self-hosted: no CDN), and append to `app/blocks.php`:
 
 ```php
-/**
- * Register vendor libs. Registration != enqueue — each block.php that needs a lib enqueues its handle.
- */
+// Splide self-hosted in resources/vendor/splide/ (no CDN); enqueued per-block in each block.php.
 add_action('init', function () {
-    wp_register_script('swiper', get_theme_file_uri('resources/js/vendor/swiper-bundle.min.js'), [], '11.2.10', true);
-    wp_register_style('swiper', get_theme_file_uri('resources/css/vendor/swiper-bundle.min.css'), [], '11.2.10');
+    wp_register_style('splide', get_theme_file_uri('resources/vendor/splide/css/splide-core.min.css'), [], '4.1.4');
+    wp_register_script('splide', get_theme_file_uri('resources/vendor/splide/js/splide.min.js'), [], '4.1.4', true);
 });
 ```
+
+`app/setup.php` stays untouched. Every carousel block reuses the same `splide` handle; WordPress loads it once per page.
 
 The rules every block follows are in `README.md` in this folder; read it before this file.

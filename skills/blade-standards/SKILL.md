@@ -42,17 +42,19 @@ wp_kses_post($content);  // trusted HTML
 
 ## Scripts & Styles
 
-Third-party scripts/styles: **register globally** in `app/setup.php` (on
-`init`), then **enqueue per-block** inside that block's `block.php`
-render. Never enqueue vendor libs globally.
+Third-party scripts/styles: self-hosted under `resources/vendor/<lib>/` (no
+CDN), **registered** in `app/blocks.php` (on `init`), then **enqueued
+per-block** inside that block's `block.php`. Never enqueue vendor libs
+globally. Older themes that register in `app/setup.php` keep working.
 
 ```php
+// app/blocks.php
 add_action('init', function () {
-    wp_register_script('swiper', 'https://cdn.example.com/swiper.min.js', [], '11.0', true);
+    wp_register_script('splide', get_theme_file_uri('resources/vendor/splide/js/splide.min.js'), [], '4.1.4', true);
 });
 
-// Inside the block render callback
-wp_enqueue_script('swiper');
+// Inside the block's block.php
+wp_enqueue_script('splide');
 ```
 
 This is the rule `create-block`'s Phase 0 "global-enqueue smell" check

@@ -4,7 +4,7 @@ Three complete Gutenberg blocks for the kit's Sage 11 + Acorn + Vite setup.
 **Copy these, not older code**: every file below was run on a live site
 (2026-09-23) — editor (no block errors, sidebar list reorders / deletes /
 adds with the canvas updating at once, Spacing and entrance Preview visible)
-and front end (padding classes inside `class`, accordion exclusive, Swiper
+and front end (padding classes inside `class`, accordion exclusive, the carousel
 initialised only where the block renders, console clean).
 
 Placeholders, same as the `create-block` templates: `<namespace>` (block
@@ -45,7 +45,8 @@ components) is **not** repeated here — it comes from
   indexes in `block.jsx`.
 - **Assets**: a block's own JS/CSS is plain, declared in `block.json`
   (`file:./block.js` / `file:./block.css`) and served from source. Vendor
-  libraries are registered in `app/setup.php` and enqueued in the
+  libraries are self-hosted in `resources/vendor/<lib>/`, registered in
+  `app/blocks.php` and enqueued in the
   `block.php` that needs them — never globally.
 
 ## One file per block
@@ -56,4 +57,4 @@ Read this file, then **only** the block file closest to what you are building:
 | --- | --- | --- |
 | Accordion (one open at a time) | `accordion.md` | a repeater with one item open at a time (native `<details name>`) |
 | Card grid | `card-grid.md` | a grid of repeated cards with image, text and link |
-| Testimonial carousel (vendor library) | `testimonial-carousel.md` | a carousel on a vendor library (Swiper), registered and enqueued per block |
+| Testimonial carousel (vendor library) | `testimonial-carousel.md` | a carousel on a vendor library (Splide), self-hosted, registered in `app/blocks.php`, enqueued per block |

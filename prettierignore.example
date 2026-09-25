@@ -12,7 +12,8 @@
 /public/
 /node_modules/
 
-# Vendor libs (Swiper, GSAP, …) are committed under resources/{js,css}/vendor/
-# (CLAUDE.md › Blocks) and sit inside the lint-staged glob — third-party code.
+# Vendor libs (Splide, GSAP, …) are self-hosted under resources/vendor/ (CLAUDE.md › Blocks);
+# older themes keep them in resources/{js,css}/vendor/. Third-party code: never formatted.
+/resources/vendor/
 /resources/js/vendor/
 /resources/css/vendor/

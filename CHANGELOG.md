@@ -2,6 +2,25 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Carousels on Splide, vendor libraries out of setup.php
+
+### Changed
+- **Splide replaces Swiper** in the carousel reference block. Splide 4.1.4
+  (`splide.min.js` + `splide-core.min.css`) ships in
+  `create-block/templates/vendor/splide/` and is copied to
+  `resources/vendor/splide/` only when a block needs a carousel: self-hosted,
+  no CDN. `perMove: 1` keeps the bullet count equal to the editor canvas's.
+- **Vendor libraries are registered in `app/blocks.php`**, not
+  `app/setup.php` (as on Bright Minds); `setup.php` stays Sage's. Updated in
+  `CLAUDE.md`, `create-block`, `blade-standards`, `css-standards` and
+  `prettierignore.example`. Older themes that register in `setup.php` keep
+  working; nothing tells them to move.
+
+### Verified
+- On a fresh local site: 3 slides show 2 bullets at 1440px (two per view)
+  and 3 at 390px, `is-initialized` on the slider, no console error and no
+  404; the editor loads the block with no error.
+
 ## 2026-09-25 — project-init: a new project's order on one screen
 
 ### Added

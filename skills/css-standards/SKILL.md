@@ -103,7 +103,7 @@ folder by role:
 | `components/` | One file per reusable UI component used across blocks/pages | `components/button.css` |
 | `pages/` | Styles that only apply to one template/page | `pages/single-project.css` |
 | `editor/` | Styles only the block editor loads, imported from `editor.css` (never `app.css`) | `editor/blocks.css` |
-| `vendor/` | Third-party CSS, committed as-is (never ours, never formatted) | `vendor/swiper-bundle.min.css` |
+| (none) | Third-party CSS is not here: it's self-hosted with its JS in `resources/vendor/<lib>/` | `resources/vendor/splide/css/splide-core.min.css` |
 
 A block's own CSS is **not** here — it lives next to the block
 (`resources/blocks/<slug>/block.css`, see **Block styles**).
@@ -150,8 +150,8 @@ A web-font `@import url(...)` goes on the **first line**, above
 ```
 
 New file → add its `@import` to its group (`editor/` files go in `editor.css`). Never create a new `.css` at the
-root of `resources/css/`, and never import `vendor/` from `app.css` (vendor
-libs are registered in `setup.php` and enqueued per block).
+root of `resources/css/`, and never import vendor CSS from `app.css` (vendor
+libs are registered in `app/blocks.php` and enqueued per block).
 
 ---
 
