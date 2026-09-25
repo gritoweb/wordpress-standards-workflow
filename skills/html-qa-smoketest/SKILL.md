@@ -96,7 +96,7 @@ h1 (unique per page)
 
 > **Note:** Check SEO only when the context is a full page, not isolated blocks/components.
 
-> **Theme identity:** Author, Author URI and the theme screenshot live in the `style.css` header and `Appearance → Themes` — they don't appear in rendered HTML, so they're **out of scope here**. Verify them via the **Launch Checklist** (`_docs/launch-list.md` › "Theme identity") before delivery.
+> **Theme identity:** Author, Author URI and the theme screenshot live in the `style.css` header and `Appearance → Themes` — they don't appear in rendered HTML, so they're **out of scope here**. Verify them via the **Launch Checklist** (`docs/launch-list.md` › "Theme identity") before delivery.
 
 
 ### 🧹 Code Quality

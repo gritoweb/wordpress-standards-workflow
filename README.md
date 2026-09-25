@@ -25,9 +25,9 @@ skills/
   figma-design-system/             # design system from a Figma file (phases 0-2) — imported to <project>/.claude/skills/
 global-skills/
   commit-rules.md                  # commit convention — NOT per-project; recommend installing to ~/.claude/skills/ (user-level)
-_docs/
-  examples/                        # reference blocks: one folder of real files each + README with the shared rules — imported to <project>/_docs/
-  launch-list.md                   # pre-launch checklist — imported to <project>/_docs/
+docs/
+  examples/                        # reference blocks: one folder of real files each + README with the shared rules — imported to <project>/docs/
+  launch-list.md                   # pre-launch checklist — imported to <project>/docs/
 gitignore.example                  # base .gitignore template — imported as <project>/.gitignore (only if missing)
 prettier.config.example.js         # Prettier + Tailwind/Blade class sorting — copied to <theme>/prettier.config.js
 install-git-hooks.example.mjs      # pre-commit hook installer — copied to <theme>/scripts/install-git-hooks.mjs
@@ -53,7 +53,7 @@ the manifest **is** the source of truth either way.
 
 > ⚠️ **CRITICAL FOR AI ASSISTANTS: Theme Root vs. WordPress Root**
 > - In standard WordPress installations with Sage 11, the codebase lives in `wp-content/themes/<theme>/`.
-> - All `.claude/skills/`, `CLAUDE.md`, and `_docs/` must be imported into `<theme>/` (`wp-content/themes/<theme>/`), **NEVER into the WordPress root**.
+> - All `.claude/skills/`, `CLAUDE.md`, and `docs/` must be imported into `<theme>/` (`wp-content/themes/<theme>/`), **NEVER into the WordPress root**.
 > - **NEVER clone or leave the `wordpress-standards-workflow` repository inside the WordPress root.**
 > - If you clone this repository from GitHub to extract skills, copy the files to `<theme>/` and **delete the cloned kit directory immediately** (`rm -rf ...`).
 
@@ -73,11 +73,11 @@ the manifest **is** the source of truth either way.
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy the whole folder — block screenshot generator (Chrome headless → webp + svg fallback) |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — adds a tab to the Site Settings page (Secure Custom Fields), only when asked |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy the whole folder — builds the css-foundation-wizard files from a Figma file (inventory, foundation, components) |
-| `_docs/examples/` | `<theme>/_docs/examples/` | Reference blocks the AI copies and adapts: `README.md` (shared rules) + one folder of real files per block |
-| `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Pre-launch checklist for go-live |
-| `_docs/kit-log.md` | `<theme>/_docs/kit-log.md` | Only if absent — the project's log of what the kit got wrong or lacked |
-| `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | The Site Settings pattern (SCF page, empty by default; tabs on request) |
-| `_docs/editor-fidelity-checklist.md` | `<theme>/_docs/editor-fidelity-checklist.md` | Canvas fidelity checklist |
+| `docs/examples/` | `<theme>/docs/examples/` | Reference blocks the AI copies and adapts: `README.md` (shared rules) + one folder of real files per block |
+| `docs/launch-list.md` | `<theme>/docs/launch-list.md` | Pre-launch checklist for go-live |
+| `docs/kit-log.md` | `<theme>/docs/kit-log.md` | Only if absent — the project's log of what the kit got wrong or lacked |
+| `docs/site-settings-pattern.md` | `<theme>/docs/site-settings-pattern.md` | The Site Settings pattern (SCF page, empty by default; tabs on request) |
+| `docs/editor-fidelity-checklist.md` | `<theme>/docs/editor-fidelity-checklist.md` | Canvas fidelity checklist |
 | `gitignore.example` | `<theme>/.gitignore` | **Only if** `<theme>/.gitignore` does not exist yet — never overwrite |
 | `prettier.config.example.js` | `<theme>/prettier.config.js` | Theme root; then add the `prepare` + `lint-staged` keys and copy the hook installer — see "Code formatting" |
 | `prettierignore.example` | `<theme>/.prettierignore` | Theme root; keeps the committed `vendor/` and `public/build/` away from the formatter — see "Code formatting" |
@@ -121,17 +121,17 @@ If you'd rather copy by hand instead of asking the AI, from the project root:
 KIT=/path/to/this/repo
 
 cp "$KIT/CLAUDE.md" ./CLAUDE.md
-mkdir -p .claude/skills _docs
+mkdir -p .claude/skills docs
 cp -R "$KIT/skills/html-qa-smoketest" .claude/skills/
 cp -R "$KIT/skills/create-block" .claude/skills/
-cp -r "$KIT/_docs/examples"     ./_docs/examples
-cp "$KIT/_docs/launch-list.md"  ./_docs/launch-list.md
-cp -n "$KIT/_docs/kit-log.md"    ./_docs/kit-log.md
+cp -r "$KIT/docs/examples"     ./docs/examples
+cp "$KIT/docs/launch-list.md"  ./docs/launch-list.md
+cp -n "$KIT/docs/kit-log.md"    ./docs/kit-log.md
 # only if the project has no .gitignore yet:
 cp "$KIT/gitignore.example" ./.gitignore
 ```
 
-Then point the AI at `_docs/examples/README.md` and `CLAUDE.md` for context before
+Then point the AI at `docs/examples/README.md` and `CLAUDE.md` for context before
 generating code.
 
 Global skills are **not** part of this per-project copy — they go to your
@@ -243,7 +243,7 @@ Composer and Node run on the **host**; Lando only serves WordPress.
 5. Scaffold Sage into the theme dir, **naming the theme after the project —
    not `sage`**. Every `<theme>` placeholder below is that name (e.g.
    `acme-2026`); shipping a theme still called `sage` is a launch blocker
-   (see `_docs/launch-list.md` › Theme identity).
+   (see `docs/launch-list.md` › Theme identity).
    ```bash
    cd wp-content/themes
    composer create-project roots/sage <theme>

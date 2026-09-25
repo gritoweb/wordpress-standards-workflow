@@ -15,7 +15,7 @@ The page opener: an `h1`, supporting text, one button and an image. Demonstrates
 From the theme root, copy the files and fill the placeholders (the same values `create-block` uses), then add the slug to `BlockManager`'s list:
 
 ```bash
-cp -r _docs/examples/hero/resources .
+cp -r docs/examples/hero/resources .
 sed -i 's#<namespace>#NAMESPACE#g; s#<text-domain>#TEXT_DOMAIN#g; s#<category>#CATEGORY#g' resources/blocks/hero/* resources/views/blocks/hero.blade.php
 ```
 

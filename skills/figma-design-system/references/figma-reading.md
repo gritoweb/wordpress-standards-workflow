@@ -100,14 +100,14 @@ Record the widths you saw; the derivation rules use them for breakpoints. If two
 
 ## Later phases: pull nodes
 
-1. Read `_docs/figma-map.md`. Take node IDs from **Canonical nodes** and the artboard tables.
+1. Read `docs/figma-map.md`. Take node IDs from **Canonical nodes** and the artboard tables.
 2. Call `get_design_context` on each node you need, one at a time, after invoking `figma:figma-design-to-code`. Treat the returned React and Tailwind as a reference, not as code to paste.
 3. Prefer Code Connect mappings, then design annotations, then variables, then raw values from the returned code, then the screenshot, in that order.
 4. If a node ID no longer resolves, tell the user the design may have changed and offer to re-walk that page only.
 
 ## Assets and screenshots
 
-- `get_screenshot` returns a URL; download it with `curl -sL URL -o path.png`. For comparison images, keep them under `_docs/figma/` in the project or the scratch directory, not in the theme.
+- `get_screenshot` returns a URL; download it with `curl -sL URL -o path.png`. For comparison images, keep them under `docs/figma/` in the project or the scratch directory, not in the theme.
 - `download_assets` on the header node gives the logo SVG and raw images; save under `resources/images/` with descriptive names. Don't redraw anything.
 - Asset URLs expire; download during the phase that needs them.
 

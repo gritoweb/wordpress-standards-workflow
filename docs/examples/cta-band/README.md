@@ -15,7 +15,7 @@ A closing call to action on a dark band, with an optional photo behind it. Demon
 From the theme root, copy the files and fill the placeholders (the same values `create-block` uses), then add the slug to `BlockManager`'s list:
 
 ```bash
-cp -r _docs/examples/cta-band/resources .
+cp -r docs/examples/cta-band/resources .
 sed -i 's#<namespace>#NAMESPACE#g; s#<text-domain>#TEXT_DOMAIN#g; s#<category>#CATEGORY#g' resources/blocks/cta-band/* resources/views/blocks/cta-band.blade.php
 ```
 

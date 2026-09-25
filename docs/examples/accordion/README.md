@@ -15,7 +15,7 @@ An array of question/answer items. Demonstrates the **one-open-at-a-time** repea
 From the theme root, copy the files and fill the placeholders (the same values `create-block` uses), then add the slug to `BlockManager`'s list:
 
 ```bash
-cp -r _docs/examples/accordion/resources .
+cp -r docs/examples/accordion/resources .
 sed -i 's#<namespace>#NAMESPACE#g; s#<text-domain>#TEXT_DOMAIN#g; s#<category>#CATEGORY#g' resources/blocks/accordion/* resources/views/blocks/accordion.blade.php
 ```
 

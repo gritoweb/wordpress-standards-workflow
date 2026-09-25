@@ -2,7 +2,7 @@
 
 Pre-launch verification for WordPress sites built on the GritoWeb standards.
 Run through this before any production go-live. Copy this file into each new
-project's `_docs/` folder and tick items as you go.
+project's `docs/` folder and tick items as you go.
 
 **Severity legend:**
 

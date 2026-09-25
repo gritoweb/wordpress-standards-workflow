@@ -15,7 +15,7 @@ A row of client or partner logos. Demonstrates an **image-only repeater**: each 
 From the theme root, copy the files and fill the placeholders (the same values `create-block` uses), then add the slug to `BlockManager`'s list:
 
 ```bash
-cp -r _docs/examples/logo-wall/resources .
+cp -r docs/examples/logo-wall/resources .
 sed -i 's#<namespace>#NAMESPACE#g; s#<text-domain>#TEXT_DOMAIN#g; s#<category>#CATEGORY#g' resources/blocks/logo-wall/* resources/views/blocks/logo-wall.blade.php
 ```
 

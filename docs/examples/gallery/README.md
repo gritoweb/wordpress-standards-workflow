@@ -17,7 +17,7 @@ Images in a Splide carousel, each with an optional caption. The second carousel 
 From the theme root, copy the files and fill the placeholders (the same values `create-block` uses), then add the slug to `BlockManager`'s list:
 
 ```bash
-cp -r _docs/examples/gallery/resources .
+cp -r docs/examples/gallery/resources .
 sed -i 's#<namespace>#NAMESPACE#g; s#<text-domain>#TEXT_DOMAIN#g; s#<category>#CATEGORY#g' resources/blocks/gallery/* resources/views/blocks/gallery.blade.php
 ```
 

@@ -13,7 +13,7 @@ A project has **no Site Settings page and no SCF** until the dev asks for a
 tab: the first tab installs both, and every tab after that only adds its own
 group. The logo and the menus are WordPress's own (Customize › Site Identity,
 Appearance › Menus): never rebuild them as Site Settings fields. This skill adds the tab that was asked for, and nothing else. The
-pattern is `_docs/site-settings-pattern.md`.
+pattern is `docs/site-settings-pattern.md`.
 
 Motion (entrance and hover defaults) is **not** a Site Settings tab: it stays
 in **Appearance › Customize › Motion** (`app/Blocks/BlockMotion.php`), as it

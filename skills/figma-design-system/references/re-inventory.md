@@ -1,6 +1,6 @@
 # Phase 0b: re-inventory (the design changed)
 
-Runs when `_docs/figma-map.md` already exists but no longer matches the Figma file: the designer replaced the file, a canonical node ID stopped resolving, or the user says the design changed. It's step 1 of `SKILL.md` › **When the design system changes mid-project**, which then runs the token diff, the style guide re-check, and the contrast gate. Phase 0 assumes a clean start; this phase assumes the theme already has real CSS, Blade, and blocks built against the old map, and the goal is a diff, not a rewrite from zero.
+Runs when `docs/figma-map.md` already exists but no longer matches the Figma file: the designer replaced the file, a canonical node ID stopped resolving, or the user says the design changed. It's step 1 of `SKILL.md` › **When the design system changes mid-project**, which then runs the token diff, the style guide re-check, and the contrast gate. Phase 0 assumes a clean start; this phase assumes the theme already has real CSS, Blade, and blocks built against the old map, and the goal is a diff, not a rewrite from zero.
 
 ## Contents
 
@@ -42,7 +42,7 @@ Don't run it speculatively. A single missing node is often just that node moving
 | --- | --- |
 | Same name, same rough size and position, new node ID | Update the node ID in the map; nothing downstream needs a rebuild. |
 | Same name, visibly different content (spot-checked) | Treat as a redesign of that page. The CSS, Blade, or block built from the old node needs review: flag it, don't silently re-point the ID. |
-| Removed | Mark the row `removed` in the map, don't delete it: move it to `_docs/figma-map-history.md` instead (see **Update the map**). Anything built from it (a block, a component) is now unsourced; say so in the handoff, don't delete the code. |
+| Removed | Mark the row `removed` in the map, don't delete it: move it to `docs/figma-map-history.md` instead (see **Update the map**). Anything built from it (a block, a component) is now unsourced; say so in the handoff, don't delete the code. |
 | New | Add a new row. Decide with the user whether it needs its own phase-0-style classification now or can wait until a later phase needs it. |
 
 Only tokens, components, the shell, and blocks whose source node is gone or redesigned are affected. A file-wide replacement doesn't mean every phase reruns: most of the time only a handful of pages actually changed.
@@ -53,7 +53,7 @@ The map is fixed-shape (see `SKILL.md` › **The map is the cache**), so this ph
 
 1. Update the header: new `File key:`, `File link:`, `Walked:` date. Keep `Connected Figma account:` if unchanged.
 2. Replace the **Pages** and **Artboards** tables with the current state: new node IDs, new rows for additions, `removed` rows removed from the live table.
-3. Move everything superseded (the old file key and link, the removed rows, the readiness report as it stood, any resolved or now-obsolete gap) into `_docs/figma-map-history.md`, under a dated heading:
+3. Move everything superseded (the old file key and link, the removed rows, the readiness report as it stood, any resolved or now-obsolete gap) into `docs/figma-map-history.md`, under a dated heading:
 
    ```markdown
    ## 2026-09-14: file replaced

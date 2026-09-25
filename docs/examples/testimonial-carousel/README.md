@@ -17,7 +17,7 @@ An array of quotes in a Splide carousel. Demonstrates the **vendor library** rul
 From the theme root, copy the files and fill the placeholders (the same values `create-block` uses), then add the slug to `BlockManager`'s list:
 
 ```bash
-cp -r _docs/examples/testimonial-carousel/resources .
+cp -r docs/examples/testimonial-carousel/resources .
 sed -i 's#<namespace>#NAMESPACE#g; s#<text-domain>#TEXT_DOMAIN#g; s#<category>#CATEGORY#g' resources/blocks/testimonial-carousel/* resources/views/blocks/testimonial-carousel.blade.php
 ```
 

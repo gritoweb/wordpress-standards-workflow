@@ -5,7 +5,7 @@ from this repo, never mid-build and never from inside the project.
 
 ## Steps
 
-1. Open the site's `wp-content/themes/<theme>/_docs/kit-log.md` and read every
+1. Open the site's `wp-content/themes/<theme>/docs/kit-log.md` (older sites: `_docs/kit-log.md`) and read every
    entry. The project is read-only: don't edit, build or commit there.
 2. Sort each entry into one action:
 

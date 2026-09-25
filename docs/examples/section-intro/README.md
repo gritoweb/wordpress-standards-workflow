@@ -15,7 +15,7 @@ A heading, intro text and a button that open a section. Demonstrates a **layout 
 From the theme root, copy the files and fill the placeholders (the same values `create-block` uses), then add the slug to `BlockManager`'s list:
 
 ```bash
-cp -r _docs/examples/section-intro/resources .
+cp -r docs/examples/section-intro/resources .
 sed -i 's#<namespace>#NAMESPACE#g; s#<text-domain>#TEXT_DOMAIN#g; s#<category>#CATEGORY#g' resources/blocks/section-intro/* resources/views/blocks/section-intro.blade.php
 ```
 

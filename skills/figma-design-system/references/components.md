@@ -9,7 +9,7 @@ cards beyond the shared `.card` surface.
 
 ## Inputs
 
-From `_docs/figma-map.md`: the **Canonical nodes** for buttons and component
+From `docs/figma-map.md`: the **Canonical nodes** for buttons and component
 nodes. Read each with `get_design_context`, one at a time; give a read
 estimate first and wait. Tokens come from phase 1 via `var(--…)`; never a raw
 hex or px a token covers (`check-css-foundation` refuses it).

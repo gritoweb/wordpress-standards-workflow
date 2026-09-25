@@ -41,7 +41,7 @@ that themselves.
 - Working directory = active Sage 11 theme root (must contain `vite.config.js`,
   `app/setup.php`, `composer.json`, `resources/`). If unsure, **ask** — don't guess.
 - Composer/Node run on the host (Lando only serves WP).
-- Standards = `CLAUDE.md` + `_docs/examples/` (read its `README.md`, then only the closest block's folder, whose files you copy). If those aren't in the project,
+- Standards = `CLAUDE.md` + `docs/examples/` (older projects: `_docs/`) (read its `README.md`, then only the closest block's folder, whose files you copy). If those aren't in the project,
   treat this skill as the standard.
 
 ---
@@ -73,7 +73,7 @@ project:
 
 If `Text Domain` is missing, or either value is still `sage`, **bail out**: the
 theme's identity hasn't been claimed yet (`project-init` › Phase 3,
-`_docs/launch-list.md` › Theme identity). Anything scaffolded now would bake the
+`docs/launch-list.md` › Theme identity). Anything scaffolded now would bake the
 wrong domain/path into every file.
 
 ### Required infra (skill bootstraps if missing)
@@ -137,7 +137,7 @@ Infra templates live in **Templates** at the bottom of this doc.
 
 ## Phase 1 — Collect block requirements
 
-> **Source of truth: this skill's templates and `_docs/examples/` only.**
+> **Source of truth: this skill's templates and `docs/examples/` only.**
 > Never copy a block, component or CSS from another project on the machine
 > (a sibling theme, an earlier test site): those were built with an older
 > kit and carry the bugs the kit has since fixed. Verified 2026-09-23: an
@@ -185,7 +185,7 @@ placeholder, no accidental newlines.
 with the **same style guide classes as its Blade element** (`heading-2` on
 both); `AutoGrowingTextarea` already carries the field reset (full width,
 transparent, no outline) — never a form wrapper, a
-white card, or a border around the field. That's how `_docs/examples/`
+white card, or a border around the field. That's how `docs/examples/`
 builds every block.
 
 #### Keyword lookup table
@@ -411,7 +411,7 @@ Attributes:
       kit**: one-item-at-a-time editing hid the order and made reordering
       impossible. If an old project still has them, migrate the block to
       `ItemList`.
-    - Reference code, tested end to end: `_docs/examples/` — its `README.md`
+    - Reference code, tested end to end: `docs/examples/` — its `README.md`
       (rules every block follows and the index of the ten reference
       blocks), then only the closest block's folder: copy its files with
       the command in its `README.md` and adapt them.
@@ -432,7 +432,7 @@ Attributes:
 
 ### What the skill does NOT ask
 
-**Vendor libs** are a deliberate dev decision, not block scaffolding. The skill generates blocks without lib boilerplate; if the dev adds a carousel etc. afterward, they follow the pattern in `_docs/examples/testimonial-carousel/` (`wp_register_*` in `app/blocks.php` + `wp_enqueue_*` in `block.php`). Phase 0's smell detector watches for the wrong pattern over time.
+**Vendor libs** are a deliberate dev decision, not block scaffolding. The skill generates blocks without lib boilerplate; if the dev adds a carousel etc. afterward, they follow the pattern in `docs/examples/testimonial-carousel/` (`wp_register_*` in `app/blocks.php` + `wp_enqueue_*` in `block.php`). Phase 0's smell detector watches for the wrong pattern over time.
 
 ### Validations (cheap, fail fast)
 

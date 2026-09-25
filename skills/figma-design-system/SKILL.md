@@ -1,6 +1,6 @@
 ---
 name: figma-design-system
-description: Sets up a Sage 11 WordPress theme's design system from a Figma file the same way on every project (typography, color, spacing, buttons, the card, forms and the components the file has), in css-foundation-wizard's files and fixed token names. Inventories the file into _docs/figma-map.md first, with a confirm gate before every write. Use whenever the user wants to start a theme from a Figma design, "set up the design system from Figma," "build the buttons from Figma," "map the Figma file," or "the design system changed."
+description: Sets up a Sage 11 WordPress theme's design system from a Figma file the same way on every project (typography, color, spacing, buttons, the card, forms and the components the file has), in css-foundation-wizard's files and fixed token names. Inventories the file into docs/figma-map.md first, with a confirm gate before every write. Use whenever the user wants to start a theme from a Figma design, "set up the design system from Figma," "build the buttons from Figma," "map the Figma file," or "the design system changed."
 ---
 
 # Figma design system for Sage 11
@@ -38,7 +38,7 @@ table and propose the next phase.
 | Check | How | Means |
 | --- | --- | --- |
 | Theme root | The directory with `vite.config.js`, `app/setup.php`, `resources/css/app.css` (usually `wp-content/themes/<name>/`). Ask if there's more than one. | Where files go |
-| Figma map | `_docs/figma-map.md` exists and has a `File key:` line | Phase 0 done |
+| Figma map | `docs/figma-map.md` exists and has a `File key:` line | Phase 0 done |
 | Design changed | The map's `File key:` no longer matches the link the user gives, or a canonical node fails to resolve | Run `references/re-inventory.md` first |
 | Foundation | `resources/css/global/{variables,typography,layout,base,container}.css` exist and `node scripts/check-css-foundation.mjs` passes | Phase 1 done |
 | Components | `resources/css/components/button.css` and `card.css` hold Figma values (the map's **Components** table) | Phase 2 done |
@@ -51,8 +51,8 @@ user asks.
 
 | Phase | Reads | Writes | Reference |
 | --- | --- | --- | --- |
-| 0 `inventory` | One Figma file link (ask once); every page; the style guide candidates | `_docs/figma-map.md` | `references/figma-reading.md`, `references/figma-map-template.md` |
-| 0b `re-inventory` | The existing map; the new file link | Updated map; superseded entries in `_docs/figma-map-history.md` | `references/re-inventory.md` |
+| 0 `inventory` | One Figma file link (ask once); every page; the style guide candidates | `docs/figma-map.md` | `references/figma-reading.md`, `references/figma-map-template.md` |
+| 0b `re-inventory` | The existing map; the new file link | Updated map; superseded entries in `docs/figma-map-history.md` | `references/re-inventory.md` |
 | 1 `foundation` | The map; the typography, color, spacing and forms boards | `resources/css/global/*.css` (values only, token names fixed), font loading, `components/forms.css` when the file draws forms | `references/foundation.md`, `references/derivation-rules.md` |
 | 2 `components` | The map; the buttons board and any component boards | `components/button.css` and `card.css` (Figma values), then the components the file defines | `references/components.md` |
 
@@ -76,11 +76,11 @@ has one section per board. A board the file lacks is derived from
 
 ## The map is the cache
 
-`_docs/figma-map.md` has a **fixed shape** (`references/figma-map-template.md`):
+`docs/figma-map.md` has a **fixed shape** (`references/figma-map-template.md`):
 current state, pages, artboards, canonical nodes, tokens, gaps, questions, and
 the sections later phases append. Later phases read the map first and call
 Figma only for the nodes they need. Every cycle rewrites its sections in
-place; superseded entries move to `_docs/figma-map-history.md` with the date.
+place; superseded entries move to `docs/figma-map-history.md` with the date.
 
 ## Gap policy
 

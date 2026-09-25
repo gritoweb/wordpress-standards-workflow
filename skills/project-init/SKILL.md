@@ -26,7 +26,7 @@ that themselves. Never writes to a remote or production environment.
 ## Pre-conditions
 
 - The kit repo (this repo, or a checkout/copy of it) is reachable on disk or via git.
-- **Target is ALWAYS the active Sage 11 theme root** (`wp-content/themes/<theme>/`), **NEVER the WordPress CMS root**. The theme is the versioned project where blocks, Blade templates, Vite, package.json, and CSS reside. All `.claude/skills/`, `CLAUDE.md`, `_docs/`, and git versioning must live inside the theme directory (`wp-content/themes/<theme>/`).
+- **Target is ALWAYS the active Sage 11 theme root** (`wp-content/themes/<theme>/`), **NEVER the WordPress CMS root**. The theme is the versioned project where blocks, Blade templates, Vite, package.json, and CSS reside. All `.claude/skills/`, `CLAUDE.md`, `docs/`, and git versioning must live inside the theme directory (`wp-content/themes/<theme>/`).
 - **Zero repository clutter in WordPress root**: If an AI assistant or developer clones this repository (`wordpress-standards-workflow`) from GitHub (e.g. `git clone https://github.com/gritoweb/wordpress-standards-workflow`), it must:
   1. Clone to a temporary folder outside the project (or `./.temp-kit`);
   2. Copy the required skills, docs, and configs into `wp-content/themes/<theme>/`;
@@ -56,7 +56,7 @@ that themselves. Never writes to a remote or production environment.
    activation.
 5. CSS foundation and the private Styleguide page: Phase 1b.
 6. Header and footer: Phase 1c.
-7. Blocks, each with `create-block`: read `_docs/examples/README.md` once,
+7. Blocks, each with `create-block`: read `docs/examples/README.md` once,
    then copy the closest example folder's files (its `README.md` has the
    command) and adapt them.
 8. Home page, Primary and Footer menus: Scenario B steps 10–11; build: **Theme assets**.
@@ -102,11 +102,11 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy whole folder; ask before overwriting |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy whole folder; ask before overwriting |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy whole folder; ask before overwriting |
-| `_docs/examples/` | `<theme>/_docs/examples/` | Copy whole folder (one folder per reference block, real files); ask before overwriting |
-| `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Ask before overwriting if present |
-| `_docs/kit-log.md` | `<theme>/_docs/kit-log.md` | Only if absent — it holds the project's own entries |
-| `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | Ask before overwriting if present |
-| `_docs/editor-fidelity-checklist.md` | `<theme>/_docs/editor-fidelity-checklist.md` | Ask before overwriting if present |
+| `docs/examples/` | `<theme>/docs/examples/` | Copy whole folder (one folder per reference block, real files); ask before overwriting |
+| `docs/launch-list.md` | `<theme>/docs/launch-list.md` | Ask before overwriting if present |
+| `docs/kit-log.md` | `<theme>/docs/kit-log.md` | Only if absent — it holds the project's own entries |
+| `docs/site-settings-pattern.md` | `<theme>/docs/site-settings-pattern.md` | Ask before overwriting if present |
+| `docs/editor-fidelity-checklist.md` | `<theme>/docs/editor-fidelity-checklist.md` | Ask before overwriting if present |
 | `gitignore.example` | `<theme>/.gitignore` | **Only if `<theme>/.gitignore` doesn't exist yet** — never overwrite an existing one |
 | `prettier.config.example.js` | `<theme>/prettier.config.js` | Ask before overwriting if present |
 | `prettierignore.example` | `<theme>/.prettierignore` | Ask before overwriting if present. **Required** — keeps `vendor/` and `public/build/` away from formatter |

@@ -42,10 +42,18 @@
 
 ---
 
+## Project docs
+
+The kit's docs live in `docs/` (reference blocks, launch list, kit log, Site
+Settings pattern). Projects set up before 2026-09-25 keep them in `_docs/`:
+read there when `docs/` doesn't have the file.
+
+---
+
 ## Kit log
 
 Whenever you work around the kit, fix a kit bug, or hit a kit instruction
-that was wrong or missing, add **one line** to `_docs/kit-log.md`: what
+that was wrong or missing, add **one line** to `docs/kit-log.md`: what
 happened and the file. Don't fix the kit from inside the project — log it and
 move on; it goes back into the kit after the site ships.
 

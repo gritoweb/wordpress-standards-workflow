@@ -1,8 +1,8 @@
-# `_docs/figma-map.md` template
+# `docs/figma-map.md` template
 
-Write the map at the project root, `_docs/figma-map.md`, in exactly this shape. Later phases parse the headings, so keep them. Replace every `PLACEHOLDER`; delete the guidance comments.
+Write the map at the project root, `docs/figma-map.md`, in exactly this shape. Later phases parse the headings, so keep them. Replace every `PLACEHOLDER`; delete the guidance comments.
 
-**The shape is fixed.** Every phase and every re-inventory cycle rewrites these sections in place: it never appends a second "as of" copy of a section below the first. History (superseded node IDs, removed pages, past readiness reports) goes in `_docs/figma-map-history.md`, dated, not in this file. See `references/re-inventory.md` for the cycle that moves content there.
+**The shape is fixed.** Every phase and every re-inventory cycle rewrites these sections in place: it never appends a second "as of" copy of a section below the first. History (superseded node IDs, removed pages, past readiness reports) goes in `docs/figma-map-history.md`, dated, not in this file. See `references/re-inventory.md` for the cycle that moves content there.
 
 ````markdown
 # Figma map: PROJECT_NAME
@@ -14,7 +14,7 @@ Inventory of the Figma file for this theme, written by the `figma-design-system`
 - Connected Figma account: ACCOUNT_EMAIL
 - Walked: YYYY-MM-DD
 - Readiness: ready | ready with questions for design | not ready
-- Re-inventory log: none | see `_docs/figma-map-history.md#YYYY-MM-DD-file-replaced`
+- Re-inventory log: none | see `docs/figma-map-history.md#YYYY-MM-DD-file-replaced`
 
 ## Pages
 

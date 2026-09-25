@@ -2,6 +2,21 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — `_docs/` becomes `docs/`
+
+### Changed
+- **One docs folder.** Everything that was in `_docs/` (reference blocks,
+  launch list, kit log, Site Settings pattern, editor fidelity checklist) is
+  now in `docs/`, next to the kit's own docs (`kit-harvest.md`,
+  `superpowers/`), and projects get it in `<theme>/docs/`. `project-init`
+  still copies only the listed files, so the kit-only docs stay in the kit.
+- Older projects keep `_docs/`: `CLAUDE.md` › Project docs, `create-block`
+  and the harvest checklist say to read there when `docs/` lacks the file.
+
+### Verified
+- `git grep _docs` outside `CHANGELOG.md` finds only the three
+  older-project notes; the files moved with `git mv` (history kept).
+
 ## 2026-09-25 — Reference blocks as real files to copy
 
 ### Changed
