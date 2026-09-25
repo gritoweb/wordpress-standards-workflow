@@ -186,7 +186,7 @@ with the **same style guide classes as its Blade element** (`heading-2` on
 both); `AutoGrowingTextarea` already carries the field reset (full width,
 transparent, no outline) — never a form wrapper, a
 white card, or a border around the field. That's how `_docs/examples/`
-builds all three blocks.
+builds every block.
 
 #### Keyword lookup table
 
@@ -409,8 +409,8 @@ Attributes:
       impossible. If an old project still has them, migrate the block to
       `ItemList`.
     - Reference code, tested end to end: `_docs/examples/` — its `README.md`
-      (rules every block follows), then only the closest block's file
-      (`accordion.md`, `card-grid.md`, `testimonial-carousel.md`).
+      (rules every block follows and the index of the ten reference
+      blocks), then only the closest block's file.
   - **Sidebar panel order**, the same in every block: the item list
     ("Items" / "Slides" / "Cards") → Background Media → the block's own
     settings (e.g. Autoplay, layout) → Spacing → Entrance animation.

@@ -2,6 +2,30 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Ten reference blocks and a whole Home example
+
+### Added
+- **Seven new reference blocks** in `_docs/examples/`: `hero`,
+  `section-intro`, `media-text`, `cta-band`, `number-grid`, `logo-wall` and
+  `gallery` (a second Splide carousel). Each reuses the shared components
+  (`ActionEditor` button pair opened on click, `AttachmentImageControl`,
+  `ItemList`, `AutoGrowingTextarea`, the `Background Media` panel) and only
+  the design system's tokens and classes: no `block.css` except the two
+  carousels' bullet colors. Neutral copy, same shape as the first three.
+- **`home.md`**: a whole Home built from the ten blocks, in order, with its
+  serialized content.
+- The index in `_docs/examples/README.md` lists all ten; an agent still
+  reads only the one it needs.
+
+### Verified
+- Built and run on a fresh local site (Sage 11 + the kit): all ten blocks
+  render on the page with real images; at 1440px and 390px both carousels
+  mount (2 and 3 bullets), no part stays hidden after scrolling, no
+  horizontal scroll, no console error, no 404, no PHP warning; the editor
+  loads all ten with no block error, and the hero's button editor is closed
+  on select and opens on click. `check-css-foundation` exits 0. The example
+  files are generated from the tested files with the kit placeholders.
+
 ## 2026-09-25 — Carousels on Splide, vendor libraries out of setup.php
 
 ### Changed

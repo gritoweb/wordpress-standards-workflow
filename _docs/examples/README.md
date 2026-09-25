@@ -1,6 +1,6 @@
 # Code examples — read this first
 
-Three complete Gutenberg blocks for the kit's Sage 11 + Acorn + Vite setup.
+Ten complete Gutenberg blocks for the kit's Sage 11 + Acorn + Vite setup.
 **Copy these, not older code**: every file below was run on a live site
 (2026-09-23) — editor (no block errors, sidebar list reorders / deletes /
 adds with the canvas updating at once, Spacing and entrance Preview visible)
@@ -51,10 +51,21 @@ components) is **not** repeated here — it comes from
 
 ## One file per block
 
-Read this file, then **only** the block file closest to what you are building:
+Read this file, then **only** the block file closest to what you are building.
+Every block is registered by adding its slug to `BlockManager`'s list
+(`create-block` Phase 3).
 
 | Block | File | Shows |
 | --- | --- | --- |
-| Accordion (one open at a time) | `accordion.md` | a repeater with one item open at a time (native `<details name>`) |
+| Hero | `hero.md` | the page opener: `h1`, text, the button pair, an image on the canvas |
+| Section intro | `section-intro.md` | heading, text and button; a layout setting (alignment) in the sidebar |
+| Media and text | `media-text.md` | text beside an image; the image's side is a sidebar setting |
+| CTA band | `cta-band.md` | a dark band with an optional background photo (`Background Media` panel, focal point) |
 | Card grid | `card-grid.md` | a grid of repeated cards with image, text and link |
-| Testimonial carousel (vendor library) | `testimonial-carousel.md` | a carousel on a vendor library (Splide), self-hosted, registered in `app/blocks.php`, enqueued per block |
+| Number grid | `number-grid.md` | a text-only repeater: key numbers and their labels |
+| Logo wall | `logo-wall.md` | an image-only repeater: logos, alt text from the Media Library |
+| Accordion | `accordion.md` | a repeater with one item open at a time (native `<details name>`) |
+| Testimonial carousel | `testimonial-carousel.md` | a carousel on a vendor library (Splide), self-hosted, registered in `app/blocks.php`, enqueued per block |
+| Gallery | `gallery.md` | a second Splide carousel, with image slides |
+
+A whole page built from them: `home.md`.
