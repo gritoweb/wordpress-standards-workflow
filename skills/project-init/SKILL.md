@@ -52,8 +52,8 @@ that themselves. Never writes to a remote or production environment.
 1. Lando + WordPress: Scenario B steps 1–4.
 2. Sage scaffold and theme identity: Scenario B step 5.
 3. Copy the kit into the theme (Phase 1 table), then delete the clone.
-4. `lando wp theme activate <theme>`, then **Clear install defaults**, after
-   activation.
+4. `lando wp theme activate <theme>`, then **Clear install defaults** and
+   **Site Settings (new projects)**, after activation.
 5. CSS foundation and the private Styleguide page: Phase 1b.
 6. Header and footer: Phase 1c.
 7. Blocks, each with `create-block`: read `docs/examples/README.md` once,
@@ -247,7 +247,7 @@ Phase 0 answer. Do not run any of these commands.
    identity in `style.css` — `Theme Name`, `Author`, `Text Domain`, and **reset
    `Version` to `1.0.0`**; match `package.json`'s `name`. (Re-verified by the
    launch list at go-live.)
-5. `lando wp theme activate <theme>`, then **Clear install defaults** (below).
+5. `lando wp theme activate <theme>`, then **Clear install defaults** and **Site Settings (new projects)** (below).
 6. Review and commit the copied kit files through the normal git flow —
    **never push without the project owner's permission**.
 7. Build theme assets (Step below).
@@ -289,7 +289,7 @@ Phase 0 answer. Do not run any of these commands.
    not `sage`).
 6. Copy kit standards into `wp-content/themes/<theme>/` per Phase 1 table.
    If the kit repository was cloned from GitHub, **delete the cloned kit directory immediately** (`rm -rf ...`) so the WordPress root remains clean.
-7. `lando wp theme activate <theme>`, then **Clear install defaults** (below).
+7. `lando wp theme activate <theme>`, then **Clear install defaults** and **Site Settings (new projects)** (below).
 8. Optionally `git init` + an initial commit inside `wp-content/themes/<theme>` — local only, never push without permission.
 9. Build theme assets (Step below).
 10. **Creating Home Page with Sample Blocks** (when requested by user prompt) —
@@ -351,6 +351,22 @@ lando wp widget list sidebar-primary --format=count
 lando wp widget list sidebar-footer --format=count
 lando wp post list --post_type=any --post_status=any --comment_status=open --format=count
 ```
+
+### Site Settings (new projects)
+
+Every new project gets the **Site Settings** page, empty, ready for the
+fields the site asks for later:
+
+1. `lando wp plugin install secure-custom-fields --activate`
+2. Copy `.claude/skills/site-settings-wizard/templates/SiteSettings.php` to
+   `app/Settings/SiteSettings.php`, replacing `__TEXT_DOMAIN__` with the
+   theme's text domain. `app/blocks.php` registers it when the class exists.
+
+No field is added here. The menus and the logo are WordPress's own
+(Appearance › Menus, Customize › Site Identity) — never Site Settings
+fields. Tabs are added only when asked, with `site-settings-wizard`. An
+**existing** site that gets the updated kit installs nothing; it gets SCF
+and the page only with its first tab.
 
 ### Theme assets (both scenarios)
 
