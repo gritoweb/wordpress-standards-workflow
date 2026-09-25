@@ -2,6 +2,27 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Every project gets a private Styleguide page
+
+### Added
+- **Styleguide page.** `css-foundation-wizard` copies
+  `template-styleguide.blade.php` and the `StyleGuide` view composer (adapted
+  from the Sage Site Kit). The composer reads the tokens from
+  `global/variables.css`, `typography.css` and `container.css`, so the page
+  shows the live type scale, colors, spacing, radius and shadow with no
+  hand-kept list. Its six sections are fixed: typography, color, spacing,
+  buttons, forms, components.
+- **project-init creates it private.** Phase 1b step 4 creates the
+  "Styleguide" page (`post_status=private`, slug `styleguide`) only when the
+  slug doesn't exist yet. Logged-in editors see it; visitors get a 404.
+  `launch-list.md` checks it's still private before launch.
+
+### Verified
+- On a local Lando site: running the command twice created one page
+  (`Created post 18`), private; `/styleguide/` returned 404 logged out and
+  200 logged in, with all six sections, 18 color swatches, 9 type rows and no
+  PHP warning.
+
 ## 2026-09-25 — Comments close on drafts and private pages too
 
 ### Fixed

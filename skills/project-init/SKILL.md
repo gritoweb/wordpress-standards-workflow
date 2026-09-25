@@ -123,6 +123,15 @@ after step 4), before the header:
 3. No style guide yet? Ask the dev for one (Figma link, brand PDF, or colors
    + fonts in plain text). Don't invent a palette — the wizard offers
    defaults only for the gaps.
+4. **Styleguide page, always private.** Every project gets it, on the
+   template the wizard copied. Create it only if the slug doesn't exist yet:
+   ```bash
+   lando wp post list --post_type=page --name=styleguide --post_status=any --format=ids | grep -q . \
+     || lando wp post create --post_type=page --post_status=private --post_title='Styleguide' \
+          --post_name=styleguide --meta_input='{"_wp_page_template":"template-styleguide.blade.php"}'
+   ```
+   Private means only logged-in editors see it; visitors get a 404. It's the
+   page to check the design system in a browser, and it stays in the project.
 
 ---
 

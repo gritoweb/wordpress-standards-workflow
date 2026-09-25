@@ -51,6 +51,7 @@ to day (`.claude/skills/css-standards/SKILL.md` › **Style guide only**).
 | `global/container.css` | Container width tokens + `.container` — **the only place the container is defined** |
 | `components/button.css` | `.btn`, `.btn-primary`, `.btn-secondary` |
 | `components/card.css` | `.card` — the one card surface every block shares |
+| `resources/views/template-styleguide.blade.php` + `app/View/Composers/StyleGuide.php` | The dev **Styleguide** page: renders the tokens and classes above so they're checked in a browser |
 
 All paths under `resources/css/`. Never at the root of `resources/css/`
 (folder layout: `css-standards` › **CSS folder layout**).
@@ -65,7 +66,7 @@ All paths under `resources/css/`. Never at the root of `resources/css/`
 6. **Step 6** — `global/container.css`
 7. **Step 7** — `components/button.css` and `components/card.css`
 8. **Step 8** — wiring: `app.css`, `editor.css`, `theme.json`, `editor/canvas.css`, Sage's `alert` component
-9. **Step 9** — copy and run `scripts/check-css-foundation.mjs`; must exit 0
+9. **Step 9** — copy the Styleguide template and composer; copy and run `scripts/check-css-foundation.mjs`; must exit 0
 10. **Handoff**
 
 Each step starts only once the previous file is confirmed and written.
@@ -634,9 +635,20 @@ which the check refuses. Point it at the state tokens:
 
 ---
 
-## Step 9 — Check
+## Step 9 — Styleguide template and check
 
-Copy `<skill>/templates/check-css-foundation.mjs` to
+Copy `<skill>/templates/template-styleguide.blade.php` to
+`resources/views/template-styleguide.blade.php` and
+`<skill>/templates/StyleGuide.php` to `app/View/Composers/StyleGuide.php`
+(ask before overwriting), replacing `__TEXT_DOMAIN__` with the theme's text
+domain. The composer reads the tokens from `global/variables.css`,
+`typography.css` and `container.css`, so the page never needs editing when a
+value changes. Its six sections are fixed (typography, color, spacing,
+buttons, forms, components): a component the site adds gets a specimen inside
+`#components`, never a seventh section. `project-init` creates the private
+page that uses it.
+
+Then copy `<skill>/templates/check-css-foundation.mjs` to
 `scripts/check-css-foundation.mjs` (ask before overwriting) and run it from
 the theme root:
 
@@ -654,7 +666,7 @@ blocking check 0.21 and runs in the pre-commit hook.
 
 ## Handoff
 
-A table of the seven files created, whether `app.css` / `editor.css` / `alert`
+A table of the seven files created, the Styleguide template and composer, whether `app.css` / `editor.css` / `alert`
 were edited, where the fonts load from, the recurring-treatment classes
 added, and the check's output. Remind the dev to run `npm run build` (they
 run it — this skill doesn't).

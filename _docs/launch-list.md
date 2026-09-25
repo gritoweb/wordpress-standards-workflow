@@ -24,6 +24,7 @@ project's `_docs/` folder and tick items as you go.
 - [ ] ⚠️ Rename or delete the default `Uncategorized` category
 - [ ] ⚠️ Delete unused themes (twentytwentythree, twentytwentyfour, etc.) — attack surface
 - [ ] ⚠️ Delete unused plugins — attack surface
+- [ ] ⚠️ The dev `Styleguide` page is still **private** (visitors must get a 404) and out of every menu
 
 ## ⚙️ WordPress core settings
 
