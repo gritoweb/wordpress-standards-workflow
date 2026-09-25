@@ -118,6 +118,20 @@ const walk = (dir, test) =>
         return test.test(entry) ? [path] : [];
       });
 
+// A named font nothing loads silently falls back to the browser's font on the page and the canvas.
+const GENERIC_FONT = /^(system-ui|ui-[\w-]+|-apple-system|blinkmacsystemfont|sans-serif|serif|monospace|arial|helvetica|georgia|times new roman|inherit)$/i;
+const allCss = walk(CSS, /\.css$/).map(read).join('\n');
+for (const token of ['font-display', 'font-body']) {
+  const value = read(`${CSS}/global/typography.css`).match(new RegExp(`--${token}\\s*:\\s*([^;]+);`))?.[1] ?? '';
+  const family = value.split(',')[0].trim().replace(/^["']|["']$/g, '');
+  if (!family || GENERIC_FONT.test(family)) continue;
+  const face = new RegExp(`@font-face\\s*\\{[^}]*font-family\\s*:\\s*["']?${family}["']?`, 'i').test(allCss);
+  const imported = (entry) => new RegExp(`@import\\s+url\\([^)]*(family=${family.replace(/ /g, '\\+')}|use\\.typekit\\.net)`, 'i').test(read(`${CSS}/${entry}.css`));
+  if (!face && !(imported('app') && imported('editor'))) {
+    problems.push(`--${token} is "${family}" but nothing loads it — add its @font-face to typography.css, or its @import url(...) to both app.css and editor.css`);
+  }
+}
+
 const siteFiles = [
   ...walk('resources/views', /\.blade\.php$/),
   ...walk('resources/blocks', /\.(jsx?|css|php)$/),

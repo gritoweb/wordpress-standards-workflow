@@ -2,6 +2,19 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — The CSS check fails on a font nothing loads
+
+### Added
+- **Font loading check.** `check-css-foundation.mjs` fails when
+  `--font-display` or `--font-body` names a font (not a system font) that has
+  no `@font-face` and no `@import url(...)` in both `app.css` and
+  `editor.css`. Without it the page and the canvas silently fall back to the
+  browser's font, as one test site did.
+
+### Verified
+- On a copy of a test theme: exit 0 with the Google Fonts import; with the
+  import removed from `app.css`, exit 1 naming Poppins and Inter.
+
 ## 2026-09-25 — Kit log and harvest: each site improves the kit
 
 ### Added
