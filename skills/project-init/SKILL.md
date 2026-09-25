@@ -47,6 +47,22 @@ that themselves. Never writes to a remote or production environment.
 5. **Phase 2** — Offer the global (user-level) skills.
 6. **Phase 3** — Hand off the manual steps for the chosen scenario.
 
+### New local project, in order (read only what each step needs)
+
+1. Lando + WordPress: Scenario B steps 1–4.
+2. Sage scaffold and theme identity: Scenario B step 5.
+3. Copy the kit into the theme (Phase 1 table), then delete the clone.
+4. `lando wp theme activate <theme>`, then **Clear install defaults** and
+   **Site Settings (new projects only)** — in that order, after activation.
+5. CSS foundation and the private Styleguide page: Phase 1b.
+6. Header: Phase 1c.
+7. Blocks, each with `create-block`: read `_docs/examples/README.md` once,
+   then only the example file closest to the block being built.
+8. Home page and Primary menu: Scenario B steps 10–11; build: **Theme assets**.
+9. Smoke check: Scenario B step 12, and report what was checked.
+
+Read a file once and keep what you need; don't re-read it in chunks.
+
 ---
 
 ## Phase 0 — Which scenario?

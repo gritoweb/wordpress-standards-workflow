@@ -2,6 +2,15 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — project-init: a new project's order on one screen
+
+### Added
+- **"New local project, in order".** A nine-line list after the execution
+  flow names each step and the one section it lives in, so an agent follows
+  it instead of reading the whole skill; the commands stay in their
+  sections (no copy). Step 7 reads `_docs/examples/README.md` once and only
+  the closest block file.
+
 ## 2026-09-25 — Reference blocks split into one file each
 
 ### Changed
