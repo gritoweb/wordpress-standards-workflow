@@ -2,6 +2,24 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Header in Tailwind, no header.css
+
+### Changed
+- **The header is Tailwind utilities and design-system classes only.**
+  `header.css` (198 lines) is gone: the sticky bar, the admin-bar offset, the
+  inline desktop menu with hover/focus submenus, the mobile toggle and panel,
+  and reduced motion are classes in `header.blade.php`; the menu's `<li>`/`<a>`
+  are styled from the `<ul>` with `[&_a]:` variants, since WordPress prints
+  them. `navigation.js` is unchanged. The submenu uses `rounded-button` +
+  `shadow-card` (the CSS check reserves the full card surface for `.card`).
+  Older themes keep their `header.css`.
+
+### Verified
+- On a local site with a Primary menu and a submenu: at 1440px the toggle is
+  hidden, the menu is inline and the submenu shows only on hover; at 390px
+  the toggle opens the panel (`aria-expanded` true, submenu visible) and Esc
+  closes it. `check-css-foundation` exits 0.
+
 ## 2026-09-25 — Native logo and menus in the header and a Tailwind footer
 
 ### Added

@@ -159,23 +159,17 @@ Sage ships `resources/views/sections/header.blade.php` as an unstyled brand
 link + a `<nav>` that renders **only when a menu is assigned** — a fresh site
 comes out with no menu, and assigning one gives an unstyled bullet list with
 no mobile toggle. Never leave that in place. Runs right after Phase 1b —
-`header.css` reads the style guide tokens with no fallback, so the
-foundation must exist first.
+the header and footer use the style guide's classes and tokens (Tailwind
+utilities, no CSS file), so the foundation must exist first.
 
 | From (`<skill>/templates/`) | To (`<theme>/`) | Rule |
 |---|---|---|
 | `header.blade.php` | `resources/views/sections/header.blade.php` | Overwrite **only** if it is still Sage's stock header (contains `class="banner"` and `nav-primary`); otherwise show the diff and ask |
-| `header.css` | `resources/css/components/header.css` | Create; ask if it exists |
 | `footer.blade.php` | `resources/views/sections/footer.blade.php` | Overwrite **only** if it is still Sage's stock footer (`dynamic_sidebar('sidebar-footer')`); otherwise show the diff and ask. Tailwind utilities only, no CSS file |
 | `navigation.js` | `resources/js/modules/navigation.js` | Create; ask if it exists |
 | `front-page.blade.php` | `resources/views/front-page.blade.php` | Create; ask if it exists. Sage's `page.blade.php` prints `partials.page-header` (an unstyled `<h1>` with the page title) above the content — on a block-built home that stray "Home" line under the header reads as a broken menu, and it duplicates the hero's `<h1>` |
 
 Replace `__TEXT_DOMAIN__` with the theme's `Text Domain`, then wire it:
-
-```css
-/* resources/css/app.css */
-@import './components/header.css';
-```
 
 ```js
 // resources/js/app.js
