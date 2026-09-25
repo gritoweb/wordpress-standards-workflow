@@ -91,7 +91,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `gitignore.example` | `<theme>/.gitignore` | **Only if `<theme>/.gitignore` doesn't exist yet** — never overwrite an existing one |
 | `prettier.config.example.js` | `<theme>/prettier.config.js` | Ask before overwriting if present |
 | `prettierignore.example` | `<theme>/.prettierignore` | Ask before overwriting if present. **Required** — keeps `vendor/` and `public/build/` away from formatter |
-| `install-git-hooks.example.mjs` | `<theme>/scripts/install-git-hooks.mjs` | Ask before overwriting if present |
+| `theme/` | `<theme>/` | The framework: copy the whole tree (it mirrors the theme layout — `app/`, `resources/`, `scripts/`). Ask before overwriting any file that exists. Then run **Phase 1a** |
 | `mu-plugins/acorn-pantheon-storage.php` | `wp-content/mu-plugins/acorn-pantheon-storage.php` | **Pantheon: required, copy as-is.** Relocates Acorn storage off the read-only filesystem |
 
 > **`.gitignore` — two separate actions.** Copy `gitignore.example` to `<theme>/.gitignore` **only if
@@ -101,6 +101,29 @@ never silently overwrite (same "bail > guessing" principle as
 
 After copying, show a summary table of what was created vs. skipped
 (already existed, dev declined).
+
+---
+
+## Phase 1a — Fill the framework placeholders and wire it
+
+The copied `theme/` carries neutral placeholders (`__PREFIX__`, `__TEXT_DOMAIN__`,
+`__THEME_SLUG__`, `__BLOCK_NAMESPACE__`, `__BLOCK_CATEGORY_SLUG__`,
+`__BLOCK_CATEGORY_TITLE__`). Fill them once, here:
+
+1. Write `<theme>/kit.config.json` from `theme/kit.config.example.json`. Derive
+   `textDomain` from `style.css` and `themeSlug` from the folder name; propose
+   `prefix` (letters/digits/underscore, no hyphens) and `blockNamespace` from the
+   slug, and ask the dev to confirm them. Ask: `"Qual namespace pros blocos?
+   Sugiro '<theme-slug>'. Ele vai no nome de cada bloco salvo no conteúdo, então
+   não dá pra trocar depois sem migrar os posts."` and `"Vou criar uma categoria
+   pros seus blocos. Quer chamar de '<Theme Name> Blocks' ou outro nome?"`.
+   Set `kitPath` to this kit's checkout path; leave `grounds` as `[]`.
+2. Run `node scripts/kit-setup.mjs` from the theme root, then
+   `node scripts/kit-setup.mjs --check` — it must exit 0.
+3. Run `create-block`'s **Phase 0** (checks only, no block): it wires
+   `functions.php`, `editor.js`, `app.css`, `editor.css`, `app.js` and the Blade
+   directives, with the same confirm-before-edit flow. 0.21 (CSS foundation) is
+   expected to fail until Phase 1b.
 
 ---
 
@@ -116,7 +139,7 @@ after step 4), before the header:
 1. **Run the `css-foundation-wizard` skill** in the theme root. It asks for
    the client's style guide and writes `resources/css/global/` and
    `components/button.css` with every token of its contract, wires
-   `app.css`/`editor.css` and copies `scripts/check-css-foundation.mjs`.
+   `app.css`/`editor.css`. `scripts/check-css-foundation.mjs` came with `theme/` (Phase 1).
 2. **Gate:** `node scripts/check-css-foundation.mjs` exits 0. Don't create
    blocks, the Home page or the first commit before it does — `create-block`
    (check 0.21) and the pre-commit hook both refuse a theme that fails it.

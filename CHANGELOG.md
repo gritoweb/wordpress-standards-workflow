@@ -2,6 +2,39 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — The framework installs as one tree, filled from a config
+
+First step of bringing the Sage Site Kit's work into this kit (decisions in
+`docs/merge-decisions.md`). `create-block` copied the framework one file at a
+time on the first block, and every placeholder was replaced by hand.
+
+### Changed
+- **`theme/` holds the framework**, mirroring the theme layout: the block PHP,
+  the editor components, entrance/hover CSS and JS, and the scripts
+  (`editor-fidelity`, `check-css-foundation`, `install-git-hooks`). Moved with
+  history from `skills/create-block/templates/`, the wizard's template and the
+  root hook installer.
+- **`project-init` installs it** (new Phase 1a): copies `theme/`, writes
+  `kit.config.json`, runs `node scripts/kit-setup.mjs` and its `--check`, then
+  runs `create-block`'s Phase 0 for the wiring.
+- **`create-block` only verifies the framework files**; a missing one sends the
+  dev to `project-init`. Wiring edits stay in its Phase 0.
+- **`BlockManager` registers every `resources/blocks/*/block.json`** and stamps
+  each block's asset version from its files' mtime, so an edited `block.js`
+  reaches browsers that cached the old one. New blocks no longer edit it.
+- **`BlockCategories`** takes its slug and title from `kit.config.json`.
+
+### Added
+- `theme/scripts/kit-setup.mjs` (+ tests) and `theme/kit.config.example.json`:
+  validate the config, fill `__PREFIX__`, `__TEXT_DOMAIN__`, `__THEME_SLUG__`,
+  `__BLOCK_NAMESPACE__`, `__BLOCK_CATEGORY_SLUG__`, `__BLOCK_CATEGORY_TITLE__`,
+  and generate `grounds.css` (dark grounds flip to `--color-light`).
+
+### Verified
+- `node --test theme/scripts/kit-setup.test.mjs`: 28 pass.
+- Fresh copy of `theme/` into an empty theme: `kit-setup` filled 10 files,
+  `--check` exit 0, no placeholder left, `php -l` clean on every `app/` file.
+
 ## 2026-09-24 — The canvas adapts to its width instead of forcing one
 
 With list view and settings open on a laptop the editor canvas is

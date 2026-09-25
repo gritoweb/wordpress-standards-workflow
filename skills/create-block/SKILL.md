@@ -76,27 +76,34 @@ theme's identity hasn't been claimed yet (`project-init` › Phase 3,
 `_docs/launch-list.md` › Theme identity). Anything scaffolded now would bake the
 wrong domain/path into every file.
 
-### Required infra (skill bootstraps if missing)
+### Required infra
+
+The framework files come from the kit's `theme/` folder, which `project-init` copies
+in and `node scripts/kit-setup.mjs` fills (namespace, category, text domain). This
+skill **never copies them**: a missing file means the kit isn't installed, so stop
+and run `project-init` (or copy `<kit>/theme/<path>` and rerun `kit-setup`). The
+**wiring** checks (0.6.1, 0.8, 0.9, 0.16, 0.18, 0.19) are still fixed here, per
+**Bootstrap UX**; `project-init` runs this same Phase 0 right after the install.
 
 | # | Check |
 |---|-------|
-| 0.1 | `app/Blocks/BlockManager.php` exists. Template at `<skill>/templates/BlockManager.php`. **First-run only**: ask `"Qual namespace pros blocos? Sugiro '<theme-slug>'. Ele vai no nome de cada bloco salvo no conteúdo, então não dá pra trocar depois sem migrar os posts."`, then replace `__BLOCK_NAMESPACE__` with the answer (lowercase, `[a-z0-9-]`). |
+| 0.1 | `app/Blocks/BlockManager.php` exists (kit: `theme/app/Blocks/BlockManager.php`) and holds no `__BLOCK_NAMESPACE__`. It registers every `resources/blocks/*/block.json` on its own — never edit it to add a block. The namespace comes from `kit.config.json` › `blockNamespace`. |
 | 0.2 | `resources/blocks/` exists |
 | 0.3 | `resources/views/blocks/` exists |
 | 0.4 | `resources/js/vendor/` exists |
 | 0.5 | `resources/css/vendor/` exists |
-| 0.6 | `app/blocks.php` is the **central block-bootstrap file** — must (a) exist, (b) contain top-level `BlockCategories::register();` and `BlockMotion::register();`, (c) contain `add_action('init', function () { (new BlockManager())->register(); });`, (d) be loaded by `functions.php`'s `collect([...])` array (see 0.6.1). Template at `<skill>/templates/blocks.php`. |
+| 0.6 | `app/blocks.php` is the **central block-bootstrap file** — must (a) exist (kit: `theme/app/blocks.php`), (b) contain top-level `BlockCategories::register();` and `BlockMotion::register();`, (c) contain `add_action('init', function () { (new BlockManager())->register(); });`, (d) be loaded by `functions.php`'s `collect([...])` array (see 0.6.1). |
 | 0.6.1 | `functions.php`'s `collect([...])` array includes `'blocks'`. Without it, `app/blocks.php` never loads. If `functions.php` doesn't use the `collect([...])` pattern at all, **bail out** — needs manual wiring. |
 | 0.8 | `resources/js/editor.js` calls `import.meta.glob('../blocks/*/block.jsx', { eager: true });` (Vite compiles the **editor** JSX only — front-end `block.js`/`block.css` are served from source via `file:`, see "Block asset loading") |
 | 0.9 | `resources/css/app.css` has `@source "../blocks/**/*.{php,jsx}";` **and** scans `app/` (`@source "../../app/";` — Sage's stock line). The padding / image-position classes are literals in `app/Blocks/*.php`; without that source Tailwind never generates them and Spacing silently does nothing. |
 | 0.10 | `package.json` `devDependencies` has `react@^18` AND `react-dom@^18`. **React pinned to ^18, not ^19** — React 19 breaks Gutenberg (element-symbol mismatch with WP's React 18). |
-| 0.11 | `app/Blocks/BlockCategories.php` exists. Template at `<skill>/templates/BlockCategories.php`. **First-run only**: ask `"Vou criar uma categoria pros seus blocos. Quer chamar de 'Custom Blocks' (default) ou outro nome?"`, copy template, edit `TITLE` and `SLUG` (lowercase + hyphens) if dev picked a different name. The actual `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). Subsequent runs: grep `const SLUG = '...'` from the existing file. |
-| 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `RemoveButton.jsx`, `RemoveImageButton.jsx`, `coreIcons.jsx`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. If missing: copy from `<skill>/templates/components/backend/*`, replacing `__TEXT_DOMAIN__` with `<text-domain>` and `__THEME_SLUG__` with `<theme-slug>` in every copied file. |
-| 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php`, `app/Blocks/BlockEntrance.php` and `app/Blocks/BlockMotion.php` exist. Templates at `<skill>/templates/`. `BlockEntrance.php` must expose `fromBlock()`, `root()` and `part()` — an older copy that only has `resolve()` (it prints `data-entrance-type`) is **incompatible** with `EntranceControl`/`entranceCanvas.js`: replace it. |
+| 0.11 | `app/Blocks/BlockCategories.php` exists (kit: `theme/app/Blocks/BlockCategories.php`) with no `__BLOCK_CATEGORY_*__` left. Read the category from `const SLUG = '...'`; it comes from `kit.config.json` › `blockCategory`. The `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). |
+| 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `RemoveButton.jsx`, `RemoveImageButton.jsx`, `coreIcons.jsx`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`. Kit: `theme/resources/blocks/components/backend/`. A leftover `__TEXT_DOMAIN__` / `__THEME_SLUG__` means `kit-setup` never ran. |
+| 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php`, `app/Blocks/BlockEntrance.php` and `app/Blocks/BlockMotion.php` exist (kit: `theme/app/Blocks/`). `BlockEntrance.php` must expose `fromBlock()`, `root()` and `part()` — an older copy that only has `resolve()` (it prints `data-entrance-type`) is **incompatible** with `EntranceControl`/`entranceCanvas.js`: replace it. |
 | 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers three Blade directives: `paddingClasses` → `\App\Blocks\BlockPadding::resolve(...)`, `entrance` → `\App\Blocks\BlockEntrance::root(...)` and `entrancePart` → `\App\Blocks\BlockEntrance::part(...)` (see "Infra bootstrap templates"). |
-| 0.18 | `resources/css/components/entrance.css` exists (template `<skill>/templates/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). `resources/css/components/hover.css` exists (template `<skill>/templates/hover.css`) and is `@import`ed by `resources/css/app.css` — **not** inside `@layer`, it must beat Tailwind's transition utilities. |
-| 0.19 | `resources/js/modules/entrance.js` exists (template `<skill>/templates/entrance.js`) and `resources/js/app.js` has `import { initEntrance } from './modules/entrance';` plus a top-level `initEntrance();` call (module scripts are deferred). Without it the front end never adds `data-entered` and the head script's 5s safety net is the only thing that un-hides the page. |
-| 0.20 | `scripts/editor-fidelity.mjs` exists (template `<skill>/templates/editor-fidelity.mjs`). It is a report-only dev tool — see "Editor fidelity report". |
+| 0.18 | `resources/css/components/entrance.css` exists (kit: `theme/resources/css/components/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). `resources/css/components/hover.css` exists (kit: `theme/resources/css/components/hover.css`) and is `@import`ed by `resources/css/app.css` — **not** inside `@layer`, it must beat Tailwind's transition utilities. |
+| 0.19 | `resources/js/modules/entrance.js` exists (kit: `theme/resources/js/modules/entrance.js`) and `resources/js/app.js` has `import { initEntrance } from './modules/entrance';` plus a top-level `initEntrance();` call (module scripts are deferred). Without it the front end never adds `data-entered` and the head script's 5s safety net is the only thing that un-hides the page. |
+| 0.20 | `scripts/editor-fidelity.mjs` exists (kit: `theme/scripts/editor-fidelity.mjs`). It is a report-only dev tool — see "Editor fidelity report". |
 | 0.21 | **CSS foundation — blocking.** `node scripts/check-css-foundation.mjs` exits 0. If the script is missing, or `resources/css/global/` is missing, **stop and run the `css-foundation-wizard` skill first** — never create a block on a theme without the style guide foundation (every block would fall back to browser fonts and Tailwind's stock palette). Exit 1 on an existing theme: show the listed problems and fix them before Phase 1. |
 
 ### Compatibility warnings (do NOT auto-fix)
@@ -109,10 +116,10 @@ wrong domain/path into every file.
 
 ### Bootstrap UX
 
-If any check 0.1–0.20 (incl. 0.6.1) fails (0.21 is not bootstrapped here — it hands off to `css-foundation-wizard`):
+If a file check fails (0.1, 0.6a, 0.11, 0.12, 0.15, 0.18/0.19 files, 0.20), stop: the kit isn't installed — run `project-init`. If a wiring check fails (0.2–0.5 folders, 0.6b–d, 0.6.1, 0.8, 0.9, 0.10, 0.16, the imports in 0.18/0.19), fix it here (0.21 hands off to `css-foundation-wizard`):
 
 1. Show the dev a status table of failed checks.
-2. Split fixes into **(A) Creations** (new files/folders) and **(B) Modifications** (edits to `functions.php`, `editor.js`, `app.css`). `package.json` is not edited — tell the dev to run `npm install --save-dev react@^18.0.0 react-dom@^18.0.0` themselves.
+2. Split fixes into **(A) Creations** (empty folders only) and **(B) Modifications** (edits to `functions.php`, `editor.js`, `app.css`). `package.json` is not edited — tell the dev to run `npm install --save-dev react@^18.0.0 react-dom@^18.0.0` themselves.
 3. Confirm A and B separately. For B, show inline diffs (affected hunks only). Stop if the dev declines either.
 
 ### Idempotency (per-file divergence heuristic)
@@ -131,7 +138,7 @@ Phase 0 must be re-runnable. Before each create/modify, Read the target and chec
 
 **Bailing > guessing.** Each bail message must name (a) the file, (b) expected shape, (c) what was found, (d) the manual fix the dev would apply.
 
-Infra templates live in **Templates** at the bottom of this doc.
+The framework's source is the kit's `theme/` folder; the wiring snippets are in **Templates** at the bottom of this doc.
 
 ---
 
@@ -560,7 +567,7 @@ to the view; never reuse the anchor for it.)
 
 ## Phase 3 — Wire up
 
-Edit `app/Blocks/BlockManager.php`: add `'<slug>',` to `$blocks`. Keep existing entries; match the existing style (append or alphabetize).
+Nothing to register: `BlockManager` registers every `resources/blocks/*/block.json` on `init` and stamps each block's asset version from its files' mtime. Never edit `BlockManager.php` for a new block.
 
 ---
 
@@ -597,52 +604,48 @@ End with a summary table listing every file created/modified.
 
 ## Templates
 
-### Templates directory
+### Framework files (kit `theme/`)
+
+`<skill>/templates/` now holds only `preview.svg` (copied per block, with
+`__BLOCK_TITLE__` substituted). Everything else this skill relies on lives in the
+kit's `theme/` folder, mirrors the theme layout, and is installed by `project-init`:
 
 ```
-<skill>/templates/
-├── BlockManager.php                → copied to app/Blocks/BlockManager.php (check 0.1)
-├── BlockCategories.php             → copied to app/Blocks/BlockCategories.php (check 0.11)
-├── BlockPadding.php                → copied to app/Blocks/BlockPadding.php (check 0.15)
-├── BlockImagePosition.php          → copied to app/Blocks/BlockImagePosition.php (check 0.15)
-├── BlockEntrance.php               → copied to app/Blocks/BlockEntrance.php (check 0.15)
-├── BlockMotion.php                 → copied to app/Blocks/BlockMotion.php (check 0.15)
-├── entrance.css                    → copied to resources/css/components/entrance.css (check 0.18)
-├── hover.css                       → copied to resources/css/components/hover.css (check 0.18)
-├── entrance.js                     → copied to resources/js/modules/entrance.js (check 0.19)
-├── editor-fidelity.mjs             → copied to scripts/editor-fidelity.mjs (check 0.20)
-├── blocks.php                      → copied to app/blocks.php (check 0.6)
-├── preview.svg                     → copied per block (with __BLOCK_TITLE__ substituted)
-└── components/backend/             → copied to resources/blocks/components/backend/ (check 0.12)
-    ├── AttachmentImageControl.jsx   ← default image control (X on hover, image icon when empty)
-    ├── useAttachmentUrls.js         ← hook for resolving attachment URLs
-    ├── ActionEditor.jsx             ← CTA label + link editor (canvas popover)
-    ├── AutoGrowingTextarea.jsx      ← inline heading/subtitle editor
-    ├── editorCanvas.js              ← canvas constants (EDITOR_TYPE, emptyLink)
-    ├── EntranceControl.jsx          ← entrance animation sidebar panel
-    ├── entranceCanvas.js            ← entrance animation canvas helpers
-    ├── DividerControl.jsx           ← section divider selector
-    ├── ItemList.jsx                 ← list repeater with drag + keyboard
-    ├── moveItem.js                  ← reorder helper for ItemList
-    ├── ParagraphsField.jsx          ← multi-paragraph RichText editor
-    ├── LinkPicker.jsx
-    ├── RemoveButton.jsx             ← deletes an item/row (core trash icon, isDestructive)
-    ├── RemoveImageButton.jsx        ← removes an image (core close icon, dark round)
-    ├── coreIcons.jsx                ← core icons inlined (trash, close, chevrons, drag handle, image)
-    ├── PaddingControls.jsx
-    ├── padding-presets.js
-    ├── ImagePositionControl.jsx
-    └── IconPicker.jsx
+<kit>/theme/
+├── app/blocks.php                          ← block bootstrap (check 0.6)
+├── app/Blocks/BlockManager.php             ← registers every resources/blocks/*/block.json (check 0.1)
+├── app/Blocks/BlockCategories.php          ← category from kit.config.json (check 0.11)
+├── app/Blocks/{BlockPadding,BlockImagePosition,BlockEntrance,BlockMotion}.php (check 0.15)
+├── resources/css/components/{entrance,hover}.css (check 0.18)
+├── resources/js/modules/entrance.js        (check 0.19)
+├── resources/blocks/components/backend/    (check 0.12)
+│   ├── AttachmentImageControl.jsx   ← default image control (X on hover, image icon when empty)
+│   ├── useAttachmentUrls.js         ← hook for resolving attachment URLs
+│   ├── ActionEditor.jsx             ← CTA label + link editor (canvas popover)
+│   ├── AutoGrowingTextarea.jsx      ← inline heading/subtitle editor
+│   ├── editorCanvas.js              ← canvas constants (EDITOR_TYPE, emptyLink)
+│   ├── EntranceControl.jsx          ← entrance animation sidebar panel
+│   ├── entranceCanvas.js            ← entrance animation canvas helpers
+│   ├── DividerControl.jsx           ← section divider selector
+│   ├── ItemList.jsx                 ← list repeater with drag + keyboard
+│   ├── moveItem.js                  ← reorder helper for ItemList
+│   ├── ParagraphsField.jsx          ← multi-paragraph RichText editor
+│   ├── LinkPicker.jsx
+│   ├── RemoveButton.jsx             ← deletes an item/row (core trash icon, isDestructive)
+│   ├── RemoveImageButton.jsx        ← removes an image (core close icon, dark round)
+│   ├── coreIcons.jsx                ← core icons inlined (trash, close, chevrons, drag handle, image)
+│   ├── PaddingControls.jsx
+│   ├── padding-presets.js
+│   ├── ImagePositionControl.jsx
+│   └── IconPicker.jsx
+└── scripts/{editor-fidelity,check-css-foundation,kit-setup,install-git-hooks}.mjs
 ```
 
-Copied infra files carry placeholders that must be replaced on copy — none may survive into the project:
-
-| Placeholder | File(s) | Replace with |
-|---|---|---|
-| `__BLOCK_TITLE__` | `preview.svg` | the block's `<Title>` |
-| `__BLOCK_NAMESPACE__` | `BlockManager.php` | the namespace confirmed in check 0.1 |
-| `__TEXT_DOMAIN__` | every copied component that calls `__()`, and `BlockMotion.php` | `<text-domain>` |
-| `__THEME_SLUG__` | `IconPicker.jsx` | `<theme-slug>` |
+`kit-setup.mjs` fills every framework placeholder from `kit.config.json`
+(`__TEXT_DOMAIN__`, `__THEME_SLUG__`, `__BLOCK_NAMESPACE__`, `__PREFIX__`,
+`__BLOCK_CATEGORY_SLUG__`, `__BLOCK_CATEGORY_TITLE__`) — none may survive into the
+project (`node scripts/kit-setup.mjs --check` exits 0). This skill substitutes only
+the per-block ones below and `__BLOCK_TITLE__` in `preview.svg`.
 
 Every generated `block.jsx` imports `PaddingControls`; image / link / array blocks add the matching imports as needed.
 
@@ -1015,31 +1018,16 @@ vendor lib's internals, scoped under the block's root class:
 
 ---
 
-### Infra bootstrap templates (Phase 0)
+### Wiring snippets (Phase 0)
 
-#### `app/Blocks/BlockManager.php`
+The framework PHP, CSS and JS come from the kit's `theme/` (see **Framework files**).
+`BlockPadding` and `BlockImagePosition` resolve an attribute value (padding
+numbers/booleans, or an `imagePosition` string) to a literal Tailwind class
+string, so Tailwind's build-time scanner picks the classes up — never
+interpolate a class dynamically.
 
-Copy from `<skill>/templates/BlockManager.php`. The template is the source of truth — no inline duplicate.
+#### Entrance: `BlockEntrance.php`, `BlockMotion.php`, `entrance.css`, `entrance.js`
 
-#### `app/Blocks/BlockCategories.php`
-
-Copy from `<skill>/templates/BlockCategories.php`. Edit `TITLE` and `SLUG` if the dev picked a non-default category name (see check 0.11).
-
-#### `app/blocks.php`
-
-Copy from `<skill>/templates/blocks.php`.
-
-#### `app/Blocks/BlockPadding.php` and `app/Blocks/BlockImagePosition.php`
-
-Copy from `<skill>/templates/BlockPadding.php` and
-`<skill>/templates/BlockImagePosition.php`. Both resolve an attribute
-value (padding numbers/booleans, or an `imagePosition` string) to a
-literal Tailwind class string, so Tailwind's build-time scanner picks the
-classes up — never interpolate a class dynamically.
-
-#### `app/Blocks/BlockEntrance.php`, `app/Blocks/BlockMotion.php`, `entrance.css`, `entrance.js`
-
-Copy from `<skill>/templates/` (destinations in the templates directory tree).
 Then wire them — each piece is required, the system fails **silently** when
 one is missing (no console error, just no animation):
 

@@ -1,0 +1,12 @@
+{
+  "kitPath": "/path/to/wordpress-standards-workflow",
+  "prefix": "acme",
+  "textDomain": "acme-2026",
+  "themeSlug": "acme-2026",
+  "blockNamespace": "acme-2026",
+  "blockCategory": {
+    "slug": "acme-2026",
+    "title": "Acme Blocks"
+  },
+  "grounds": []
+}

@@ -636,9 +636,9 @@ which the check refuses. Point it at the state tokens:
 
 ## Step 9 — Check
 
-Copy `<skill>/templates/check-css-foundation.mjs` to
-`scripts/check-css-foundation.mjs` (ask before overwriting) and run it from
-the theme root:
+`scripts/check-css-foundation.mjs` is installed with the kit's `theme/`
+(`project-init` Phase 1). If it's missing, copy `<kit>/theme/scripts/check-css-foundation.mjs`.
+Run it from the theme root:
 
 ```bash
 node scripts/check-css-foundation.mjs

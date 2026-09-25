@@ -29,7 +29,7 @@ _docs/
   launch-list.md                   # pre-launch checklist — imported to <project>/_docs/
 gitignore.example                  # base .gitignore template — imported as <project>/.gitignore (only if missing)
 prettier.config.example.js         # Prettier + Tailwind/Blade class sorting — copied to <theme>/prettier.config.js
-install-git-hooks.example.mjs      # pre-commit hook installer — copied to <theme>/scripts/install-git-hooks.mjs
+theme/                             # the framework (block PHP, editor components, entrance, scripts) — copied to <theme>/
 mu-plugins/
   acorn-pantheon-storage.php       # Pantheon blocker: relocates Acorn storage — copied to <project>/wp-content/mu-plugins/
 CHANGELOG.md                       # what changed in the standards
@@ -78,7 +78,7 @@ the manifest **is** the source of truth either way.
 | `gitignore.example` | `<theme>/.gitignore` | **Only if** `<theme>/.gitignore` does not exist yet — never overwrite |
 | `prettier.config.example.js` | `<theme>/prettier.config.js` | Theme root; then add the `prepare` + `lint-staged` keys and copy the hook installer — see "Code formatting" |
 | `prettierignore.example` | `<theme>/.prettierignore` | Theme root; keeps the committed `vendor/` and `public/build/` away from the formatter — see "Code formatting" |
-| `install-git-hooks.example.mjs` | `<theme>/scripts/install-git-hooks.mjs` | Pre-commit installer; wired via the theme's `prepare` script |
+| `theme/` | `<theme>/` | The framework, mirroring the theme layout. Then write `<theme>/kit.config.json` and run `node scripts/kit-setup.mjs` — see **Per-project config** |
 | `mu-plugins/acorn-pantheon-storage.php` | `wp-content/mu-plugins/acorn-pantheon-storage.php` | **Pantheon: required, copy as-is.** Relocates Acorn's storage off the read-only filesystem |
 
 `README.md`, `CHANGELOG.md` and any other file at the kit's root are about
@@ -86,6 +86,26 @@ the kit itself and are **not** imported into projects.
 
 The `global-skills/` folder is **not** part of the per-project import — see
 "Global skills" below.
+
+### Per-project config
+
+`theme/kit.config.example.json` shows the shape of `<theme>/kit.config.json`,
+which fills the framework's neutral placeholders. `project-init` writes it
+(deriving what it can, asking for the rest), runs `node scripts/kit-setup.mjs`
+from the theme root, then `node scripts/kit-setup.mjs --check` (exit 0 = no
+placeholder left).
+
+| Key | What it is |
+|---|---|
+| `prefix` | Short lowercase project prefix, letters/digits/underscore only (a PHP/JS identifier: field keys, hook names, JS globals). Not `sage`. |
+| `textDomain` | The theme's text domain; must match `Text Domain` in `style.css`. |
+| `themeSlug` | The theme's folder name under `wp-content/themes/`. |
+| `blockNamespace` | The block prefix (`acme-2026/hero`). Stored in post content, so changing it later needs a content migration. |
+| `blockCategory.slug` / `.title` | The inserter category every kit block registers into. |
+| `kitPath` | Path to this kit's checkout, so project docs can point at `examples/`. Optional, machine-specific. |
+| `grounds` | `{ "name", "token", "light" }` backgrounds blocks can sit on; `kit-setup` generates `resources/css/global/grounds.css` from it. `[]` is valid. |
+
+`kit-setup.mjs` validates the config first and is idempotent.
 
 ### Global skills (user-level — recommend, don't auto-import)
 
@@ -123,6 +143,9 @@ cp -R "$KIT/skills/html-qa-smoketest" .claude/skills/
 cp -R "$KIT/skills/create-block" .claude/skills/
 cp "$KIT/_docs/examples.md"     ./_docs/examples.md
 cp "$KIT/_docs/launch-list.md"  ./_docs/launch-list.md
+cp -R "$KIT/theme/." ./                      # the framework
+cp ./kit.config.example.json ./kit.config.json   # edit it, then:
+node scripts/kit-setup.mjs && node scripts/kit-setup.mjs --check
 # only if the project has no .gitignore yet:
 cp "$KIT/gitignore.example" ./.gitignore
 ```
@@ -171,7 +194,7 @@ npm i -D prettier prettier-plugin-tailwindcss @shufo/prettier-plugin-blade lint-
 cp "$KIT/prettier.config.example.js" ./prettier.config.js
 cp "$KIT/prettierignore.example" ./.prettierignore
 mkdir -p scripts
-cp "$KIT/install-git-hooks.example.mjs" ./scripts/install-git-hooks.mjs
+# scripts/install-git-hooks.mjs comes with the kit's theme/ (see the import manifest)
 ```
 
 Then add to the theme's `package.json`:
