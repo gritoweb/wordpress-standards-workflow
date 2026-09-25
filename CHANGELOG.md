@@ -2,6 +2,24 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Motion stays in the Customizer; SCF only with the first tab
+
+### Changed
+- **Older sites stay safe.** The previous entry moved Motion to Site Settings,
+  so copying the updated kit into an existing site would have lost its saved
+  Customizer motion values, or failed with `Class App\Settings\SiteSettings
+  not found` when only `BlockMotion.php` was copied. `BlockMotion.php`,
+  `blocks.php`, `BlockManager.php`, `entrance.css`, `hover.css` and
+  `create-block` are back to their previous versions: Motion stays in
+  **Appearance › Customize › Motion**.
+- **Nothing installed by default.** `project-init` no longer installs SCF.
+  The first Site Settings tab someone asks for installs SCF and copies
+  `SiteSettings.php` (now a `site-settings-wizard` template), through
+  `site-settings-wizard`.
+
+### Verified
+- `git diff master -- skills/create-block` is empty.
+
 ## 2026-09-25 — Site Settings on Secure Custom Fields, empty by default
 
 ### Changed

@@ -1,5 +1,5 @@
 /*
- * Hover effects picked by BlockMotion's settings (it prints the body
+ * Hover effects picked in Customize > Motion (BlockMotion prints the body
  * class). Unlayered on purpose: it must beat Tailwind's transition utilities.
  * It only animates — colours stay on the button's own classes. Every CTA gets
  * the `btn` class; plain content links get nothing.

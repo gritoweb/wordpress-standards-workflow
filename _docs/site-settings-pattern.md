@@ -3,17 +3,16 @@
 Global values an editor changes without a deploy live on one **Site Settings**
 page, built on **Secure Custom Fields** (SCF, the free ACF fork).
 
-## What ships by default
+## Nothing ships by default
 
-- The plugin: `project-init` runs `lando wp plugin install secure-custom-fields --activate`.
-- An **empty** Site Settings page: `app/Settings/SiteSettings.php`, registered
-  from `app/blocks.php`. No tab, no field.
-- Motion (entrance and hover defaults) works without a tab: `BlockMotion`
-  uses the code's defaults.
+A new project has no Site Settings page and no SCF. **The first tab someone
+asks for** installs Secure Custom Fields and adds the page
+(`app/Settings/SiteSettings.php`, registered from `app/blocks.php`), through
+`site-settings-wizard`. Nothing is installed that the site doesn't use.
 
-**A tab is added only when someone asks for it**, with `site-settings-wizard`.
-Motion has a ready-made tab; any other tab (Branding, Header, Footer,
-Integrations…) is built from the fields that were asked for.
+Motion (entrance and hover defaults) is not part of this: it stays in
+**Appearance › Customize › Motion** (`BlockMotion`), unchanged, so older
+sites keep their saved values.
 
 ## How a tab is built
 
@@ -28,7 +27,7 @@ Integrations…) is built from the fields that were asked for.
 
 | Belongs | Doesn't |
 |---|---|
-| Site-wide values: header button, legal name, support email, social links, an API key, motion defaults | Design tokens → `resources/css/global/` |
+| Site-wide values: header button, legal name, support email, social links, an API key | Design tokens → `resources/css/global/` |
 | Changed by an editor, one value at a time | A block's own content or choice → block attributes |
 | | Repeatable records (team, clients) → a post type |
 

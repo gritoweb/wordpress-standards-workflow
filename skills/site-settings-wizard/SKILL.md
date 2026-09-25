@@ -3,27 +3,36 @@ name: site-settings-wizard
 description: >
   Adds a tab of fields to a Sage 11 theme's Site Settings page, built on Secure Custom Fields (SCF, the free ACF fork):
   one SCF field group in acf-json/ and reads through App\Settings\SiteSettings::field(). Only runs when the dev asks for
-  a tab (Motion, Branding, Header, Footer, Integrations…); the page ships empty.
+  a tab (Branding, Header, Footer, Integrations…); nothing is installed before that.
 ---
 
 # site-settings-wizard — add a tab to Site Settings (SCF)
 
-Every project gets an **empty Site Settings page**: `app/Settings/SiteSettings.php`
-registers it (called from `app/blocks.php`) and is the one reader for its
-fields. **No tab exists until the dev asks for it.** This skill adds the tab
-that was asked for, and nothing else. The pattern is
-`_docs/site-settings-pattern.md`.
+A project has **no Site Settings page and no SCF** until the dev asks for a
+tab. The first tab installs both; every tab after that only adds its own
+group. This skill adds the tab that was asked for, and nothing else. The
+pattern is `_docs/site-settings-pattern.md`.
 
-Never runs `npm` / `composer` / `git` — the dev does that themselves.
+Motion (entrance and hover defaults) is **not** a Site Settings tab: it stays
+in **Appearance › Customize › Motion** (`app/Blocks/BlockMotion.php`), as it
+always has.
+
+Never runs `npm` / `composer` / `git` — the dev does that themselves. The
+only `lando` command is the plugin install above, on a local site.
 
 ---
 
 ## Pre-conditions
 
 - Working directory = active Sage 11 theme root. If unsure, **ask** — don't guess.
-- `app/Settings/SiteSettings.php` exists (copied by `create-block` Phase 0, check 0.15).
-- **Secure Custom Fields** is active (`project-init` installs it:
-  `lando wp plugin install secure-custom-fields --activate`). ACF Pro uses the same API.
+- **First tab only** (no `app/Settings/SiteSettings.php` yet):
+  1. Install the plugin: `lando wp plugin install secure-custom-fields --activate`
+     (skip if ACF Pro is already active: same API).
+  2. Copy `<skill>/templates/SiteSettings.php` to `app/Settings/SiteSettings.php`,
+     replacing `__TEXT_DOMAIN__` with the theme's text domain. It registers
+     the Site Settings page and is the one reader for its fields.
+  3. Add `\App\Settings\SiteSettings::register();` to `app/blocks.php`, after
+     `BlockMotion::register();`. Nothing else in the theme changes.
 
 ---
 
@@ -44,11 +53,6 @@ for — no "while we're here" Header/Footer/Socials. For each field: label,
 `name` (snake_case), SCF type (`text`, `email`, `url`, `link`, `image`,
 `number`, `true_false`, `select`), default, and for numbers `min`/`max`.
 
-**Motion** is ready-made: copy `<skill>/templates/group_site_settings_motion.json`
-to `acf-json/group_site_settings_motion.json` as is. Its field names are the
-ones `app/Blocks/BlockMotion.php` already reads, with the same defaults, so
-nothing else changes.
-
 ## Step 2 — Does it belong here?
 
 Site Settings holds site-wide values an editor changes without a deploy, one
@@ -58,6 +62,7 @@ value at a time. Push back on:
 - **Per-block choices** (a heading, a button, a background) → the block's own
   attributes. The block stores its content; Site Settings never does.
 - **Repeatable records** (team, clients) → a post type, asked for separately.
+- **Motion** (entrance, hover) → it stays in Appearance › Customize › Motion.
 
 ## Step 3 — Field group
 

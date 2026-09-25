@@ -2,7 +2,7 @@
 
 namespace App\Settings;
 
-/** The Site Settings options page (SCF) and the one reader for its fields; see _docs/site-settings-pattern.md. */
+/** The Site Settings options page (SCF), added with its first tab, and the one reader for its fields; see _docs/site-settings-pattern.md. */
 class SiteSettings
 {
     public const PAGE = 'site-settings';
