@@ -1,0 +1,63 @@
+{
+  "apiVersion": 3,
+  "name": "<namespace>/media-text",
+  "title": "Media and Text",
+  "category": "<category>",
+  "icon": "align-pull-right",
+  "description": "Text on one side and an image on the other.",
+  "textdomain": "<text-domain>",
+  "render": "file:./block.php",
+  "supports": {
+    "anchor": true
+  },
+  "attributes": {
+    "isPreview": {
+      "type": "boolean",
+      "default": false
+    },
+    "title": {
+      "type": "string",
+      "default": "Show one idea with a picture"
+    },
+    "body": {
+      "type": "string",
+      "default": "A paragraph that explains the idea. The image sits on the side you pick in the sidebar."
+    },
+    "ctaText": {
+      "type": "string",
+      "default": ""
+    },
+    "ctaLink": {
+      "type": "object",
+      "default": {
+        "url": "",
+        "opensInNewTab": false
+      }
+    },
+    "imageId": {
+      "type": "number",
+      "default": 0
+    },
+    "imageSide": {
+      "type": "string",
+      "default": "right"
+    },
+    "entrance": {
+      "type": "object",
+      "default": {
+        "type": "fade-slide",
+        "direction": "up",
+        "distance": null,
+        "unit": "px",
+        "duration": null,
+        "delay": null,
+        "stagger": 100
+      }
+    }
+  },
+  "example": {
+    "attributes": {
+      "isPreview": true
+    }
+  }
+}

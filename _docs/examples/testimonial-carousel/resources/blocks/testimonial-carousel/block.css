@@ -1,0 +1,18 @@
+.testimonial-carousel .splide__pagination {
+  gap: 8px;
+  margin-top: 2rem;
+}
+
+.testimonial-carousel .splide__pagination__page {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background-color: var(--color-border);
+  cursor: pointer;
+}
+
+.testimonial-carousel .splide__pagination__page.is-active {
+  background-color: var(--color-primary);
+}

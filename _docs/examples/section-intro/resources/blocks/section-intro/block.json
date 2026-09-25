@@ -1,0 +1,59 @@
+{
+  "apiVersion": 3,
+  "name": "<namespace>/section-intro",
+  "title": "Section Intro",
+  "category": "<category>",
+  "icon": "editor-alignleft",
+  "description": "A heading, intro text and a button that open a section.",
+  "textdomain": "<text-domain>",
+  "render": "file:./block.php",
+  "supports": {
+    "anchor": true
+  },
+  "attributes": {
+    "isPreview": {
+      "type": "boolean",
+      "default": false
+    },
+    "title": {
+      "type": "string",
+      "default": "A clear heading for this section"
+    },
+    "body": {
+      "type": "string",
+      "default": "One or two sentences that say what the section is about and why it matters to the visitor."
+    },
+    "align": {
+      "type": "string",
+      "default": "left"
+    },
+    "ctaText": {
+      "type": "string",
+      "default": "Learn more"
+    },
+    "ctaLink": {
+      "type": "object",
+      "default": {
+        "url": "",
+        "opensInNewTab": false
+      }
+    },
+    "entrance": {
+      "type": "object",
+      "default": {
+        "type": "fade-slide",
+        "direction": "up",
+        "distance": null,
+        "unit": "px",
+        "duration": null,
+        "delay": null,
+        "stagger": 100
+      }
+    }
+  },
+  "example": {
+    "attributes": {
+      "isPreview": true
+    }
+  }
+}

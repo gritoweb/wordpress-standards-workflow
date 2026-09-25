@@ -57,7 +57,8 @@ that themselves. Never writes to a remote or production environment.
 5. CSS foundation and the private Styleguide page: Phase 1b.
 6. Header and footer: Phase 1c.
 7. Blocks, each with `create-block`: read `_docs/examples/README.md` once,
-   then only the example file closest to the block being built.
+   then copy the closest example folder's files (its `README.md` has the
+   command) and adapt them.
 8. Home page, Primary and Footer menus: Scenario B steps 10–11; build: **Theme assets**.
 9. Smoke check: Scenario B step 12, and report what was checked.
 
@@ -101,7 +102,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy whole folder; ask before overwriting |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy whole folder; ask before overwriting |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy whole folder; ask before overwriting |
-| `_docs/examples/` | `<theme>/_docs/examples/` | Copy whole folder (one file per reference block); ask before overwriting |
+| `_docs/examples/` | `<theme>/_docs/examples/` | Copy whole folder (one folder per reference block, real files); ask before overwriting |
 | `_docs/launch-list.md` | `<theme>/_docs/launch-list.md` | Ask before overwriting if present |
 | `_docs/kit-log.md` | `<theme>/_docs/kit-log.md` | Only if absent — it holds the project's own entries |
 | `_docs/site-settings-pattern.md` | `<theme>/_docs/site-settings-pattern.md` | Ask before overwriting if present |

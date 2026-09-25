@@ -2,6 +2,23 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-25 — Reference blocks as real files to copy
+
+### Changed
+- **`_docs/examples/<slug>/` holds the block's real files** (`block.json`,
+  `block.php`, `block.jsx`, `block.js`/`block.css` where used,
+  `preview.svg`, the Blade view) plus a short `README.md` with what it
+  teaches and a two-line copy command (`cp -r` + `sed` for the placeholders).
+  An agent copies and adapts instead of retyping ~250 lines per block from a
+  markdown file: fewer tokens, less time, and no drift from the tested code.
+  The `.md`-with-code files are gone; `_docs/examples/README.md` (rules +
+  index) and `home.md` stay.
+
+### Verified
+- Round trip: running each README's copy command in an empty folder and
+  filling the placeholders gives files byte-identical to the ten blocks
+  tested on the local site (10/10), with no placeholder left.
+
 ## 2026-09-25 — Section buttons as shared components
 
 ### Added

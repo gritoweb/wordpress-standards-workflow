@@ -41,7 +41,7 @@ that themselves.
 - Working directory = active Sage 11 theme root (must contain `vite.config.js`,
   `app/setup.php`, `composer.json`, `resources/`). If unsure, **ask** — don't guess.
 - Composer/Node run on the host (Lando only serves WP).
-- Standards = `CLAUDE.md` + `_docs/examples/` (read its `README.md`, then only the closest block's file). If those aren't in the project,
+- Standards = `CLAUDE.md` + `_docs/examples/` (read its `README.md`, then only the closest block's folder, whose files you copy). If those aren't in the project,
   treat this skill as the standard.
 
 ---
@@ -413,7 +413,8 @@ Attributes:
       `ItemList`.
     - Reference code, tested end to end: `_docs/examples/` — its `README.md`
       (rules every block follows and the index of the ten reference
-      blocks), then only the closest block's file.
+      blocks), then only the closest block's folder: copy its files with
+      the command in its `README.md` and adapt them.
   - **Sidebar panel order**, the same in every block: the item list
     ("Items" / "Slides" / "Cards") → Background Media → the block's own
     settings (e.g. Autoplay, layout) → Spacing → Entrance animation.
@@ -431,7 +432,7 @@ Attributes:
 
 ### What the skill does NOT ask
 
-**Vendor libs** are a deliberate dev decision, not block scaffolding. The skill generates blocks without lib boilerplate; if the dev adds a carousel etc. afterward, they follow the pattern in `_docs/examples/testimonial-carousel.md` (`wp_register_*` in `app/blocks.php` + `wp_enqueue_*` in `block.php`). Phase 0's smell detector watches for the wrong pattern over time.
+**Vendor libs** are a deliberate dev decision, not block scaffolding. The skill generates blocks without lib boilerplate; if the dev adds a carousel etc. afterward, they follow the pattern in `_docs/examples/testimonial-carousel/` (`wp_register_*` in `app/blocks.php` + `wp_enqueue_*` in `block.php`). Phase 0's smell detector watches for the wrong pattern over time.
 
 ### Validations (cheap, fail fast)
 
