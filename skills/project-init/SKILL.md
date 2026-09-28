@@ -167,6 +167,8 @@ utilities, no CSS file), so the foundation must exist first.
 | `header.blade.php` | `resources/views/sections/header.blade.php` | Overwrite **only** if it is still Sage's stock header (contains `class="banner"` and `nav-primary`); otherwise show the diff and ask |
 | `footer.blade.php` | `resources/views/sections/footer.blade.php` | Overwrite **only** if it is still Sage's stock footer (`dynamic_sidebar('sidebar-footer')`); otherwise show the diff and ask. Tailwind utilities only, no CSS file |
 | `navigation.js` | `resources/js/modules/navigation.js` | Create; ask if it exists |
+| `SiteChrome.php` | `app/View/Composers/SiteChrome.php` | Create; ask if it exists. Feeds the header button, the footer contact and the legal name from Site Settings; with no `SiteSettings` class every value is empty |
+| `../../create-block/templates/button-link.blade.php` | `resources/views/components/button-link.blade.php` | Only if missing — the header button uses `<x-button-link>` |
 | `front-page.blade.php` | `resources/views/front-page.blade.php` | Create; ask if it exists. Sage's `page.blade.php` prints `partials.page-header` (an unstyled `<h1>` with the page title) above the content — on a block-built home that stray "Home" line under the header reads as a broken menu, and it duplicates the hero's `<h1>` |
 
 Replace `__TEXT_DOMAIN__` with the theme's `Text Domain`, then wire it:
@@ -354,19 +356,27 @@ lando wp post list --post_type=any --post_status=any --comment_status=open --for
 
 ### Site Settings (new projects)
 
-Every new project gets the **Site Settings** page, empty, ready for the
-fields the site asks for later:
+Every new project gets the **Site Settings** page with the **default
+example**: a Header tab (show the header button, and its link) and a Footer
+tab (legal name, email, phone, address), which the header and footer from
+Phase 1c already read. **It's only the default:** when the dev's request says
+what the header or footer should hold, build that instead with
+`site-settings-wizard`, and skip the example.
 
 1. `lando wp plugin install secure-custom-fields --activate`
 2. Copy `.claude/skills/site-settings-wizard/templates/SiteSettings.php` to
    `app/Settings/SiteSettings.php`, replacing `__TEXT_DOMAIN__` with the
    theme's text domain. `app/blocks.php` registers it when the class exists.
+3. Copy `.claude/skills/site-settings-wizard/templates/group_site_settings.json`
+   to `acf-json/group_site_settings.json` as is. SCF loads it from the theme;
+   the fields start empty, so the header has no button and the footer shows
+   the site title until someone fills them.
 
-No field is added here. The menus and the logo are WordPress's own
-(Appearance › Menus, Customize › Site Identity) — never Site Settings
-fields. Tabs are added only when asked, with `site-settings-wizard`. An
-**existing** site that gets the updated kit installs nothing; it gets SCF
-and the page only with its first tab.
+The menus and the logo are WordPress's own (Appearance › Menus, Customize ›
+Site Identity) — never Site Settings fields. Any other tab is added only
+when asked, with `site-settings-wizard`. An **existing** site that gets the
+updated kit installs nothing; it gets SCF and the page only with its first
+tab.
 
 ### Theme assets (both scenarios)
 

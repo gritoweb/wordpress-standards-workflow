@@ -1,0 +1,89 @@
+{
+    "key": "group_site_settings",
+    "title": "Site Settings",
+    "fields": [
+        {
+            "key": "field_site_settings_header_tab",
+            "label": "Header",
+            "name": "",
+            "type": "tab",
+            "placement": "top",
+            "endpoint": 0
+        },
+        {
+            "key": "field_site_settings_header_cta_show",
+            "label": "Show header button",
+            "name": "header_cta_show",
+            "type": "true_false",
+            "ui": 1,
+            "default_value": 0,
+            "instructions": "The logo and the menu links come from Appearance › Customize › Site Identity and Appearance › Menus."
+        },
+        {
+            "key": "field_site_settings_header_cta_link",
+            "label": "Header button",
+            "name": "header_cta_link",
+            "type": "link",
+            "return_format": "array",
+            "conditional_logic": [
+                [
+                    {
+                        "field": "field_site_settings_header_cta_show",
+                        "operator": "==",
+                        "value": "1"
+                    }
+                ]
+            ]
+        },
+        {
+            "key": "field_site_settings_footer_tab",
+            "label": "Footer",
+            "name": "",
+            "type": "tab",
+            "placement": "top",
+            "endpoint": 0
+        },
+        {
+            "key": "field_site_settings_legal_name",
+            "label": "Legal name",
+            "name": "legal_name",
+            "type": "text",
+            "instructions": "Shown after © and the year. Empty uses the site title."
+        },
+        {
+            "key": "field_site_settings_contact_email",
+            "label": "Email",
+            "name": "contact_email",
+            "type": "email"
+        },
+        {
+            "key": "field_site_settings_contact_phone",
+            "label": "Phone",
+            "name": "contact_phone",
+            "type": "text"
+        },
+        {
+            "key": "field_site_settings_contact_address",
+            "label": "Address",
+            "name": "contact_address",
+            "type": "textarea",
+            "rows": 3,
+            "new_lines": ""
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "options_page",
+                "operator": "==",
+                "value": "site-settings"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "seamless",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "active": true
+}

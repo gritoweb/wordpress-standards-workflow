@@ -39,7 +39,7 @@
     </button>
 
     <nav id="site-nav" aria-label="{{ __('Primary', '__TEXT_DOMAIN__') }}" data-nav
-      class="absolute inset-x-0 top-full hidden max-h-[calc(100dvh-4.5rem)] overflow-y-auto border-b border-border bg-light px-5 pt-3 pb-5 group-[.is-open]:block lg:static lg:block lg:max-h-none lg:overflow-visible lg:border-0 lg:bg-transparent lg:p-0">
+      class="absolute inset-x-0 top-full hidden max-h-[calc(100dvh-4.5rem)] overflow-y-auto border-b border-border bg-light px-5 pt-3 pb-5 group-[.is-open]:block lg:static lg:flex lg:max-h-none lg:items-center lg:gap-4 lg:overflow-visible lg:border-0 lg:bg-transparent lg:p-0">
       {!! wp_nav_menu([
           'theme_location' => 'primary_navigation',
           'container' => false,
@@ -47,6 +47,11 @@
           'fallback_cb' => $pageList,
           'echo' => false,
       ]) !!}
+
+      {{-- Site Settings › Header; prints nothing until it has a text and a link. --}}
+      @if (! empty($headerCta))
+        <x-button-link :text="$headerCta['text']" :url="$headerCta['url']" :new-tab="$headerCta['newTab']" class="mt-3 lg:mt-0" />
+      @endif
     </nav>
   </div>
 </header>

@@ -6,8 +6,13 @@ page, built on **Secure Custom Fields** (SCF, the free ACF fork).
 ## New project vs existing site
 
 - **New project** (`project-init`): installs Secure Custom Fields and ships
-  an **empty** Site Settings page (`app/Settings/SiteSettings.php`,
-  registered from `app/blocks.php`), ready for the fields the site asks for.
+  the Site Settings page (`app/Settings/SiteSettings.php`, registered from
+  `app/blocks.php`) with a **default example**: a Header tab (header button)
+  and a Footer tab (legal name, email, phone, address), in
+  `acf-json/group_site_settings.json`, read by the header and footer through
+  `app/View/Composers/SiteChrome.php`. It's only the default: when the
+  request says what the header or footer should hold, that is built instead,
+  and every site adjusts the tabs as it needs.
 - **Existing site** that gets the updated kit: installs nothing. The first
   tab someone asks for installs SCF and adds the page.
 

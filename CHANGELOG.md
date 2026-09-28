@@ -2,6 +2,31 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-28 — New projects' Site Settings ship a Header and Footer example
+
+The empty Site Settings page ("No Custom Field Groups found") read as broken.
+
+### Added
+- **Default example.** `project-init` copies
+  `site-settings-wizard/templates/group_site_settings.json`: a Header tab
+  (show the header button, and its link) and a Footer tab (legal name, email,
+  phone, address). It's only the default: when the request says what the
+  header or footer holds, that is built instead.
+- **`SiteChrome` composer** (`project-init/templates/SiteChrome.php`) feeds
+  them to the header (button via `<x-button-link>`, inside the menu on
+  mobile) and the footer (contact lines and `© year <legal name>`). The logo
+  and the links stay WordPress's own. Without `SiteSettings` (an older site)
+  every value is empty and both render as before.
+
+### Verified
+- On a local site: fields empty → no button, no contact, `© 2026 <site
+  title>`; filled → the button (new tab), `mailto:`, `tel:+5511999990000`,
+  the address and `© 2026 <legal name>`, at 1440px and 390px (menu open);
+  with `SiteSettings.php` renamed away → 200, no warning, same as before.
+- A public composer method reaches the view as an `InvokableComponentVariable`
+  (`Cannot use object ... as array`), so `SiteChrome` returns plain values
+  from `with()`.
+
 ## 2026-09-25 — `_docs/` becomes `docs/`
 
 ### Changed

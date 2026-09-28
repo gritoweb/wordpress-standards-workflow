@@ -1,4 +1,4 @@
-{{-- Logo and menu are WordPress's own: Customize › Site Identity, and Appearance › Menus › "Footer". --}}
+{{-- Logo and menu are WordPress's own (Customize › Site Identity, Appearance › Menus › "Footer"); contact and legal name are Site Settings › Footer. --}}
 <footer class="border-t border-border bg-surface">
   <div class="container flex flex-wrap items-center justify-between gap-6 py-12">
     <div class="[&_img]:block [&_img]:max-h-10 [&_img]:w-auto">
@@ -21,6 +21,20 @@
       </nav>
     @endif
 
-    <p class="m-0 basis-full text-small text-muted">&copy; {{ date('Y') }} {!! $siteName !!}</p>
+    @if (! empty($contact))
+      <address class="m-0 flex basis-full flex-col gap-1 text-small text-muted not-italic md:flex-row md:flex-wrap md:gap-x-6">
+        @isset($contact['email'])
+          <a class="text-ink no-underline hover:text-primary" href="mailto:{!! antispambot($contact['email']) !!}">{!! antispambot($contact['email']) !!}</a>
+        @endisset
+        @isset($contact['phone'])
+          <a class="text-ink no-underline hover:text-primary" href="tel:{{ $contact['tel'] }}">{{ $contact['phone'] }}</a>
+        @endisset
+        @isset($contact['address'])
+          <span>{!! nl2br(e($contact['address'])) !!}</span>
+        @endisset
+      </address>
+    @endif
+
+    <p class="m-0 basis-full text-small text-muted">&copy; {{ date('Y') }} {{ $legalName ?? $siteName }}</p>
   </div>
 </footer>

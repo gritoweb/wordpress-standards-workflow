@@ -3,14 +3,14 @@ name: site-settings-wizard
 description: >
   Adds a tab of fields to a Sage 11 theme's Site Settings page, built on Secure Custom Fields (SCF, the free ACF fork):
   one SCF field group in acf-json/ and reads through App\Settings\SiteSettings::field(). Only runs when the dev asks for
-  a tab or field (social links, legal name, Integrations…). New projects already have the empty page (project-init). The logo and the menus
+  a tab or field (social links, legal name, Integrations…). New projects already have the page with the default Header/Footer example (project-init). The logo and the menus
   are WordPress's own (Customize › Site Identity, Appearance › Menus), never Site Settings fields.
 ---
 
 # site-settings-wizard — add a tab to Site Settings (SCF)
 
-A **new project** already has SCF and an empty Site Settings page
-(`project-init`). An **existing site** has neither until the dev asks for a
+A **new project** already has SCF and the Site Settings page with the
+default Header/Footer example (`project-init`). An **existing site** has neither until the dev asks for a
 tab: its first tab installs both. Every tab only adds its own group. The logo and the menus are WordPress's own (Customize › Site Identity,
 Appearance › Menus): never rebuild them as Site Settings fields. This skill adds the tab that was asked for, and nothing else. The
 pattern is `docs/site-settings-pattern.md`.
@@ -52,7 +52,9 @@ only `lando` command is the plugin install above, on a local site.
 ## Step 1 — The tab the dev asked for
 
 Ask which tab and which fields. Never add a tab or a field that wasn't asked
-for — no "while we're here" Header/Footer/Socials. For each field: label,
+for — no "while we're here" socials or extra fields. To change the default
+Header/Footer example, edit `acf-json/group_site_settings.json` and
+`app/View/Composers/SiteChrome.php` together. For each field: label,
 `name` (snake_case), SCF type (`text`, `email`, `url`, `link`, `image`,
 `number`, `true_false`, `select`), default, and for numbers `min`/`max`.
 
