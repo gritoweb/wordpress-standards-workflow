@@ -24,6 +24,17 @@ class SiteSettings
                 'redirect'   => false,
             ]);
         });
+
+        // SCF builds the tabs in JS, so until then every tab's fields paint and then vanish.
+        add_action('admin_head', function () {
+            $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+
+            if (! $screen || ! str_ends_with($screen->id, 'page_'.self::PAGE)) {
+                return;
+            }
+
+            echo '<style>:where(.inside, .acf-fields):not(:has(> .acf-tab-wrap)) > .acf-field-tab ~ .acf-field-tab ~ .acf-field{display:none}</style>'."\n";
+        });
     }
 
     /** A saved Site Settings value, or $default when SCF is off or the field was never saved. */

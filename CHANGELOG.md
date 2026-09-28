@@ -2,6 +2,23 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-09-28 — The Footer tab no longer flashes on Site Settings
+
+### Fixed
+- **No flash of the Footer fields.** SCF builds the tabs in JavaScript, so
+  until its script runs every tab's fields are painted, and the Footer
+  fields showed for a moment under Header. `SiteSettings::register()` prints
+  a small admin style, only on the Site Settings screen, that hides the
+  fields after the second tab until SCF has added `.acf-tab-wrap`; from then
+  on SCF's own tabs take over. In the `seamless` style the fields sit in
+  `.inside`, not `.acf-fields`, so the selector covers both.
+
+### Verified
+- On a local site with SCF's script blocked (the moment before it runs): the
+  Footer field was visible before the fix, hidden after, and the Header
+  fields stay visible. With the script: clicking Footer shows its fields and
+  hides Header's, and clicking Header brings them back.
+
 ## 2026-09-28 — New projects' Site Settings ship a Header and Footer example
 
 The empty Site Settings page ("No Custom Field Groups found") read as broken.
