@@ -36,6 +36,7 @@ const TERMINUS_READ = /^(auth:whoami|site:info|env:info|env:list|site:list|backu
 const ALWAYS_APPROVE = new Set(["scp", "rsync", "sftp", "mysql", "mariadb", "mv", "rm", "chmod", "chown", "truncate", "docker", "kill", "pkill", "sudo", "crontab"]);
 const INLINE = { python: "-c", python3: "-c", node: "-e", php: "-r", perl: "-e", ruby: "-e" };
 const SCRIPT_RUNNERS = new Set(["node", "python", "python3", "php", "ruby", "perl", "bash", "sh", "zsh"]);
+const VERSION_FLAGS = new Set(["--version", "-v", "-V", "--help", "-h"]);
 const PACKAGE_RUNNERS = new Set(["npm", "npx", "pnpm", "yarn", "composer", "pip", "pip3", "bun", "deno"]);
 const SKILL_TOOLS = /(^|\/)\.claude\/skills\/launch\/(tools|report)\/[\w.-]+\.mjs$/;
 const SENSITIVE_WORDS = /\b(ssh|terminus|wp|lando|rm|unlink|rmtree|subprocess|child_process|exec|system|mysql)\b/;
@@ -109,12 +110,18 @@ function segmentVerdict(segment) {
   if (base === "find" && args.some((a) => a === "-delete" || a === "-exec" || a === "-execdir")) return "find that deletes or executes";
   if (base === "sed" && args.some((a) => /^-[a-zA-Z]*i/.test(a) || a.startsWith("--in-place"))) return "sed -i edits files in place";
   if (base === "git" && ["push", "reset", "clean", "checkout", "restore"].includes(args[0])) return `git ${args[0]} changes the repository`;
-  if ((base === "bash" || base === "sh" || base === "zsh") && args[0] === "-c") return verdict(args[1] ?? "").reason;
+  if ((base === "bash" || base === "sh" || base === "zsh") && args[0] === "-c") {
+    // segments() already replaced $( ) and backticks with SUBST: code built at run time can't be inspected.
+    if (/SUBST|\$\(|`/.test(args[1] ?? "")) return `${base} -c runs a command built at run time`;
+    return verdict(args[1] ?? "").reason;
+  }
   if (base === "eval" || base === "xargs") return `${base} runs commands the guard can't see`;
   if (INLINE[base] && args.includes(INLINE[base])) return SENSITIVE_WORDS.test(args.join(" ")) ? `inline ${base} code touches the system` : null;
   if (SCRIPT_RUNNERS.has(base)) {
     const script = args.find((a) => !a.startsWith("-"));
-    return !script || SKILL_TOOLS.test(script) ? null : `${base} runs ${script}, a script the guard can't inspect`;
+    // With no script file the interpreter runs whatever arrives on stdin (curl … | sh, base64 -d | bash, node < f).
+    if (!script) return args.length && args.every((a) => VERSION_FLAGS.has(a)) ? null : `${base} runs code from stdin, which the guard can't inspect`;
+    return SKILL_TOOLS.test(script) ? null : `${base} runs ${script}, a script the guard can't inspect`;
   }
   if (PACKAGE_RUNNERS.has(base)) return base === "npx" && args.some((a) => /^lighthouse(@|$)/.test(a)) ? null : `${base} runs package code`;
   return null;

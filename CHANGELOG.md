@@ -2,6 +2,27 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — The launch guard no longer lets code in through a pipe
+
+### Fixed
+- **Piping into a shell or interpreter bypassed the guard.** Four forms
+  were let through as reads:
+  - `printf … | base64 -d | sh`
+  - `curl … | sh`
+  - `cat x.sh | bash`
+  - `bash -c "$(cat x.sh)"`
+
+  An interpreter with no script file (`sh`, `bash`, `node`, `python`…)
+  now reads code from stdin, so it needs approval, as does `bash -c` with
+  a command built at run time. Version and help flags (`node --version`)
+  still pass. A review in the room (GLM) reported the gap, and the judge
+  reproduced it before the fix.
+
+### Verified
+- The four commands, plus `node < evil.mjs` and `python3 -`, returned
+  `allow` before the change and `approve` after it. `node --test
+  "skills/launch/*/*.test.mjs"`: 28/28 pass.
+
 ## 2026-10-01 — PageSpeed from pagespeed.web.dev, no API key; faster, quieter runs
 
 Asking every developer for a PageSpeed API key was a bad experience, and
