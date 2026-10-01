@@ -73,7 +73,7 @@ the manifest **is** the source of truth either way.
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy the whole folder — block screenshot generator (Chrome headless → webp + svg fallback) |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — adds a tab to the Site Settings page (Secure Custom Fields), only when asked |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy the whole folder — builds the css-foundation-wizard files from a Figma file (inventory, foundation, components) |
-| `skills/launch/` | `<theme>/.claude/skills/launch/` | Copy the whole folder — runs its own `launch-list.md` (the pre-launch checklist), fixes what you approve, writes the launch report (HTML + PDF, Node 18+, no packages) |
+| `skills/launch/` | `<theme>/.claude/skills/launch/` | Copy the whole folder — runs its own `launch-list.md` (the pre-launch checklist) with its HTTP, page and PageSpeed tools, fixes what you approve with one click, writes the launch report (HTML + PDF, Node 18+, no packages; set `PAGESPEED_API_KEY` for the PSI API, otherwise it runs Lighthouse locally) |
 | `docs/examples/` | `<theme>/docs/examples/` | Reference blocks the AI uses for grounding: `README.md` (shared rules) + one file per block |
 | `docs/kit-log.md` | `<theme>/docs/kit-log.md` | Only if absent — the project's log of what the kit got wrong or lacked |
 | `docs/site-settings-pattern.md` | `<theme>/docs/site-settings-pattern.md` | The Site Settings pattern (SCF page, empty by default; tabs on request) |

@@ -24,6 +24,9 @@ test("the launch list's checks run without asking", () => {
     `lando wp db query "SELECT ID FROM wp_posts WHERE post_content REGEXP 'lorem'"`,
     "grep -rn console.log resources/ | head",
     "node .claude/skills/launch/report/report.mjs docs/launch-report.md --pdf",
+    "node .claude/skills/launch/tools/http-audit.mjs https://example.com",
+    "npx -y lighthouse@12 https://example.com --output=json",
+    "node --version",
   ]) assert.equal(level(c), "allow", c);
 });
 
@@ -48,6 +51,11 @@ test("anything that writes needs the user's approval", () => {
     `python3 -c "import subprocess; subprocess.run(['wp','user','delete','1'])"`,
     "git push origin refactor",
     "scp x u1@host:public_html/",
+    "node cleanup.mjs",
+    "python3 fix.py",
+    "npm run build",
+    "npx wp-scripts something",
+    "composer install --no-dev",
   ]) assert.equal(level(c), "approve", c);
 });
 

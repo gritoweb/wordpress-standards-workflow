@@ -35,6 +35,9 @@ const LANDO_READ = new Set(["list", "info", "logs", "version", "config"]);
 const TERMINUS_READ = /^(auth:whoami|site:info|env:info|env:list|site:list|backup:list|upstream:updates:list|domain:list|env:code-log|self:info)$/;
 const ALWAYS_APPROVE = new Set(["scp", "rsync", "sftp", "mysql", "mariadb", "mv", "rm", "chmod", "chown", "truncate", "docker", "kill", "pkill", "sudo", "crontab"]);
 const INLINE = { python: "-c", python3: "-c", node: "-e", php: "-r", perl: "-e", ruby: "-e" };
+const SCRIPT_RUNNERS = new Set(["node", "python", "python3", "php", "ruby", "perl", "bash", "sh", "zsh"]);
+const PACKAGE_RUNNERS = new Set(["npm", "npx", "pnpm", "yarn", "composer", "pip", "pip3", "bun", "deno"]);
+const SKILL_TOOLS = /(^|\/)\.claude\/skills\/launch\/(tools|report)\/[\w.-]+\.mjs$/;
 const SENSITIVE_WORDS = /\b(ssh|terminus|wp|lando|rm|unlink|rmtree|subprocess|child_process|exec|system|mysql)\b/;
 
 // Splits on ; && || | and newlines outside quotes, and pulls $( ) / backtick bodies out as their own commands.
@@ -108,7 +111,12 @@ function segmentVerdict(segment) {
   if (base === "git" && ["push", "reset", "clean", "checkout", "restore"].includes(args[0])) return `git ${args[0]} changes the repository`;
   if ((base === "bash" || base === "sh" || base === "zsh") && args[0] === "-c") return verdict(args[1] ?? "").reason;
   if (base === "eval" || base === "xargs") return `${base} runs commands the guard can't see`;
-  if (INLINE[base] && args.includes(INLINE[base]) && SENSITIVE_WORDS.test(args.join(" "))) return `inline ${base} code touches the system`;
+  if (INLINE[base] && args.includes(INLINE[base])) return SENSITIVE_WORDS.test(args.join(" ")) ? `inline ${base} code touches the system` : null;
+  if (SCRIPT_RUNNERS.has(base)) {
+    const script = args.find((a) => !a.startsWith("-"));
+    return !script || SKILL_TOOLS.test(script) ? null : `${base} runs ${script}, a script the guard can't inspect`;
+  }
+  if (PACKAGE_RUNNERS.has(base)) return base === "npx" && args.some((a) => /^lighthouse(@|$)/.test(a)) ? null : `${base} runs package code`;
   return null;
 }
 

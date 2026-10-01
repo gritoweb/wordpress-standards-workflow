@@ -2,6 +2,60 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — `launch` checks and fixes much more, and measures PageSpeed
+
+On the first real run, many items were left to a human that the agent can
+do, HTTPS and headers failed on Lando although that's not a site defect,
+and there was no PageSpeed number.
+
+### Added
+- **`skills/launch/tools/`, three scripts that return JSON**, so every run
+  checks the same way and fast:
+  - `http-audit.mjs` (about 2 s): HTTPS, security headers, exposed files,
+    directory listing, XML-RPC, REST users, robots, sitemap, 404, search,
+    favicon, cache and CDN
+  - `page-audit.mjs`: title, description, H1, canonical, OG, alt,
+    placeholders, footer links, forms and anti-spam, analytics, consent,
+    broken links, and W3C on public URLs
+  - `psi.mjs`: the PageSpeed Insights API with `PAGESPEED_API_KEY`, or local
+    Lighthouse with the same lab settings when there's no key or the quota
+    ran out (429), plus the PSI links
+- **PERF-2 is required: PageSpeed mobile on the home page of at least 70.**
+- New items:
+  - SEC-17: the server doesn't advertise its stack. Lando answered
+    `x-powered-by: Acorn … (Laravel …)`.
+  - CON-8: no broken links. It found the menu still pointing at the deleted
+    `sample-page`.
+- New fixes:
+  - `ask` values gathered in one round with a suggested answer: SEC-1,
+    SEC-2, SEO-4, SEO-7, CON-2, CON-5, ID-1, SET-1, SET-2
+  - SEC-9 removes `readme.html`, `license.txt` and `wp-config-sample.php`
+  - ID-2 screenshots the home page for `screenshot.png`
+  - PAGE-1 sets the site icon
+  - MAIL-1 installs WP Mail SMTP
+  - SET-6 fixes the date format
+- Moved from manual to automatic: 2FA (SEC-15, `sg_security_2fa_configured`),
+  dev packages (CODE-3), CDN, cookie consent, placeholder images, valid
+  HTML, accessibility, and the backup.
+
+### Changed
+- **`public` items give `LOCAL`, not `FAIL`, on a local URL.** The verdict
+  can say "Ready locally" with N public-URL checks pending.
+- **The guard also asks before scripts it can't inspect.** That covers
+  `node <file>`, `python <file>`, `npm`, `npx` and `composer`. The skill's
+  own tools and `npx lighthouse` are excepted.
+- `launch-list.md` uses words (Required/Recommended/Optional), not emoji.
+
+### Verified
+- `node --test "skills/launch/*/*.test.mjs"`: 18/18 pass.
+- On `luistest1300` (Lando): `http-audit.mjs` returned every field in 1.8 s.
+  `page-audit.mjs --links` found the broken `sample-page` link. `psi.mjs`
+  got the PSI API's 429 and fell back to Lighthouse: mobile 84 (LCP 3.4 s),
+  desktop 97.
+- The Yoast option keys (`metadesc-home-wpseo`, `og_default_image(_id)`)
+  and the Security Optimizer 2FA meta key were checked in the plugins'
+  source.
+
 ## 2026-10-01 — Approve the launch fixes with one click
 
 ### Changed

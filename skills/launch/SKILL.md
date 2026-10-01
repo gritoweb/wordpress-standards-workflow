@@ -1,7 +1,7 @@
 ---
 name: launch
 description: >
-  Pre-launch audit of a WordPress site against its own launch-list.md. It checks every item it can (wp-cli, theme files, HTTP on the public URL), asks before fixing anything it knows how to fix (one user approval for the whole ordered list of commands, enforced by a hook), re-checks, and writes a pass/fail/fixed/manual report as Markdown + HTML + PDF. Use when the user says "/launch", "launch check", "is the site ready to go live?", "pre-launch audit" or "go-live checklist".
+  Pre-launch audit of a WordPress site against its own launch-list.md. It checks every item it can (wp-cli, theme files, HTTP on the public URL), runs HTTP/page/PageSpeed tools, asks for missing values in one round, fixes everything it can after one user approval of the ordered command list (enforced by a hook), re-checks, and writes a professional pass/fail report as Markdown + HTML + PDF. Use when the user says "/launch", "launch check", "is the site ready to go live?", "pre-launch audit" or "go-live checklist".
 hooks:
   PreToolUse:
     - matcher: "Bash|Write|Edit|MultiEdit|NotebookEdit|AskUserQuestion"
@@ -103,139 +103,167 @@ no other interpreter, no editing the guard. A denial means you stop and ask.
 8. **No git.** The skill never commits or pushes. The report files are left for the user.
 9. **When unsure, stop and ask.** This applies to unexpected output, a plugin that may be custom, or a value the list doesn't give. Never guess.
 
-## 0. Gather the target (ask, never assume)
+## 0. Gather the target (one round of questions)
 
-Ask the user for the following, and wait for the answers:
+Detect first, then ask only what you can't detect, in **one** `AskUserQuestion`:
+- **wp-cli:** try `lando wp option get siteurl`, then `wp option get siteurl`. If Lando isn't running,
+  the first fix in the approval list is `lando start`.
+- **Remote** (only when the user wants the server checked): Pantheon `<site>.<env>` for
+  `terminus wp <site>.<env> -- …`, or SSH (`user@host:port/path`) for `wp --ssh=… …`. The key must
+  already work; test it with `option get siteurl`.
+- **`$URL`:** the public URL (live or staging). If the site only exists locally, use the Lando URL. The
+  `public` items then come out `LOCAL`.
+- **Project name:** for the report header. Default to the theme name.
 
-1. **Local site**: is the Lando app running in this theme's WordPress? Detect it with
-   `lando wp option get siteurl`. If that fails, try `wp option get siteurl`.
-   No working wp-cli means the wp-cli items run against the remote environment
-   instead, or become `manual`.
-2. **Public URL** (`$URL`), the site as visitors will see it (the live URL, or the
-   test/staging URL when the site isn't live yet). Without one, every HTTP item becomes `manual`.
-3. **Remote environment**, only if wp-cli on the server is wanted: the Pantheon
-   `<site>.<env>` for `terminus wp <site>.<env> -- …`. Reading is allowed. Writing follows step 3.
-4. **Project name**, for the report's header.
+`$THEME` is the active theme root (the folder containing `.claude/`). `$TOOLS` is
+`.claude/skills/launch/tools`.
 
-`$THEME` is the active theme root (where this skill is installed: the folder containing `.claude/`).
+## 1. Check everything (read-only)
 
-## 1. Run the checks
+1. Run the three tools once, and save their JSON for the report:
+   ```bash
+   node $TOOLS/http-audit.mjs $URL
+   node $TOOLS/page-audit.mjs $URL <menu page URLs…> --links      # add --w3c only for a public URL
+   node $TOOLS/psi.mjs $URL                                        # about 40 s without a PAGESPEED_API_KEY
+   ```
+2. Run the `wp …`, `grep` and `ls` checks of `launch-list.md`.
+3. Give every item exactly one result:
+   - `PASS`: the evidence matches **Pass if**.
+   - `FAIL`: it doesn't.
+   - `LOCAL`: a `public` item checked on a local URL. Re-check it on the public URL; it's never `FAIL`.
+   - `MANUAL`: a `manual` item, or a check that couldn't run (say why: no access, timeout, error).
+   - `N/A`: the item doesn't apply (no e-commerce, not a migration). Say why.
+4. Keep the evidence short and real: the field and its value, the command's output line, the file
+   and line. A check that errors is `MANUAL` with the error, never `PASS`.
 
-Go through `launch-list.md` section by section. For each item tagged `auto`:
+Nothing changes in this step, not even an "obvious" fix.
 
-- Run the **Check** exactly as written: `lando wp …` locally, `terminus wp … -- …` remotely,
-  `curl` against `$URL`, `grep`/`ls` in `$THEME`.
-- Compare the result with **Pass if** and record one of these results:
-  - `✅ Pass`: evidence matches.
-  - `❌ Fail`: evidence doesn't match. The severity comes from the item (🚫 / ⚠️ / 💡).
-  - `➖ N/A`: the item doesn't apply (for example, no e-commerce or not a migration). Say why.
-  - `👁 Manual`: tagged `manual`, or the check couldn't run (no URL, no wp-cli, no access). Say what's missing.
-- Keep the **evidence** short and real: the command's relevant output line, the HTTP
-  status, the file and line. Never write "looks fine" without output to back it.
+## 2. Ask for the missing values (one round)
 
-Rules while checking:
-- **Read-only.** Nothing is changed in this step, not even "obvious" fixes.
-- A check that errors (timeout, 5xx, wp-cli error) is `👁 Manual` with the error as evidence, never `✅`.
-- For page-level checks (SEO-4 … SEO-8), check the home page plus every page in the main menu. Cap it at 15 pages, and list any you skipped.
-- `html-qa-smoketest` covers a single page's markup in depth. Point to it for SEO-8 details instead of duplicating it.
+Collect every `FAIL` tagged `ask`, and put them in one `AskUserQuestion` with up to 4 questions,
+asking a second round only if there are more. Each question offers your **suggested answer first**:
+- the timezone from the site language
+- the category name from the site's content
+- an admin email at the client's domain
+- a meta description you drafted from the page's real text, shown in full
+- the logo as the OG image and the site icon
 
-## 2. Offer the fixes
+The user can accept or type their own. Never invent a value the user hasn't seen.
 
-Collect every `❌ Fail` whose item is tagged `fix`. Show them as a numbered list. Each entry has
-the ID, what's wrong, the **exact command** that will run, and where it runs (local or remote):
+## 3. One approval for every fix
 
-```
-1. SEC-1  user "admin" exists           local   lando wp user create … && lando wp user delete admin --reassign=…
-2. SEO-1  search engines discouraged    REMOTE  terminus wp acme.live -- option update blog_public 1
-```
+Build the fix list from every `FAIL` tagged `fix` (with the values from step 2), **in this order**:
+1. `lando start`, if it's needed
+2. the backup (safety rule 3)
+3. the fixes, in the list's order
 
-- Ask which to apply: numbers, `all local`, or `none`. Then write the chosen commands to `.launch-pending.txt`, and have the user approve them with the guard (above).
-- A fix that needs a value the list doesn't give (a new admin login and email, a timezone, a theme
-  name) is asked for. **Never invent it.**
-- `CON-2` (drafts and trash): show the titles before deleting, because a draft can be real work.
-- Updates (SEC-3), file deletions in the web root (SEC-9) and `public/build/` are **never** auto-fixed. They go into the report as actions for the dev.
+Then ask the single `Launch fixes` question (see **The guard**). Its question text says the environment and `siteurl`. Its
+`Approve all` preview is the numbered list of exact commands. Write remote commands one per line,
+never chained.
 
-## 3. Apply what was approved
+Never offer as a fix:
+- updates (SEC-3)
+- deleting logs, backups or `.env` (SEC-9)
+- template changes (SEO-5)
+- `public/build/`
 
-- Run only commands the user approved through the guard. The backup (safety rule 3) is the first line of the pending list.
-- **Remote** fixes (`terminus wp … -- <write>`, `wp --ssh=…`, `ssh … wp …`) go in the pending list **one
-  per line, never chained**, so the user sees every remote write in the list they approve. This is the kit's
-  rule (`CLAUDE.md`: never write to a remote environment without explicit permission).
-- Run one fix at a time. If one fails, stop, show the output, and ask before going on.
-- After the fixes, **re-run the Check** of every fixed item. An item is `🔧 Fixed` only if its
-  re-check passes. Otherwise it stays `❌ Fail`, with the new evidence.
+They go in the report as actions for the dev.
 
-## 4. Write the report
+## 4. Apply, then re-check
 
-Write `docs/launch-report.md` in this shape (the first `#` is the page title):
+- Run the approved commands exactly, in order, one at a time (safety rule 5).
+- After each fix, re-run that item's check. It's `FIXED` only if the re-check passes. Otherwise it
+  stays `FAIL`, with the new evidence.
+- When everything has run, run `http-audit.mjs` and `page-audit.mjs` again, because plugins change
+  HTTP behaviour. Update every affected result.
+
+## 5. Write the report
+
+Write `docs/launch-report.md` in this shape. Use **no emoji**: results and severities are plain words,
+which the renderer turns into coloured labels.
 
 ```markdown
 # Launch report: <Project>
 
-## Result
+**Verdict: Ready to launch** | **Verdict: Not ready** (N required items fail) | **Verdict: Ready locally** (N public-URL checks pending)
 
 | Result | Items |
 |---|---|
-| ✅ Pass | **N** |
-| 🔧 Fixed during this run | **N** |
-| ❌ Fail (required) | **N** |
-| ❌ Fail (recommended) | **N** |
-| 👁 Manual check | **N** |
-| ➖ N/A | **N** |
+| PASS | **N** |
+| FIXED | **N** |
+| FAIL | **N** (N required) |
+| LOCAL | **N** |
+| MANUAL | **N** |
+| N/A | **N** |
 
-**Verdict:** Ready to launch / **Not ready**: N required items fail.
+## PageSpeed
+
+| Device | Performance | Accessibility | Best practices | SEO | LCP | CLS | TBT |
+|---|---|---|---|---|---|---|---|
+| Mobile | **84** | 99 | 83 | 92 | 3.4 s | 0 | 0 ms |
+| Desktop | 97 | 99 | 82 | 92 | 1.0 s | 0 | 0 ms |
+
+Minimum: 70 on mobile. Source: <source>. Open in PageSpeed Insights: [mobile](<psi_link>) · [desktop](<psi_link_desktop>)
 
 ## Required items still failing
 
 | ID | Item | Evidence | What to do |
 |---|---|---|---|
 
-## Security
-| ID | Item | Result | Evidence |
-|---|---|---|---|
-| SEC-1 | No `admin` user | ✅ Pass | `wp user list`: admin not found |
-
-## Base SEO
-… one table per launch-list section, in the same order …
-
 ## Fixed during this run
 
-| ID | Command | Where | Re-check |
-|---|---|---|---|
+| ID | Command | Re-check |
+|---|---|---|
+
+Backup: `<path or ID>`
+
+## Security
+| ID | Severity | Item | Result | Evidence |
+|---|---|---|---|---|
+| SEC-1 | Required | No `admin` user | PASS | `wp user list`: no `admin` |
+
+… one table per section of `launch-list.md`, in the same order …
 
 ## Manual checks
 
-- **SEC-15** 2FA on every administrator: Security Optimizer › Login Security
-- …
+1. **MAIL-2** Every form delivers: submit each form …
+…
 
 ## How this was checked
 
-Local: `lando` (siteurl …). Public URL: … Remote: … Date: …
+Target: <environment> (`siteurl`). URL: … Remote: … Date: … Tools: http-audit, page-audit, psi (<source>).
 ```
 
-- The verdict is **Ready** only when no 🚫 item is `❌ Fail`. `👁 Manual` 🚫 items are called out under the verdict.
-- Evidence goes in backticks. The renderer escapes everything, so pasted HTML is safe.
+- The verdict is **Ready to launch** only when no Required item is `FAIL` and nothing is `LOCAL`.
+- Put evidence in backticks. The renderer escapes everything, so pasted HTML is safe.
 
-Then render it in the same visual style as every GritoWeb report:
+Render it:
 
 ```bash
 node .claude/skills/launch/report/report.mjs docs/launch-report.md \
   --about "<Project>" --subtitle "Pre-launch audit" \
-  --meta "Date=<YYYY-MM-DD>" --meta "URL=<host>" --meta "Verdict=<Ready|Not ready>" --pdf
+  --meta "Date=<YYYY-MM-DD>" --meta "URL=<host>" --meta "Verdict=<Ready|Not ready|Ready locally>" --pdf
 ```
 
-This writes `docs/launch-report.html` and `docs/launch-report.pdf` next to the `.md`. The PDF needs
-Chrome, Edge or Chromium. Without one, the HTML is still written, and the command says so with exit 1.
-The generator needs only Node 18+ and no packages.
+This writes `docs/launch-report.html` and `.pdf` next to the `.md`, using Node 18+ and no packages.
+The PDF needs Chrome, Edge or Chromium.
 
-## 5. Close
+## 6. Close
 
-Tell the user the verdict, the counts, the required items still failing, and the paths of the
-HTML and PDF. Don't commit the report unless asked. The `.md`, `.html` and `.pdf` are the deliverable.
+Tell the user:
+- the verdict
+- the counts
+- the PageSpeed mobile score, with its link
+- what was fixed
+- the required items still failing, each with its next step
+- the report paths
+
+Don't commit anything.
 
 ## Never
 
-- Mark `✅` without evidence, or turn a failed check into `👁 Manual` to make the verdict look better.
-- Change anything (locally or remotely) before step 2's approval. Never write remotely without the per-command OK.
+- Mark `PASS` without evidence, or downgrade a `FAIL` to `MANUAL`/`LOCAL` to make the verdict look better.
+- Change anything before the user's approval.
+- Replace or rewrite `launch-list.md`, or any file the user didn't approve.
 - Touch WordPress core, third-party plugin code or `public/build/`.
-- Write the report in any language other than English.
+- Put emoji in the report, or write it in any language other than English.
