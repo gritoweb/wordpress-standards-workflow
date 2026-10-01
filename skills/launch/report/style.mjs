@@ -94,6 +94,7 @@ h1.title { margin: var(--s2) 0 var(--s3); font-size: clamp(26px, 4vw, 34px); lin
 .text table { border-collapse: collapse; width: 100%; font-size: 14px; }
 .text th, .text td { padding: var(--s2) var(--s3); border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
 .text th { background: var(--sunken); font-weight: 600; }
+.text td:first-child { white-space: nowrap; }
 .text tr:last-child td { border-bottom: 0; }
 .tag { display: inline-block; padding: 1px 8px; border-radius: var(--pill); font-size: 11.5px; font-weight: 700; letter-spacing: .04em; white-space: nowrap; }
 .tag-ok { background: var(--ok-soft); color: var(--ok); }
@@ -110,6 +111,12 @@ footer.foot { margin-top: var(--s7); color: var(--faint); font-size: 12.5px; }
   .panel { display: block !important; }
   .card, .finding, figure { break-inside: avoid; box-shadow: none; }
   .text figure img { max-height: 9cm; width: auto; }
+  .text h2, .text h3, .text h4 { break-after: avoid; }
+  .text tr { break-inside: avoid; }
+  /* A scroll container prints as a fixed box: let tables flow across pages instead. */
+  .text .table { overflow: visible; border: 0; border-radius: 0; }
+  .text table { border: 1px solid var(--line); }
+  .text thead { display: table-header-group; }
 }
 `;
 

@@ -143,3 +143,15 @@ test("the agent can't pre-fill the user's answer", () => {
   assert.equal(decide({ tool_name: "AskUserQuestion", tool_input: { questions: [] } }), null);
   assert.equal(decidePost({ tool_name: "AskUserQuestion", tool_input: { questions: [{ header: "Other", question: "x" }] }, tool_response: { answers: { x: "Approve all" } } }), null, "only the Launch fixes question approves");
 });
+
+test("every read command in the launch list passes the guard", async () => {
+  const { readFileSync } = await import("node:fs");
+  const list = readFileSync(new URL("../launch-list.md", import.meta.url), "utf8");
+  const reads = [];
+  for (const line of list.split("\n")) {
+    if (!/^\s+- (Check|Ask):|^\*\*Logo|^\(`wp|^or `wp/.test(line)) continue;
+    for (const m of line.matchAll(/`((?:wp|curl|grep|ls|head) [^`]+)`/g)) if (!m[1].includes("…")) reads.push(m[1].replace(/<[^>]+>/g, "x"));
+  }
+  assert.ok(reads.length > 40, `found ${reads.length} check commands`);
+  for (const c of reads) assert.equal(level(c), "allow", c);
+});

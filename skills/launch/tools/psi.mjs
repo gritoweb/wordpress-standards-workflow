@@ -96,7 +96,7 @@ async function captureScores(send, evaluate, file) {
     const gauge = [...root.querySelectorAll(".lh-gauge__wrapper")].find((g) => !g.closest(".lh-sticky-header"));
     const top = gauge?.getBoundingClientRect();
     const end = root.querySelector(".lh-metrics-container")?.getBoundingClientRect();
-    return top && end ? { x: end.left + scrollX - 24, y: top.top + scrollY - 70, width: end.width + 48, height: end.bottom - top.top + 100 } : null;
+    return top && end ? { x: end.left + scrollX - 24, y: top.top + scrollY - 70, width: end.width + 48, height: end.bottom - top.top + 78 } : null;
   })()`);
   const clip = box ? { x: Math.max(0, box.x), y: Math.max(0, box.y), width: box.width, height: Math.min(box.height, 1400), scale: 1 } : undefined;
   const shot = await send("Page.captureScreenshot", { format: "png", captureBeyondViewport: true, ...(clip ? { clip } : {}) });

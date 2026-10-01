@@ -2,6 +2,49 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — Launch report: counts and every check are back, the PDF prints cleanly
+
+### Changed
+- **The report lists every check again.** The developer wanted, as before,
+  the count per status and every item with its status below it. The
+  order is now:
+  1. verdict
+  2. count table per status
+  3. **Fix before launch** (required fails and what to do)
+  4. **Fixed during this run**
+  5. **PageSpeed**
+  6. **Migration**
+  7. **All checks**: one table per section with each item's status and
+     evidence, and the next step after FAIL, MANUAL and LOCAL results
+
+  The separate Should fix, Check on the public URL, Manual checks and
+  Passed blocks are gone, since All checks covers them. A note that only
+  repeats the PageSpeed URL is dropped.
+- **The intake always suggests a value when there is a sensible default**
+  (timezone `America/Sao_Paulo`, category `Blog`, drafted meta
+  descriptions and tagline), so `ok` leads to fixes. The developer's run
+  offered no fixes because these came as `—`.
+
+### Fixed
+- **The guard blocked a read command of the list:** `wp theme mod get
+  custom_logo`. Theme mods are now reads. A new test runs every check
+  command in `launch-list.md` through the guard and requires `allow`.
+- **PDF layout.**
+  - The ID column no longer wraps (`SEC-` / `15`).
+  - Headings stay with their table, and rows don't split across pages.
+  - Table headers repeat on each page.
+  - The scroll container no longer prints an empty framed box at page
+    ends.
+  - The PageSpeed crop stops right after the lab metrics.
+
+### Verified
+- `node --test "skills/launch/*/*.test.mjs"`: 34/34 pass. New tests check
+  the count table, that every check is listed once in All checks, that a
+  recommended fail is not a blocker, and that every list command passes
+  the guard.
+- The developer's `luistest1200` report, rebuilt in a scratch copy, prints
+  with no blank frames and with the PageSpeed picture on page 2.
+
 ## 2026-10-01 — The launch report is an action list, and PageSpeed always has its picture
 
 ### Fixed

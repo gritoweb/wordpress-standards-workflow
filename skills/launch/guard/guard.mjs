@@ -21,7 +21,7 @@ const WP_READ = new Set([
   "option get", "option list", "option pluck", "config get", "config has", "config path",
   "user list", "user get", "user meta get", "user meta list", "role list", "cap list",
   "plugin list", "plugin get", "plugin status", "plugin is-active", "plugin is-installed", "plugin path", "plugin verify-checksums", "plugin search",
-  "theme list", "theme get", "theme status", "theme is-active", "theme is-installed", "theme path",
+  "theme list", "theme get", "theme status", "theme is-active", "theme is-installed", "theme path", "theme mod get", "theme mod list",
   "core version", "core check-update", "core is-installed", "core verify-checksums",
   "post list", "post get", "post meta get", "post meta list", "post-type list", "post-type get", "taxonomy list", "taxonomy get",
   "comment list", "comment get", "comment count", "term list", "term get",

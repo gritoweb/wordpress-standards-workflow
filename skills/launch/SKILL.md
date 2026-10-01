@@ -136,9 +136,19 @@ Before I start, confirm or fill in (reply only what changes, e.g. "3 https://acm
 8. Client contacts (phone / email / address): —
 9. Admin's real email: luis@acme.com
 10. Timezone: America/Sao_Paulo
-11. Default category name: News
+11. Default category name: Blog
 ```
 
+- **Always suggest a concrete value when a sensible default exists, so `ok` leads to fixes**, never `—`:
+  - timezone: `America/Sao_Paulo` when `WPLANG` is `pt_BR` or empty (the agency's default);
+  - default category: `Blog`;
+  - inbox and admin email: the agency address the user writes once, or the admin's current email when
+    it is real;
+  - meta descriptions and tagline: always drafted (from the page title, headings and the site name
+    when the content is thin), and shown in the approval preview.
+
+  Leave `—` only where nothing can be guessed: the PageSpeed public URL, the old site, the terms page,
+  the logo file and the client's contacts.
 - Skip a number the user already gave in the command (for example `/launch https://acme.com`).
 - Use the reply exactly as written. "ok" accepts every suggestion. A value the user typed is never
   re-asked and never offered as options.
@@ -262,11 +272,16 @@ JSON
   your results and run it again. Never work around it by writing the report by hand.
 - It prints the verdict and counts as JSON. The verdict is computed: **Ready to launch** only with no
   Required `FAIL` and nothing `LOCAL`.
-- The report is action-first and never repeats an item: **Fix before launch** (required fails), **Fixed
-  during this run**, **PageSpeed** (with the screenshot from pagespeed.web.dev or, for a local
-  estimate, from Lighthouse's own report, saved as `launch/lighthouse-*.html`), **Should fix**,
-  **Migration**, **Check on the public URL** (LOCAL), **Manual checks**, then **Passed** as one line per
-  section. Every item's evidence is in `launch/results.json`.
+- The report opens with the verdict and a **count per status**, then:
+  - **Fix before launch** (the required fails, with the action);
+  - **Fixed during this run**;
+  - **PageSpeed** (with the screenshot from pagespeed.web.dev or, for a local estimate, from
+    Lighthouse's own report, saved as `launch/lighthouse-*.html`);
+  - **Migration**;
+  - **All checks**: one table per section with every item's status and evidence, plus the next step for
+    FAIL, MANUAL and LOCAL items.
+
+  `launch/results.json` has every result as data.
 - `notes` are only for what no item says. Don't repeat an item's evidence or action there.
 
 ## 6. Close

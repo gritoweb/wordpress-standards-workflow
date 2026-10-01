@@ -75,33 +75,37 @@ function migration(r) {
   return out;
 }
 
-// Action-first: every item appears once, in the block that says what to do with it; passes collapse to one line per section.
+// Counts first, then what blocks the launch, then every check with its status (the full audit trail the reader asked for).
 export function buildMarkdown(input, list, raw = {}) {
   const meta = new Map(list.map((i) => [i.id, i]));
   const order = new Map(list.map((i, n) => [i.id, n]));
   const rows = input.items.map((r) => ({ ...meta.get(r.id), ...r })).sort((a, b) => order.get(a.id) - order.get(b.id));
   const by = (res) => rows.filter((r) => r.result === res);
-  const blockers = by("FAIL").filter((r) => r.severity === "Required"), shouldFix = by("FAIL").filter((r) => r.severity !== "Required");
+  const blockers = by("FAIL").filter((r) => r.severity === "Required");
   const verdict = blockers.length ? "Not ready" : by("LOCAL").length ? "Ready locally" : "Ready to launch";
   const counts = Object.fromEntries(RESULTS.map((r) => [r, by(r).length]));
-  const n = (k, label) => (counts[k] ? `${counts[k]} ${label}` : null);
   const md = [`# Launch report: ${input.project}`, "",
-    `**${verdict}**${blockers.length ? ` · ${blockers.length} required to fix` : ""} · ${[n("FAIL", "fail"), n("FIXED", "fixed"), n("LOCAL", "to check on the public URL"), n("MANUAL", "manual"), n("PASS", "passed"), n("N/A", "n/a")].filter(Boolean).join(" · ")}`, ""];
-  const table = (items, withSeverity) => [`| ID | ${withSeverity ? "Severity | " : ""}Problem | Evidence | Do this |`, `|---|${withSeverity ? "---|" : ""}---|---|---|`,
-    ...items.map((r) => `| ${r.id} | ${withSeverity ? `${r.severity} | ` : ""}${cell(r.title)} | ${cell(r.evidence)}${r.suggested ? " (suggested value, confirm)" : ""} | ${cell(r.action)} |`), ""];
-  if (blockers.length) md.push("## Fix before launch", "", ...table(blockers, false));
+    `**${verdict}**${blockers.length ? ` · ${blockers.length} required item${blockers.length > 1 ? "s" : ""} to fix` : ""}${verdict === "Ready locally" ? ` · ${counts.LOCAL} to check on the public URL` : ""}`, "",
+    "| Result | Items |", "|---|---|", ...RESULTS.map((res) => `| ${res} | **${counts[res]}**${res === "FAIL" && counts.FAIL ? ` (${blockers.length} required)` : ""} |`), ""];
+  if (blockers.length) md.push("## Fix before launch", "", "| ID | Problem | Do this |", "|---|---|---|", ...blockers.map((r) => `| ${r.id} | ${cell(r.title)} | ${cell(r.action)} |`), "");
   if (input.fixed?.length) md.push("## Fixed during this run", "", "| ID | Command | Re-check |", "|---|---|---|", ...input.fixed.map((f) => `| ${f.id} | \`${cell(f.command)}\` | ${cell(f.recheck)} |`), "", `Backup: ${input.backup ? `\`${cell(input.backup)}\`` : "none (nothing was changed)"}`, "");
   md.push(...pageSpeed(raw.psi, input.target), "");
-  if (shouldFix.length) md.push("## Should fix", "", ...table(shouldFix, true));
   md.push(...migration(raw.redirects), "");
-  if (by("LOCAL").length) md.push("## Check on the public URL", "", "These can't be judged on a local site. Re-run `/launch` (re-check) on the live or staging URL.", "", "| ID | Item | What the local run saw |", "|---|---|---|", ...by("LOCAL").map((r) => `| ${r.id} | ${cell(r.title)} | ${cell(r.evidence)} |`), "");
-  if (by("MANUAL").length) md.push("## Manual checks", "", ...by("MANUAL").map((r, i) => `${i + 1}. **${r.id}** ${r.title}: ${r.action ?? r.steps ?? r.evidence}`), "");
-  const passed = [...new Set(list.map((i) => i.section))].map((sec) => [sec, by("PASS").filter((r) => r.section === sec)]).filter(([, xs]) => xs.length);
-  if (passed.length) md.push("## Passed", "", ...passed.map(([sec, xs]) => `- **${sec}** (${xs.length}): ${xs.map((r) => r.id).join(", ")}`), "", "Every result's evidence is in `results.json`.", "");
-  if (by("N/A").length) md.push(`**Not applicable:** ${by("N/A").map((r) => `${r.id} (${cell(r.evidence)})`).join("; ")}`, "");
-  if (input.notes?.length) md.push("## Notes", "", ...input.notes.map((x) => `- ${x}`), "");
+  md.push("## All checks", "");
+  for (const section of [...new Set(list.map((i) => i.section))]) {
+    const xs = rows.filter((r) => r.section === section);
+    if (!xs.length) continue;
+    md.push(`### ${section}`, "", "| ID | Severity | Item | Result | Evidence |", "|---|---|---|---|---|",
+      ...xs.map((r) => {
+        const next = ["FAIL", "MANUAL", "LOCAL"].includes(r.result) && r.action ? ` → **${cell(r.action)}**` : "";
+        return `| ${r.id} | ${r.severity} | ${cell(r.title)} | ${r.result} | ${cell(r.evidence)}${r.suggested ? " (suggested value, confirm)" : ""}${next} |`;
+      }), "");
+  }
+  // The PageSpeed section already says which URL it measured; a note repeating it is noise.
+  const notes = (input.notes ?? []).filter((x) => !(raw.psi?.url && x.includes(raw.psi.url)));
+  if (notes.length) md.push("## Notes", "", ...notes.map((x) => `- ${x}`), "");
   const t = input.target ?? {};
-  md.push("---", "", `After fixing, run \`/launch\` again and choose **re-check**: only what failed is checked.`, "",
+  md.push("---", "", "After fixing, run `/launch` again and choose **re-check**: only what failed is checked. Full evidence: `results.json`.", "",
     `Checked ${input.date ?? new Date().toISOString().slice(0, 10)} · target ${t.environment ?? "?"} (\`${t.siteurl ?? t.url ?? "?"}\`) · PageSpeed URL ${t.psi_url ?? "-"} · tools: http-audit, page-audit, psi${raw.redirects ? ", redirect-audit" : ""}`);
   const results = rows.map(({ id, severity, title, result, evidence, action, suggested, source }) => ({ id, severity, title, result, evidence, action: action ?? null, suggested: !!suggested, decided_by: source ?? "agent" }));
   return { markdown: md.join("\n") + "\n", verdict, counts, results };

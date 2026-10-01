@@ -28,7 +28,7 @@ test("an incomplete or malformed result set is refused, naming what is wrong", (
   assert.ok(errors.some((e) => /SEO-2 appears twice/.test(e)) && errors.some((e) => /SEO-2: a FAIL needs an action/.test(e)));
 });
 
-test("verdict is computed and every item appears once, in the block that says what to do", () => {
+test("counts by status, the launch blockers, then every check with its status", () => {
   const items = all();
   Object.assign(items.find((i) => i.id === "SEC-1"), { result: "FAIL", evidence: "`admin` exists", action: "create a new admin, delete `admin`" });
   Object.assign(items.find((i) => i.id === "SEC-17"), { result: "FAIL", evidence: "x-powered-by: Acorn", action: "remove the header" });
@@ -36,13 +36,13 @@ test("verdict is computed and every item appears once, in the block that says wh
   Object.assign(items.find((i) => i.id === "LIVE-7"), { result: "MANUAL", action: "test in four browsers" });
   let r = buildMarkdown({ project: "Acme", items }, LIST);
   assert.equal(r.verdict, "Not ready"); assert.equal(r.counts.FAIL, 2); assert.equal(r.counts.LOCAL, 1);
-  assert.match(r.markdown, /\*\*Not ready\*\* · 1 required to fix/);
-  assert.match(r.markdown, /## Fix before launch[\s\S]*\| SEC-1 \|[\s\S]*## Should fix[\s\S]*\| SEC-17 \| Recommended/);
-  assert.match(r.markdown, /## Check on the public URL[\s\S]*\| SEC-7 \|/);
-  assert.match(r.markdown, /## Manual checks\n\n1\. \*\*LIVE-7\*\*/);
-  for (const id of ["SEC-1", "SEC-17", "SEC-7", "LIVE-7"]) assert.equal(r.markdown.split(new RegExp(`\\b${id}\\b`)).length - 1, 1, `${id} appears exactly once`);
-  assert.doesNotMatch(r.markdown, /- \*\*Security\*\* \(\d+\):[^\n]*\bSEC-1\b,/, "a failing item is not listed as passed");
-  assert.equal(r.results.find((x) => x.id === "SEC-1").result, "FAIL");
+  assert.match(r.markdown, /\| PASS \| \*\*69\*\* \|[\s\S]*\| FAIL \| \*\*2\*\* \(1 required\) \|/);
+  assert.match(r.markdown, /## Fix before launch\n\n\| ID \| Problem \| Do this \|\n\|---\|---\|---\|\n\| SEC-1 \|[^\n]*create a new admin/);
+  assert.doesNotMatch(r.markdown, /## Fix before launch[\s\S]*SEC-17[\s\S]*## PageSpeed/, "a recommended fail is not a blocker");
+  assert.match(r.markdown, /### Security[\s\S]*\| SEC-1 \| Required \| [^|]+ \| FAIL \| `admin` exists → \*\*create a new admin/);
+  assert.match(r.markdown, /\| SEC-17 \| Recommended \| [^|]+ \| FAIL \|/);
+  assert.match(r.markdown, /\| LIVE-7 \| Recommended \| [^|]+ \| MANUAL \| checked → \*\*test in four browsers\*\* \|/);
+  assert.equal((r.markdown.match(/^\| [A-Z]+-\d+ \| (Required|Recommended|Optional) \|/gm) ?? []).length, LIST.length, "every check is listed once in All checks");
   items.find((i) => i.id === "SEC-1").result = "FIXED";
   r = buildMarkdown({ project: "Acme", items }, LIST);
   assert.equal(r.verdict, "Ready locally");
