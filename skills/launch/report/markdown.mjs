@@ -21,6 +21,10 @@ function inline(text) {
   return s.replace(/\u0000(\d+)\u0000/g, (_, i) => "<code>" + codes[Number(i)] + "</code>");
 }
 
+// A table cell that is exactly a result or severity word renders as a coloured label instead of an emoji.
+const TAGS = { PASS: "ok", FIXED: "ok", FAIL: "bad", LOCAL: "warn", MANUAL: "warn", "N/A": "none", Required: "bad", Recommended: "warn", Optional: "none" };
+const cell = (c) => (Object.hasOwn(TAGS, c) ? `<span class="tag tag-${TAGS[c]}">${escapeHtml(c)}</span>` : inline(c));
+
 const isTableRow = (line) => /^\s*\|.*\|\s*$/.test(line);
 const cells = (line) => line.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
 
@@ -55,7 +59,7 @@ export function markdownToHtml(source) {
       const head = cells(line);
       const rows = [];
       for (i += 2; i < lines.length && isTableRow(lines[i]); i++) rows.push(cells(lines[i]));
-      out.push(`<div class="table"><table><thead><tr>${head.map((c) => `<th>${inline(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+      out.push(`<div class="table"><table><thead><tr>${head.map((c) => `<th>${inline(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${cell(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
       continue;
     }
 

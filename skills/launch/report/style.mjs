@@ -93,6 +93,11 @@ h1.title { margin: var(--s2) 0 var(--s3); font-size: clamp(26px, 4vw, 34px); lin
 .text th, .text td { padding: var(--s2) var(--s3); border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
 .text th { background: var(--sunken); font-weight: 600; }
 .text tr:last-child td { border-bottom: 0; }
+.tag { display: inline-block; padding: 1px 8px; border-radius: var(--pill); font-size: 11.5px; font-weight: 700; letter-spacing: .04em; white-space: nowrap; }
+.tag-ok { background: var(--ok-soft); color: var(--ok); }
+.tag-bad { background: var(--bad-soft); color: var(--bad); }
+.tag-warn { background: var(--warn-soft); color: var(--warn); }
+.tag-none { background: var(--sunken); color: var(--muted); }
 .copy { position: absolute; top: var(--s2); right: var(--s2); border: 1px solid var(--line); background: var(--surface); color: var(--muted); font: 12px var(--font); padding: 2px 8px; border-radius: var(--r1); cursor: pointer; }
 .copy:hover { color: var(--text); }
 footer.foot { margin-top: var(--s7); color: var(--faint); font-size: 12.5px; }

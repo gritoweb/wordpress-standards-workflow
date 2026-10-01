@@ -39,3 +39,10 @@ test("--pdf prints the page with a headless browser", { skip: !findBrowser() && 
   assert.ok(existsSync(join(dir, "r.pdf")) && statSync(join(dir, "r.pdf")).size > 1000);
   assert.equal(readFileSync(join(dir, "r.pdf")).subarray(0, 4).toString(), "%PDF");
 });
+
+test("result and severity words become coloured labels, other cells stay escaped text", () => {
+  const html = markdownToHtml("| ID | Severity | Result |\n|---|---|---|\n| SEC-1 | Required | FAIL |\n| SEC-2 | Optional | PASS |\n| X | <b>FAIL</b> | PASSED |");
+  assert.match(html, /<td><span class="tag tag-bad">Required<\/span><\/td><td><span class="tag tag-bad">FAIL<\/span><\/td>/);
+  assert.match(html, /<td><span class="tag tag-none">Optional<\/span><\/td><td><span class="tag tag-ok">PASS<\/span><\/td>/);
+  assert.match(html, /<td>&lt;b&gt;FAIL&lt;\/b&gt;<\/td><td>PASSED<\/td>/, "only an exact word becomes a label");
+});

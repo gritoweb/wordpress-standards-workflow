@@ -2,6 +2,22 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — The launch report reads professionally
+
+### Changed
+- **No emoji in the report.** Results (PASS, FIXED, FAIL, LOCAL, MANUAL,
+  N/A) and severities (Required, Recommended, Optional) are plain words.
+  The renderer turns a cell that is exactly one of those words into a
+  coloured label, using the palette's ok/bad/warn colours. Any other cell
+  stays escaped text.
+- The report starts with the verdict, the counts and PageSpeed, then the
+  required items still failing, what was fixed, the sections and the
+  manual steps.
+
+### Verified
+- A report test checks the labels and that only an exact word becomes one
+  (`<b>FAIL</b>` and `PASSED` stay text).
+
 ## 2026-10-01 — `launch` checks and fixes much more, and measures PageSpeed
 
 On the first real run, many items were left to a human that the agent can
