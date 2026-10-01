@@ -101,6 +101,7 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy whole folder; ask before overwriting |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy whole folder; ask before overwriting |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy whole folder; ask before overwriting |
+| `skills/launch/` | `<theme>/.claude/skills/launch/` | Copy whole folder; ask before overwriting |
 | `docs/examples/` | `<theme>/docs/examples/` | Copy whole folder (one file per reference block); ask before overwriting |
 | `docs/launch-list.md` | `<theme>/docs/launch-list.md` | Ask before overwriting if present |
 | `docs/kit-log.md` | `<theme>/docs/kit-log.md` | Only if absent — it holds the project's own entries |

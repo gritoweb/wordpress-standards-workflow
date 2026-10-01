@@ -2,6 +2,40 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — `launch` skill and a launch list the AI can check
+
+### Added
+- **`skills/launch/`.** Runs `docs/launch-list.md` against the local site
+  (wp-cli), the theme files and the public URL. It asks before fixing
+  anything, and asks for each remote write on its own. Then it re-checks and
+  writes `docs/launch-report.md` plus HTML and PDF. The report generator
+  (`report/report.mjs`) ships inside the skill (Node 18+, no packages), so
+  it works for anyone who installs the kit.
+- **Safety rules in the skill.** It only runs the list's commands. Before
+  each write it shows `siteurl` and the environment. It takes a DB backup
+  (outside the web root) before the first fix. SEC-1 creates the new admin
+  before removing `admin`, and `--reassign` is always used, so nobody gets
+  locked out. It stops if a fix fails or the site answers 5xx. No secrets
+  or emails go into the report, and it never touches git.
+
+### Changed
+- **`docs/launch-list.md` rewritten for verification.** Every item has an ID,
+  `auto`/`fix`/`manual` tags, and the exact **Check**, **Pass if** and
+  **Fix**. Security and base SEO are all required. New items:
+  - no `admin` or test users
+  - no dev-only or inactive plugins
+  - the required plugin set (Disable WP REST API, Security Optimizer,
+    Speed Optimizer, Yoast SEO, Safe SVG)
+  - no `console.log` in the theme
+  - exposed sensitive files and directory listing
+  - REST user enumeration and security headers
+  - one H1, canonical and `alt` on key pages
+
+### Verified
+- `node --test "skills/launch/report/*.test.mjs"`: 4/4 pass (escaping, tables, English page, PDF).
+- A sample report renders with the same CSS as the reference report (only
+  unused tab ids differ) and prints to PDF.
+
 ## 2026-09-28 — The Footer tab no longer flashes on Site Settings
 
 ### Fixed

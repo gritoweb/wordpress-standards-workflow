@@ -23,6 +23,7 @@ skills/
   fotos/SKILL.md                   # block screenshot generator — imported to <project>/.claude/skills/
   site-settings-wizard/SKILL.md    # interactive wizard for Site Settings — imported to <project>/.claude/skills/
   figma-design-system/             # design system from a Figma file (phases 0-2) — imported to <project>/.claude/skills/
+  launch/                          # pre-launch audit + HTML/PDF report — imported to <project>/.claude/skills/
 global-skills/
   commit-rules.md                  # commit convention — NOT per-project; recommend installing to ~/.claude/skills/ (user-level)
 docs/
@@ -73,6 +74,7 @@ the manifest **is** the source of truth either way.
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy the whole folder — block screenshot generator (Chrome headless → webp + svg fallback) |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — adds a tab to the Site Settings page (Secure Custom Fields), only when asked |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy the whole folder — builds the css-foundation-wizard files from a Figma file (inventory, foundation, components) |
+| `skills/launch/` | `<theme>/.claude/skills/launch/` | Copy the whole folder — runs `docs/launch-list.md`, fixes what you approve, writes the launch report (HTML + PDF, Node 18+, no packages) |
 | `docs/examples/` | `<theme>/docs/examples/` | Reference blocks the AI uses for grounding: `README.md` (shared rules) + one file per block |
 | `docs/launch-list.md` | `<theme>/docs/launch-list.md` | Pre-launch checklist for go-live |
 | `docs/kit-log.md` | `<theme>/docs/kit-log.md` | Only if absent — the project's log of what the kit got wrong or lacked |
@@ -124,6 +126,7 @@ cp "$KIT/CLAUDE.md" ./CLAUDE.md
 mkdir -p .claude/skills docs
 cp -R "$KIT/skills/html-qa-smoketest" .claude/skills/
 cp -R "$KIT/skills/create-block" .claude/skills/
+cp -R "$KIT/skills/launch" .claude/skills/
 cp -r "$KIT/docs/examples"     ./docs/examples
 cp "$KIT/docs/launch-list.md"  ./docs/launch-list.md
 cp -n "$KIT/docs/kit-log.md"    ./docs/kit-log.md
