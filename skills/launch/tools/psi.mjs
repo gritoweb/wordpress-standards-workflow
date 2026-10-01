@@ -155,6 +155,8 @@ export async function psi(url, { screenshot } = {}) {
       try { result[strategy] = fromLighthouse(url, strategy); } catch (e) { result[strategy] = { error: e.message }; }
     }
   }
+  // An estimate stands in only where Google can't reach (local URLs); on a public URL it is shown but never decides PERF-2.
+  result.decisive = !fallbackReason || fallbackReason.startsWith("local URL");
   const m = result.mobile?.scores?.performance;
   // PSI lab scores move several points between runs; a score near the line deserves a second look.
   return { ...base, ...result, mobile_pass: m == null ? null : m >= MIN_MOBILE_SCORE, borderline: m != null && Math.abs(m - MIN_MOBILE_SCORE) <= 5 };

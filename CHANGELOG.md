@@ -2,6 +2,86 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — `launch`: tools decide their own items, the report is built, and migrations are checked
+
+On the developer's run of the previous version, the gaps were these:
+- it never asked about a migration;
+- dev-only things on Lando failed as Required;
+- logo fixes were skipped;
+- the agent hand-wrote a 190-line report.
+
+A room review (GLM and Antigravity, with Claude as the judge) also flagged
+word-based heuristics and bare-boolean evidence.
+
+### Added
+- **`report/build.mjs` + `report/evaluate.mjs`: the report is built, not
+  written.**
+  - The agent pipes per-item results as JSON on stdin.
+  - Every item the tools can see (HTTPS, headers, exposed files, robots,
+    sitemap, canonical, H1, OG, alt, broken links, PageSpeed, migration,
+    analytics, consent, forms, search…) is decided in code from the tools'
+    JSON, with evidence.
+  - The builder refuses a result set that is incomplete, has a FAIL with no
+    action, or contradicts a tool, and names the item.
+  - Counts, verdict and next steps are computed.
+- **`tools/redirect-audit.mjs` (SEO-11).**
+  - It takes the old site's sitemap (or a pasted list; the Wayback Machine
+    is a 20 s best effort) and checks every old path on the new site: 200,
+    permanent redirect, temporary redirect or broken. It keeps every hop.
+  - A different old domain must 301 to the new one.
+  - The skill now asks "is this a migration?".
+- **`tools/brand-images.mjs`.** It renders the logo into a 512×512 site icon
+  and a 1200×630 OG image with headless Chrome, refusing blank output
+  (under 1 KB). PAGE-1, SEO-7 and PAGE-5 become fixable, with `wp media
+  import`.
+- **`tools/signatures.json`.** The detection data (consent and captcha
+  vendors, honeypot fields, placeholder hosts, analytics loaders, exposed
+  paths, header names, CDN hints) moves out of the code, each list with its
+  source and date, and is validated at load. Pass/fail policy stays in
+  `launch-list.md`.
+- **More automatic items:**
+  - LIVE-3: contacts are extracted and confirmed by the user
+  - MAIL-2: a `wp_mail` test email, in the approval list
+  - MAIL-3: WP Mail SMTP sender and mailer
+  - PAGE-3: password form handled by the theme
+  - PAGE-6: login logo filters
+  - a warning and removal offer for the old `docs/launch-list.md`
+
+### Changed
+- **Everything generated goes in `<theme>/launch/`** (report, PDF,
+  screenshot, brand images, `raw/` JSON), not `docs/`.
+- **Legal links by URL, not by words.** The privacy page comes from
+  `wp_page_for_privacy_policy` (ID resolved to URL), and the terms URL is
+  asked once. They are matched as links in the footer. There is no word
+  fallback: without a URL the item can't pass by guesswork.
+- **The search "no results" state** is detected by the `search-no-results`
+  body class, not by text in three languages.
+- **An exposed file needs proof:** a 200 that isn't the site's soft-404
+  page, with the status, content type and size as evidence.
+- **Tools return what they saw**, not `true`: the analytics tag, the consent
+  vendor, the "Powered by" text, the CDN header.
+- **The `launch-env` tag.** SEC-8, CODE-3 and the logs/backups part of SEC-9
+  are `LOCAL` on a dev site. WordPress's own exposed files still fail.
+- **A failed PageSpeed page read on a public URL makes PERF-2 `MANUAL`.**
+  The local estimate is shown, but it no longer decides.
+
+### Verified
+- `node --test "skills/launch/*/*.test.mjs"`: 32/32 pass. New tests:
+  - two in-memory sites for the migration
+  - computed results, contradiction refusal, FIXED and LOCAL handling
+  - legal links by URL
+  - brand image sizes
+  - builder completeness and table escaping
+- On `luistest1300`, the tools ran into a temporary `launch/`:
+  - the builder refused results that marked LEGAL-1 N/A while the footer
+    had no privacy link;
+  - with corrected results it wrote the report and PDF (Not ready: 2
+    required failures, 7 LOCAL);
+  - http-audit proved the planted `debug.log`/`backup.sql` with type and
+    size.
+- The guard lets the new tool commands through, including the heredoc
+  build call.
+
 ## 2026-10-01 — The launch guard no longer lets code in through a pipe
 
 ### Fixed

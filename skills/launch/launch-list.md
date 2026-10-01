@@ -19,22 +19,29 @@ every item it can, fixes what the user approves, and writes the report.
 - `manual`: only a human can do it. The report gives the exact steps.
 - `public`: needs the real public URL. On a local URL (`.lndo.site`, `localhost`, `.test`) the
   result is `LOCAL` ("re-check on the public URL"), never `FAIL`.
+- `launch-env`: only matters on the environment that goes live (debug flags, dev packages, logs and
+  backups). Checked on a local site, the result is `LOCAL` ("check on the launch environment").
 
 **Commands**
 
 - `wp …` runs locally as `lando wp …`. Remotely it runs as `terminus wp <site>.<env> -- …` or
   `wp --ssh=<user>@<host>:<port>/<path> …`.
 - `$URL` is the site URL, and `$THEME` is the active theme root.
-- `$TOOLS` is `.claude/skills/launch/tools`. Its three scripts return JSON:
+- `$TOOLS` is `.claude/skills/launch/tools`. Its scripts return JSON:
   - `http-audit.mjs $URL` runs the site-level HTTP checks (`H.<field>` below)
   - `page-audit.mjs <urls…> --links [--w3c]` runs the page checks (`P.<field>`)
-  - `psi.mjs $PSI_URL --screenshot docs/launch-pagespeed-mobile.png` runs PageSpeed (`S.<field>`)
+  - `psi.mjs $PSI_URL --screenshot launch/pagespeed-mobile.png` runs PageSpeed (`S.<field>`)
+  - `redirect-audit.mjs $URL (--old <old-site> | --list <file>)` checks a migration (`R.<field>`)
+  - `brand-images.mjs <logo> --out launch/brand [--bg <colour>]` makes the site icon and OG image
 
   Run each one once and read every item from its output.
 - The pages for the `P.` checks are the home page plus every page in the main menu
   (`wp menu item list <menu> --fields=url`), 15 at most.
 
 Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when there is one, **Fix**.
+
+- **Old copy:** if the project still has `docs/launch-list.md` (from before the list moved into the skill), the
+  report says it is unused, and the approval list offers `rm docs/launch-list.md`.
 
 ---
 
@@ -66,7 +73,7 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
 - [ ] **SEC-7** Required `auto` `public`: HTTPS enforced
   - Check: `H.https`
   - Pass if: `redirects_to_https` is true, and `https_status` is 200 with no `https_error`
-- [ ] **SEC-8** Required `auto` `fix`: Debug off
+- [ ] **SEC-8** Required `auto` `fix` `launch-env`: Debug off
   - Check: `wp config get WP_DEBUG`, `wp config get WP_DEBUG_DISPLAY` on the environment being launched
   - Pass if: both are false or undefined. On Pantheon, check `live`.
   - Fix: `wp config set WP_DEBUG false --raw`
@@ -74,6 +81,7 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
   - Check: `H.exposed`
   - Pass if: the list is empty
   - Fix: one `rm <file>` per line for WordPress's own `readme.html`, `license.txt` and `wp-config-sample.php`. Logs, backups, `.env` and `.git` are reported for the dev to remove and to rotate any secret, never deleted by the agent.
+  - On a local site, the logs, backups and `.env` part is `launch-env` (`LOCAL`); the WordPress files still count.
 - [ ] **SEC-10** Required `auto`: No directory listing
   - Check: `H.directory_listing`
   - Pass if: every value is false
@@ -125,7 +133,7 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
 - [ ] **SEO-7** Required `auto` `fix` `ask`: Open Graph on the home page
   - Check: `P.og` on the home page
   - Pass if: title, description and image are all present, and `image_status` is 200
-  - Fix: `wp option patch update wpseo_social og_default_image "<image-url>"` and `wp option patch update wpseo_social og_default_image_id <id>`. The default suggestion is the site logo (`wp option get site_logo`, or the `custom_logo` theme mod). The description comes from SEO-4.
+  - Fix: see **Logo** below. The image is `launch/brand/og-default-1200x630.png`: `wp media import <file> --porcelain`, then `wp option patch update wpseo_social og_default_image "<url>"` and `wp option patch update wpseo_social og_default_image_id <id>`. The description comes from SEO-4.
 - [ ] **SEO-8** Required `auto`: Images have `alt`
   - Check: `P.images_without_alt`
   - Pass if: empty on every page. Decorative images may have `alt=""`. For a single page in depth, use `html-qa-smoketest`.
@@ -136,8 +144,13 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
 - [ ] **SEO-10** Required `auto`: A themed 404
   - Check: `H.not_found`
   - Pass if: status 404 and `themed` is true
-- [ ] **SEO-11** Required `manual`: 301 redirects from the old site (migration projects only)
-  - Steps: for each old URL on the client's list, `curl -sI <old-url>` must answer 301 to the right new page. Without a migration, the item is `N/A`.
+- [ ] **SEO-11** Required `auto` `ask`: Every old URL still works after a migration
+  - Ask: is this site replacing an old one? No / the old site's URL / a file with the old URLs
+  - Check: `R` from `redirect-audit.mjs $URL --old <old-site>` (it reads the old sitemap, or the Wayback
+    Machine as a fallback) or `--list <file>`
+  - Pass if: `broken` is 0, `temporary_redirect` is 0, and, when the old domain differs,
+    `old_domain.permanent_to_new` is true. Not a migration: `N/A`.
+  - The fix is the dev's: the report lists every broken path, ready for the redirect plugin.
 - [ ] **SEO-12** Recommended `manual`: Google Search Console verified and the sitemap submitted
   - Steps: Search Console › Add property › verify it (DNS or the Yoast meta tag) › Sitemaps › submit `<URL>/sitemap_index.xml`
 
@@ -196,7 +209,7 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
 - [ ] **CODE-2** Required `auto`: Built assets present
   - Check: `$THEME/public/build/manifest.json`, and every file it lists
   - Pass if: they all exist
-- [ ] **CODE-3** Required `auto`: No dev dependencies shipped
+- [ ] **CODE-3** Required `auto` `launch-env`: No dev dependencies shipped
   - Check: `composer show --direct --no-dev --name-only` against the `packages-dev` in `$THEME/composer.lock`, with `ls $THEME/vendor/<package>`
   - Pass if: no dev package is installed in `vendor/` on the environment being launched
 - [ ] **ID-1** Required `auto` `fix` `ask`: The `style.css` header is the project's
@@ -241,10 +254,16 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
   - Check: `wp plugin list --status=active --field=name`
   - Pass if: `wp-mail-smtp` or `fluent-smtp` is listed
   - Fix: `wp plugin install wp-mail-smtp --activate`. The credentials stay manual (MAIL-3).
-- [ ] **MAIL-2** Required `manual`: Every form delivers
-  - Steps: submit each form on the site with a test message, and confirm it arrives in the client's inbox (not spam)
-- [ ] **MAIL-3** Recommended `manual`: Sender is a real domain address
-  - Steps: WP Mail SMTP › Settings: the From Email is `@<client-domain>`, the mailer is configured, and Email Test is sent
+- [ ] **MAIL-2** Required `auto` `fix` `ask`: WordPress sends email, and every form delivers
+  - Ask: an inbox to receive the test (suggest the admin email)
+  - Fix (it sends one real email, so it goes in the approval list):
+    `wp eval 'var_export(wp_mail("<inbox>", "Launch check: <site>", "Sent by the launch skill."));'`
+  - Pass if: it prints `true`, meaning WordPress handed the message to the mailer. The report still asks the user
+    to confirm it arrived (not in spam), and to submit each form on the site once.
+- [ ] **MAIL-3** Recommended `auto`: Sender is a real domain address, and the mailer is configured
+  - Check: `wp option pluck wp_mail_smtp mail from_email`, `wp option pluck wp_mail_smtp mail mailer`
+  - Pass if: the From Email ends with the site's own domain (not `wordpress@` or a free webmail), and the mailer
+    is not `mail` (PHP's default). The SMTP credentials stay the dev's: WP Mail SMTP › Settings.
 - [ ] **MAIL-4** Recommended `auto`: Every form has anti-spam
   - Check: `P.forms`, `P.forms_protected`
   - Pass if: they are equal on every page (each form has Turnstile, reCAPTCHA, hCaptcha or a honeypot)
@@ -265,22 +284,30 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
 
 ## Pages and icons
 
-- [ ] **PAGE-1** Required `auto` `fix`: Site icon
+- [ ] **PAGE-1** Required `auto` `fix` `ask`: Site icon
   - Check: `H.favicon`, `wp option get site_icon`
   - Pass if: `site_icon` is set (non-zero) or `icon_link` is true, and `default_wp_icon` is false
-  - Fix: `wp option update site_icon <attachment-id>`. The suggestion is the logo's attachment ID, and the agent shows which image it is.
+  - Fix: see **Logo** below. `wp media import launch/brand/site-icon-512.png --porcelain`, then `wp option update site_icon <id>`.
 - [ ] **PAGE-2** Recommended `auto`: Search results themed, with a "no results" state
   - Check: `H.search`
   - Pass if: `themed` and `has_no_results_text` are true
-- [ ] **PAGE-3** Recommended `manual`: The password-protected page form is themed
-  - Steps: set any page to password-protected, open it while logged out, check the layout, then revert it
+- [ ] **PAGE-3** Recommended `auto`: The password-protected page form is themed
+  - Check: `grep -rln "post_password_required\|the_password_form" $THEME/app $THEME/resources/views`
+  - Pass if: at least one match (the theme handles the form). Otherwise WordPress's bare form shows inside the theme.
 - [ ] **PAGE-4** Recommended `auto`: Every public custom taxonomy has an archive template or `has_archive => false`
   - Check: `wp taxonomy list --public=1 --field=name` against the `$THEME/resources/views/taxonomy-*.blade.php` and `archive.blade.php` templates
 - [ ] **PAGE-5** Optional `auto`: Apple touch icon
   - Check: `H.apple_touch_icon`
   - Pass if: 200, or `site_icon` is set (WordPress then outputs the touch icon)
-- [ ] **PAGE-6** Optional `manual`: Login page logo is the client's
-  - Steps: open `/wp-login.php` and check the logo. The fix is the `login_enqueue_scripts`, `login_headerurl` and `login_headertext` filters.
+- [ ] **PAGE-6** Optional `auto`: Login page logo is the client's
+  - Check: `grep -rln "login_enqueue_scripts\|login_headerurl" $THEME/app`
+  - Pass if: at least one match. The fix is the `login_enqueue_scripts`, `login_headerurl` and `login_headertext` filters.
+
+**Logo** (shared by SEO-7, PAGE-1 and PAGE-5): find it in `wp option get site_logo`, the `custom_logo` theme mod
+(`wp theme mod get custom_logo`), `$THEME/resources/**/*logo*` and `$THEME/public/**/*logo*` (png, svg, jpg, webp),
+or `wp post list --post_type=attachment --s=logo --fields=ID,guid`. When there's none, the values question asks for a
+file path (for the icon, a square symbol works better than a wide wordmark). Then `node $TOOLS/brand-images.mjs <logo> --out launch/brand --bg <colour>` makes
+`site-icon-512.png` and `og-default-1200x630.png`. The agent opens both images before offering the fix.
 
 ## Go-live
 
@@ -290,8 +317,10 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
 - [ ] **LIVE-2** Required `auto`: No "Powered by WordPress" and no starter names
   - Check: `P.powered_by_wordpress`, `P.starter_names`
   - Pass if: both are false on every page
-- [ ] **LIVE-3** Required `manual`: Contact details are correct
-  - Steps: compare the phone, address and email in the footer and on the Contact page with the client's data
+- [ ] **LIVE-3** Required `auto` `ask`: Contact details are correct
+  - Check: `P.contacts` (every `tel:` and `mailto:` and the footer text, across the audited pages)
+  - Ask: "Are these the client's correct phone, email and address?", showing what was found. Yes, or type the right ones.
+  - Pass if: the user confirms. If the user corrects a value, `FAIL`, naming the page where the wrong value appears.
 - [ ] **LIVE-4** Required `manual`: Checkout works end to end (e-commerce only)
   - Steps: buy one product with a sandbox payment, and confirm the order and the emails
 - [ ] **LIVE-5** Recommended `auto` `public`: Valid HTML

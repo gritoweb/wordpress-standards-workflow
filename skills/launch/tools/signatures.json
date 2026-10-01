@@ -1,0 +1,54 @@
+{
+  "_about": "Detection data for the launch tools: what to look for, not what passes. Pass/fail policy lives in launch-list.md. Each list says where it came from and when it was last checked; update both together.",
+  "consent_vendors": {
+    "source": "Script and CSS handles of the WordPress.org cookie/consent plugins with 100k+ installs, plus the common SaaS CMPs",
+    "updated": "2026-10-01",
+    "patterns": ["cookieyes", "cookiebot", "complianz", "cmplz", "cookie-law-info", "cookie-notice", "borlabs", "iubenda", "onetrust", "osano", "termly", "real-cookie-banner", "gdpr-cookie", "adopt\\.", "cookie-consent", "lgpd"]
+  },
+  "captcha_vendors": {
+    "source": "Widget markers documented by Cloudflare Turnstile, Google reCAPTCHA and hCaptcha",
+    "updated": "2026-10-01",
+    "patterns": ["cf-turnstile", "challenges\\.cloudflare\\.com/turnstile", "g-recaptcha", "recaptcha/api", "grecaptcha", "h-captcha", "hcaptcha\\.com"]
+  },
+  "honeypot_fields": {
+    "source": "Field names used by Contact Form 7 Honeypot, Gravity Forms, WPForms, Akismet and Fluent Forms",
+    "updated": "2026-10-01",
+    "patterns": ["honeypot", "ak_hp", "gform_validation_container", "wpforms\\[hp\\]", "_fluentform_.*_hp", "name=[\"'][^\"']*(website_url|your-website)[\"']"]
+  },
+  "placeholder_image_hosts": {
+    "source": "Public placeholder image services",
+    "updated": "2026-10-01",
+    "patterns": ["placehold\\.(co|it)", "placeholder\\.com", "via\\.placeholder", "picsum\\.photos", "dummyimage\\.com", "lorempixel", "placekitten", "source\\.unsplash\\.com", "fakeimg"]
+  },
+  "lorem": {
+    "source": "Standard Lorem Ipsum filler",
+    "updated": "2026-10-01",
+    "patterns": ["lorem ipsum", "dolor sit amet", "consectetur adipiscing"]
+  },
+  "analytics": {
+    "source": "Google tag (gtag.js), Google Tag Manager and Universal Analytics loaders",
+    "updated": "2026-10-01",
+    "patterns": ["googletagmanager\\.com/gtag/js\\?id=[A-Z0-9-]+", "googletagmanager\\.com/gtm\\.js\\?id=GTM-[A-Z0-9]+", "gtag\\(['\"]config['\"],\\s*['\"][A-Z0-9-]+", "google-analytics\\.com/analytics\\.js"]
+  },
+  "exposed_paths": {
+    "source": "OWASP WSTG-CONF-04 backup/unreferenced files, plus WordPress's own fingerprinting files",
+    "updated": "2026-10-01",
+    "paths": [".env", "wp-config.php.bak", "wp-config.php~", "wp-config.old", "wp-config.php.save", "debug.log", "wp-content/debug.log", "backup.zip", "backup.sql", "db.sql", "dump.sql", "database.sql", ".git/HEAD", "composer.json", "readme.html", "license.txt", "wp-config-sample.php"],
+    "wordpress_files": ["readme.html", "license.txt", "wp-config-sample.php"]
+  },
+  "security_headers": {
+    "source": "OWASP Secure Headers Project",
+    "updated": "2026-10-01",
+    "names": ["strict-transport-security", "x-content-type-options", "x-frame-options", "content-security-policy", "referrer-policy", "permissions-policy"]
+  },
+  "cache_headers": {
+    "source": "Response headers of Cloudflare, Fastly (Pantheon), SiteGround, LiteSpeed, Varnish and generic proxies",
+    "updated": "2026-10-01",
+    "names": ["x-cache", "x-proxy-cache", "cf-cache-status", "age", "x-sg-cache", "x-cache-enabled", "x-litespeed-cache", "x-pantheon-styx-hostname", "x-served-by", "cache-control"]
+  },
+  "cdn_hints": {
+    "source": "Server and via headers of the major CDNs and managed hosts' edges",
+    "updated": "2026-10-01",
+    "patterns": ["cloudflare", "fastly", "akamai", "cloudfront", "bunny", "sucuri", "stackpath", "keycdn", "siteground", "styx", "cf-ray", "x-amz-cf"]
+  }
+}

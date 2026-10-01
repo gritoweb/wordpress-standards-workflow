@@ -105,72 +105,90 @@ no other interpreter, no editing the guard. A denial means you stop and ask.
 
 ## 0. Gather the target (detect first, ask at most once)
 
-**Re-check mode.** If `docs/launch-report.md` already exists, the first question offers:
-- `Re-check what failed` (recommended): runs only the items that were `FAIL` or `LOCAL` in that
-  report, the same way, then updates their rows, the counts and the verdict. This takes 1–2 minutes.
+**Re-check mode.** If `launch/report.md` already exists, the first question offers:
+- `Re-check what failed` (recommended): re-run the tools and only the agent checks that were `FAIL` or
+  `LOCAL`, then rebuild the report (step 5). This takes 1–2 minutes.
 - `Full audit`
 
 Detect, without asking:
 - **wp-cli:** `lando wp option get siteurl`, then `wp option get siteurl`. If Lando is installed but
   stopped, the first line of the approval list is `lando start`.
 - **Project name:** `Theme Name` in `$THEME/style.css`, or the theme folder name.
+- **Privacy page URL:** `wp option get wp_page_for_privacy_policy` returns an **ID**; turn it into the
+  URL with `wp post get <id> --field=url`. Zero means there is none.
 
-Then ask only what is still unknown, in **one** `AskUserQuestion`. Skip any question the user
-already answered in the command, for example `/launch https://acme.com`:
+Then ask only what is still unknown, in **one** `AskUserQuestion` (up to 4 questions). Skip any question
+the user already answered in the command, for example `/launch https://acme.com`:
 - **`$URL`, the site to audit:** the public URL (live or staging), or "this local site" (the
-  `siteurl`). On a local URL, the `public` items come out `LOCAL`.
+  `siteurl`). On a local URL, public-only items come out `LOCAL`.
 - **`$PSI_URL`, the URL PageSpeed Insights tests:** it must be public, because Google can't reach
-  Lando. It defaults to `$URL` when that is public. When auditing locally, the user can give the
-  staging or live URL here. Offer "skip, local estimate only" as well.
-- **Remote** (only if the user wants the server's wp-cli checked): Pantheon `<site>.<env>` for
-  `terminus wp <site>.<env> -- …`, or SSH (`user@host:port/path`) for `wp --ssh=… …`. The key must
-  already work. Test it with `option get siteurl`.
+  Lando. It defaults to `$URL` when that is public. Offer "skip, local estimate only".
+- **Migration:** "Is this site replacing an old one?" with three answers: `No`, the old site's URL
+  (Other), or a path to a file with the old URLs.
+- **Terms page URL:** WordPress has no setting for it, so ask, suggesting a published page whose slug
+  looks like terms. Offer `No terms page`.
 
-`$THEME` is the active theme root (the folder containing `.claude/`).
+Remote wp-cli (Pantheon `terminus wp <site>.<env> -- …`, or SSH `wp --ssh=user@host:port/path …`)
+is used only when the user asks for the server to be checked. The key must already work: test it
+with `option get siteurl`.
+
+`$THEME` is the active theme root (the folder containing `.claude/`). Everything the skill generates
+goes in `launch/` at the theme root, so the user can delete it any time.
 
 ## 1. Check everything (read-only)
 
-1. Run the three tools **in parallel, in one Bash call** (the `mkdir` on its own line first), writing
-   their JSON to `docs/.launch/`. Write the paths literally, because the guard only lets the skill's own tools through:
+1. Run the tools **in parallel, in one Bash call**, writing their JSON to `launch/raw/`. Put the
+   `mkdir` on its own line first. Write the paths literally, because the guard only lets the skill's
+   own tools through. Leave out a flag whose value is unknown:
    ```bash
-   mkdir -p docs/.launch
-   node .claude/skills/launch/tools/http-audit.mjs $URL > docs/.launch/http.json 2>/dev/null &
-   node .claude/skills/launch/tools/page-audit.mjs $URL <menu page URLs…> --links > docs/.launch/pages.json 2>/dev/null &
-   node .claude/skills/launch/tools/psi.mjs $PSI_URL --screenshot docs/launch-pagespeed-mobile.png > docs/.launch/psi.json 2>/dev/null &
+   mkdir -p launch/raw
+   node .claude/skills/launch/tools/http-audit.mjs $URL > launch/raw/http.json 2>/dev/null &
+   node .claude/skills/launch/tools/page-audit.mjs $URL <menu page URLs…> --links --privacy-url <url> --terms-url <url> > launch/raw/pages.json 2>/dev/null &
+   node .claude/skills/launch/tools/psi.mjs $PSI_URL --screenshot launch/pagespeed-mobile.png > launch/raw/psi.json 2>/dev/null &
+   node .claude/skills/launch/tools/redirect-audit.mjs $URL --old <old-site> > launch/raw/redirects.json 2>/dev/null &
    wait
    ```
-   - `psi.mjs` opens pagespeed.web.dev in headless Chrome (about 25 s, no API key). With no
-     public `$PSI_URL`, or when the page fails, it runs local Lighthouse and says why in `source`.
+   - `redirect-audit` runs only for a migration. With a list of old URLs, use `--list <file>`.
    - Add `--w3c` to `page-audit` only for a public `$URL`, because it sends the HTML to validator.w3.org.
-   - Read the JSON files. Don't paste them into the chat.
-2. Meanwhile, run the `wp …`, `grep` and `ls` checks of `launch-list.md`.
-3. Give every item exactly one result:
+   - `psi.mjs` reads pagespeed.web.dev in headless Chrome (about 25 s, no API key). On a local URL,
+     or when the page fails, it falls back to local Lighthouse and says why.
+2. Meanwhile, run the `wp …`, `grep` and `ls` checks of `launch-list.md`. These are the items the
+   tools can't see.
+3. **The tools decide their own items.** `report/evaluate.mjs` computes, from the JSON, every item
+   the tools can see, with its evidence: HTTPS, headers, exposed files, robots, sitemap, canonical,
+   H1, OG, alt, broken links, PageSpeed, migration, analytics, consent, forms, search and so on.
+   Don't re-judge those. You give results only for the rest, plus `FIXED` for anything you fixed.
+   If you contradict a tool, the build refuses the report and says which item disagrees.
+4. Give each of your items exactly one result:
    - `PASS`: the evidence matches **Pass if**.
-   - `FAIL`: it doesn't.
-   - `LOCAL`: a `public` item checked on a local URL. Re-check it on the public URL; it's never `FAIL`.
-   - `MANUAL`: a `manual` item, or a check that couldn't run (say why: no access, timeout, error).
+   - `FAIL`: it doesn't. Add the action that fixes it.
+   - `LOCAL`: a `launch-env` item checked on a local site (debug flags, dev packages, logs).
+   - `MANUAL`: a `manual` item, or a check that couldn't run (say why).
    - `N/A`: the item doesn't apply (no e-commerce, not a migration). Say why.
-4. Keep the evidence short and real: the field and its value, the command's output line, the file
-   and line. A check that errors is `MANUAL` with the error, never `PASS`.
+
+   The evidence is real: the command's output line, or the file and line. A check that errors is
+   `MANUAL` with the error, never `PASS`.
 
 Nothing changes in this step, not even an "obvious" fix.
 
 ## 2. Ask for the missing values (one round)
 
-Collect every `FAIL` tagged `ask`, and put them in one `AskUserQuestion` (up to 4 questions per call;
+Collect every `FAIL` tagged `ask`, and put them in one `AskUserQuestion` (4 questions per call; any
 more go in the next call right away). Each question offers your **suggested answer first**:
-- the timezone from the site language
-- the category name from the site's content
-- an admin email at the client's domain
+- the timezone, from the site language
+- the category name, from the site's content
+- an admin email at the client's domain, and the inbox for the MAIL-2 test email
 - a meta description you drafted from the page's real text, shown in full
-- the logo as the OG image and the site icon
+- the logo for the icon and OG image (see **Logo** in `launch-list.md`), with a background colour.
+  Run `brand-images.mjs`, open both PNGs and show them to the user before offering the fix.
+- **contacts (LIVE-3):** show `contacts.phones` and `contacts.emails` from `pages.json`, plus the
+  footer text, and ask whether they are correct
 
-The user can accept or type their own. Never invent a value the user hasn't seen. In the report, a
-suggested value the user accepted without editing is marked "(suggested, confirm)".
+The user can accept or type their own. Never invent a value the user hasn't seen. Mark a suggested
+value the user accepted without editing with `"suggested": true` in its result.
 
-**Two rounds of questions at most per run:** the values, then `Launch fixes`. Anything that turns
-up later (for example, after the re-check) goes into the report's next steps, not into a third
-question.
+**Two rounds of questions at most per run:** the values, then `Launch fixes`. Anything that turns up
+later goes into the report's next steps.
 
 ## 3. One approval for every fix
 
@@ -178,15 +196,17 @@ Build the fix list from every `FAIL` tagged `fix` (with the values from step 2),
 1. `lando start`, if it's needed
 2. the backup (safety rule 3)
 3. the fixes, in the list's order
+4. `rm docs/launch-list.md`, if that old copy is still in the project
 
-Then ask the single `Launch fixes` question (see **The guard**). Its question text says the environment and `siteurl`. Its
-`Approve all` preview is the numbered list of exact commands. Write remote commands one per line,
-never chained.
+Then ask the single `Launch fixes` question (see **The guard**). Its question text says the environment
+and `siteurl`. Its `Approve all` preview is the numbered list of exact commands. Write remote commands
+one per line, never chained.
 
 Never offer as a fix:
 - updates (SEC-3)
 - deleting logs, backups or `.env` (SEC-9)
-- template changes (SEO-5)
+- redirects (SEO-11)
+- template changes (SEO-5, PAGE-3)
 - `public/build/`
 
 They go in the report as actions for the dev.
@@ -194,88 +214,39 @@ They go in the report as actions for the dev.
 ## 4. Apply, then re-check
 
 - Run the approved commands exactly, in order, one at a time (safety rule 5).
-- After each fix, re-run that item's check. It's `FIXED` only if the re-check passes. Otherwise it
-  stays `FAIL`, with the new evidence.
-- When everything has run, run `http-audit.mjs` and `page-audit.mjs` again, in parallel, because
-  plugins change HTTP behaviour. Update every affected result. `psi.mjs` isn't re-run unless a fix
-  targeted performance.
+- After each fix, re-run that item's check. It's `FIXED` only if the re-check passes.
+- When everything has run, run `http-audit.mjs` and `page-audit.mjs` again into `launch/raw/`, because
+  fixes change what they see. `psi.mjs` isn't re-run unless a fix targeted performance.
 
-## 5. Write the report
+## 5. Build the report (no hand-written report)
 
-Write `docs/launch-report.md` in this shape. Use **no emoji**: results and severities are plain words,
-which the renderer turns into coloured labels.
-
-```markdown
-# Launch report: <Project>
-
-**Verdict: Ready to launch** | **Verdict: Not ready** (N required items fail) | **Verdict: Ready locally** (N public-URL checks pending)
-
-**Next steps:** the three most important actions left, in order of impact, each with its item ID.
-
-| Result | Items |
-|---|---|
-| PASS | **N** |
-| FIXED | **N** |
-| FAIL | **N** (N required) |
-| LOCAL | **N** |
-| MANUAL | **N** |
-| N/A | **N** |
-
-## PageSpeed
-
-| Device | Performance | Accessibility | Best practices | SEO | LCP | CLS | TBT |
-|---|---|---|---|---|---|---|---|
-| Mobile | **84** | 99 | 83 | 92 | 3.4 s | 0 | 0 ms |
-| Desktop | 97 | 99 | 82 | 92 | 1.0 s | 0 | 0 ms |
-
-Minimum: 70 on mobile. Real users (Core Web Vitals, Chrome UX Report): Passed | Failed | No data.
-Source: <source>. Full report: [PageSpeed Insights](<report_url>) (with no `report_url`, use [mobile](<psi_link>) · [desktop](<psi_link_desktop>)).
-Lab scores move a few points between runs. When `borderline` is true, say so and suggest running it again.
-
-![PageSpeed Insights, mobile](launch-pagespeed-mobile.png)
-
-## Required items still failing
-
-| ID | Item | Evidence | What to do |
-|---|---|---|---|
-
-## Fixed during this run
-
-| ID | Command | Re-check |
-|---|---|---|
-
-Backup: `<path or ID>`
-
-## Security
-| ID | Severity | Item | Result | Evidence |
-|---|---|---|---|---|
-| SEC-1 | Required | No `admin` user | PASS | `wp user list`: no `admin` |
-
-… one table per section of `launch-list.md`, in the same order …
-
-## Manual checks
-
-1. **MAIL-2** Every form delivers: submit each form …
-…
-
-## How this was checked
-
-Target: <environment> (`siteurl`). URL: … Remote: … Date: … Tools: http-audit, page-audit, psi (<source>).
-```
-
-- The verdict is **Ready to launch** only when no Required item is `FAIL` and nothing is `LOCAL`.
-- Put evidence in backticks. The renderer escapes everything, so pasted HTML is safe.
-
-Render it:
+Pipe your results as JSON on stdin to the builder. It merges them with the tools' decisions,
+**refuses** an incomplete set or one that contradicts the tools, computes the counts, verdict and next
+steps, and writes `launch/report.md`, `report.html` and `report.pdf`, with the PageSpeed screenshot
+embedded:
 
 ```bash
-node .claude/skills/launch/report/report.mjs docs/launch-report.md \
-  --about "<Project>" --subtitle "Pre-launch audit" \
-  --meta "Date=<YYYY-MM-DD>" --meta "URL=<host>" --meta "Verdict=<Ready|Not ready|Ready locally>" --pdf
+node .claude/skills/launch/report/build.mjs --dir launch <<'JSON'
+{
+  "project": "<Theme Name>",
+  "date": "<YYYY-MM-DD>",
+  "target": { "environment": "local|staging|production", "siteurl": "<siteurl>", "url": "<$URL>", "psi_url": "<$PSI_URL>", "remote": null },
+  "items": [
+    { "id": "SEC-1", "result": "PASS", "evidence": "wp user list: no admin" },
+    { "id": "SET-1", "result": "FIXED", "evidence": "timezone_string America/Sao_Paulo", "suggested": true },
+    { "id": "MAIL-1", "result": "FAIL", "evidence": "no SMTP plugin active", "action": "Install WP Mail SMTP and set the credentials." }
+  ],
+  "fixed": [ { "id": "SET-1", "command": "wp option update timezone_string America/Sao_Paulo", "recheck": "option is set" } ],
+  "backup": "<path or ID, or null>",
+  "notes": ["<anything the reader must know, e.g. PageSpeed measured another URL>"]
+}
+JSON
 ```
 
-This writes `docs/launch-report.html` and `.pdf` next to the `.md`, with the PageSpeed screenshot embedded,
-so each one is a single file. It needs Node 22+ (for the PageSpeed tool) and Chrome, Edge or Chromium, with no packages.
+- If it exits 1, read the list it prints (missing IDs, contradictions, a FAIL without an action), fix
+  your results and run it again. Never work around it by writing the report by hand.
+- It prints the verdict and counts as JSON. The verdict is computed: **Ready to launch** only with no
+  Required `FAIL` and nothing `LOCAL`.
 
 ## 6. Close
 
@@ -285,14 +256,15 @@ Tell the user:
 - the PageSpeed mobile score, with its report link
 - what was fixed
 - the required items still failing, each with its next step
-- the report paths
+- `launch/report.pdf`
 
 Don't commit anything.
 
 ## Never
 
-- Mark `PASS` without evidence, or downgrade a `FAIL` to `MANUAL`/`LOCAL` to make the verdict look better.
+- Mark `PASS` without evidence, contradict a tool's result, or downgrade a `FAIL` to `MANUAL`/`LOCAL`
+  to make the verdict look better.
+- Write or edit the report by hand.
 - Change anything before the user's approval.
 - Replace or rewrite `launch-list.md`, or any file the user didn't approve.
 - Touch WordPress core, third-party plugin code or `public/build/`.
-- Put emoji in the report, or write it in any language other than English.

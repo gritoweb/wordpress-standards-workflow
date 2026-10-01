@@ -3,11 +3,7 @@
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 
-const EXPOSED = [".env", "wp-config.php.bak", "wp-config.php~", "wp-config.old", "wp-config.php.save", "debug.log", "wp-content/debug.log",
-  "backup.zip", "backup.sql", "db.sql", "dump.sql", "database.sql", ".git/HEAD", "composer.json", "readme.html", "license.txt", "wp-config-sample.php"];
-const SECURITY_HEADERS = ["strict-transport-security", "x-content-type-options", "x-frame-options", "content-security-policy", "referrer-policy", "permissions-policy"];
-const CACHE_HEADERS = ["x-cache", "x-proxy-cache", "cf-cache-status", "age", "x-sg-cache", "x-cache-enabled", "x-litespeed-cache", "x-pantheon-styx-hostname", "x-served-by", "cache-control"];
-const CDN_HINTS = /cloudflare|fastly|akamai|cloudfront|bunny|sucuri|stackpath|keycdn|siteground|styx/i;
+import { SIG } from "./signatures.mjs";
 
 export const isLocalHost = (host) => /(^localhost$|^127\.|\.lndo\.site$|\.test$|\.local$|\.ddev\.site$|\.localhost$)/.test(host);
 
@@ -36,13 +32,23 @@ export async function httpAudit(base) {
 
   const home = await get(url.href, { redirect: "follow" });
   out.home = { status: home.status, error: home.error };
-  out.headers = Object.fromEntries(SECURITY_HEADERS.map((h) => [h, home.headers[h] ?? null]));
+  out.headers = Object.fromEntries(SIG.securityHeaders.map((h) => [h, home.headers[h] ?? null]));
   out.powered_by = home.headers["x-powered-by"] ?? null;
 
+  // A 200 alone is not proof: some servers answer 200 for any path. Compare HTML answers with a known-missing path.
+  const probe = await get(origin + "/launch-check-missing-" + Date.now() + ".txt", { redirect: "follow" });
+  const soft404 = probe.status === 200 ? probe.text.length : null;
+  out.soft_404 = soft404 != null;
   out.exposed = [];
-  for (const path of EXPOSED) {
-    const r = await get(origin + "/" + path, { method: "HEAD" });
-    if (r.status === 200) out.exposed.push(path);
+  for (const path of SIG.exposedPaths) {
+    const head = await get(origin + "/" + path, { method: "HEAD" });
+    if (head.status !== 200) continue;
+    const type = head.headers["content-type"] ?? null;
+    if (/text\/html/i.test(type ?? "") && soft404 != null) {
+      const page = await get(origin + "/" + path);
+      if (Math.abs(page.text.length - soft404) <= soft404 * 0.05) continue;
+    }
+    out.exposed.push({ path, status: 200, content_type: type, bytes: Number(head.headers["content-length"]) || null, wordpress_file: SIG.wordpressFiles.includes(path) });
   }
 
   out.directory_listing = {};
@@ -71,16 +77,17 @@ export async function httpAudit(base) {
   out.not_found = { status: missing.status, themed: /<header|class="[^"]*(site-header|banner)/i.test(missing.text) && !/wp-die-message/.test(missing.text) };
 
   const search = await get(origin + "/?s=zzzzlaunchcheck", { redirect: "follow" });
-  out.search = { status: search.status, themed: /<header/i.test(search.text), has_no_results_text: /no results|nothing found|nenhum resultado|não encontr|sin resultados/i.test(search.text) };
+  // body_class() marks an empty search with search-no-results, whatever the site's language.
+  out.search = { status: search.status, themed: /<header/i.test(search.text), no_results_marker: /<body[^>]*class=["'][^"']*\bsearch-no-results\b/i.test(search.text) };
 
   const fav = await get(origin + "/favicon.ico", { method: "HEAD" });
   out.favicon = { status: fav.status, location: fav.headers.location ?? null, default_wp_icon: /w-logo/.test(fav.headers.location ?? ""), icon_link: /<link[^>]+rel=["'][^"']*icon/i.test(home.text) };
   out.apple_touch_icon = (await get(origin + "/apple-touch-icon.png", { method: "HEAD" })).status;
 
   const second = await get(url.href, { redirect: "follow" });
-  const cache = Object.fromEntries(CACHE_HEADERS.filter((h) => second.headers[h] != null).map((h) => [h, second.headers[h]]));
+  const cache = Object.fromEntries(SIG.cacheHeaders.filter((h) => second.headers[h] != null).map((h) => [h, second.headers[h]]));
   out.cache = { headers: cache, hit: Object.values(cache).some((v) => /hit/i.test(v)) || Number(cache.age) > 0 };
-  out.cdn = Object.entries(second.headers).some(([k, v]) => CDN_HINTS.test(k + " " + v)) || /cf-ray|x-amz-cf|x-fastly/i.test(Object.keys(second.headers).join(" "));
+  out.cdn = Object.entries(second.headers).map(([k, v]) => `${k}: ${v}`).find((h) => SIG.cdn.test(h)) ?? null;
 
   return out;
 }
