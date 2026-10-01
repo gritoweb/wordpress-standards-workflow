@@ -117,16 +117,33 @@ Detect, without asking:
 - **Privacy page URL:** `wp option get wp_page_for_privacy_policy` returns an **ID**; turn it into the
   URL with `wp post get <id> --field=url`. Zero means there is none.
 
-Then ask only what is still unknown, in **one** `AskUserQuestion` (up to 4 questions). Skip any question
-the user already answered in the command, for example `/launch https://acme.com`:
-- **`$URL`, the site to audit:** the public URL (live or staging), or "this local site" (the
-  `siteurl`). On a local URL, public-only items come out `LOCAL`.
+Then ask only what is still unknown, in **one plain chat message** (see **How to ask** below). Skip
+anything the user already gave in the command, for example `/launch https://acme.com`:
+- **`$URL`, the site to audit:** the public URL (live or staging), or the local `siteurl`. On a local
+  URL, public-only items come out `LOCAL`.
 - **`$PSI_URL`, the URL PageSpeed Insights tests:** it must be public, because Google can't reach
-  Lando. It defaults to `$URL` when that is public. Offer "skip, local estimate only".
-- **Migration:** "Is this site replacing an old one?" with three answers: `No`, the old site's URL
-  (Other), or a path to a file with the old URLs.
-- **Terms page URL:** WordPress has no setting for it, so ask, suggesting a published page whose slug
-  looks like terms. Offer `No terms page`.
+  Lando. Suggest `$URL` when it is public; otherwise suggest "none, local estimate only".
+- **Migration, the old site:** its URL, a path to a file with the old URLs, or "none" if the site
+  isn't replacing an old one.
+- **Terms page URL:** WordPress has no setting for it. Suggest a published page whose slug looks like
+  terms, or "none".
+
+**How to ask.** There are two kinds of question, and they never mix:
+- **A value the user types** (a URL, an email, a file path, a name, a text) is asked in a **plain chat
+  message**, never as `AskUserQuestion` options. Number the values, put your suggestion after each,
+  and end with: "Reply with the values that differ, or `ok` to accept all." Then wait for the reply.
+  Example:
+  ```
+  1. Site to audit: http://acme.lndo.site (detected)
+  2. PageSpeed URL: none, local estimate only
+  3. Old site (migration): none
+  4. Terms page: https://acme.lndo.site/terms/ (found by slug)
+  Reply with the values that differ (e.g. "2: https://acme.com, 3: https://old-acme.com"), or ok.
+  ```
+  Use what the user writes as it is. Never turn a typed value into a list of options, and never ask
+  the same value again. If a reply is unclear, ask about that one value in plain text.
+- **A choice between fixed options** (re-check or full audit, the `Launch fixes` approval, skip or
+  apply something) uses `AskUserQuestion`.
 
 Remote wp-cli (Pantheon `terminus wp <site>.<env> -- …`, or SSH `wp --ssh=user@host:port/path …`)
 is used only when the user asks for the server to be checked. The key must already work: test it
@@ -173,8 +190,8 @@ Nothing changes in this step, not even an "obvious" fix.
 
 ## 2. Ask for the missing values (one round)
 
-Collect every `FAIL` tagged `ask`, and put them in one `AskUserQuestion` (4 questions per call; any
-more go in the next call right away). Each question offers your **suggested answer first**:
+Collect every `FAIL` tagged `ask`, and ask for all of them in **one plain chat message** (see **How to
+ask** in step 0: numbered values, your suggestion after each, `ok` accepts all). Suggest:
 - the timezone, from the site language
 - the category name, from the site's content
 - an admin email at the client's domain, and the inbox for the MAIL-2 test email
@@ -182,9 +199,9 @@ more go in the next call right away). Each question offers your **suggested answ
 - the logo for the icon and OG image (see **Logo** in `launch-list.md`), with a background colour.
   Run `brand-images.mjs`, open both PNGs and show them to the user before offering the fix.
 - **contacts (LIVE-3):** show `contacts.phones` and `contacts.emails` from `pages.json`, plus the
-  footer text, and ask whether they are correct
+  footer text, and ask the user to confirm them or write the right ones
 
-The user can accept or type their own. Never invent a value the user hasn't seen. Mark a suggested
+The user accepts or writes their own. Never invent a value the user hasn't seen. Mark a suggested
 value the user accepted without editing with `"suggested": true` in its result.
 
 **Two rounds of questions at most per run:** the values, then `Launch fixes`. Anything that turns up

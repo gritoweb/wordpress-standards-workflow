@@ -2,6 +2,25 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — `launch` lets you type URLs and values instead of picking options
+
+### Fixed
+- **Typed values were forced into multiple choice.** The skill asked for
+  the audit URL, the PageSpeed URL, the old site and similar values as
+  `AskUserQuestion` options. Choosing "Other" brought another selection
+  instead of a place to type. Now:
+  - values the user types (URLs, emails, file paths, texts) are asked in
+    one plain chat message, numbered, with a suggestion each, and `ok`
+    accepts all;
+  - the reply is used as written and never re-asked;
+  - only fixed choices (re-check or full audit, the `Launch fixes`
+    approval) use `AskUserQuestion`.
+
+### Verified
+- `SKILL.md`: `AskUserQuestion` is now named only for the guard's approval
+  and for fixed choices. Steps 0 and 2 ask for values in plain text.
+  Reported by the developer on a real run.
+
 ## 2026-10-01 — `launch`: tools decide their own items, the report is built, and migrations are checked
 
 On the developer's run of the previous version, the gaps were these:
