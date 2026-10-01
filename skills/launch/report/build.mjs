@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Builds the launch report from the agent's per-item results (JSON on stdin) plus the tools' raw JSON; counts and verdict are computed, never typed.
-// usage: node build.mjs [--dir launch] [--no-pdf] < results.json
+// usage: node build.mjs [--dir launch] [--no-pdf] < results.json   |   node build.mjs --todo [--dir launch] [--url <audited url>]
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { printPdf, renderReport } from "./report.mjs";
-import { merge } from "./evaluate.mjs";
+import { EVALUATORS, merge } from "./evaluate.mjs";
 import { isLocalHost } from "../tools/http-audit.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -101,6 +101,24 @@ export function buildMarkdown(input, list, raw = {}) {
   const t = input.target ?? {};
   md.push("## How this was checked", "", `Target: ${t.environment ?? "?"} (\`${t.siteurl ?? "?"}\`). URL: ${t.url ?? "-"}. PageSpeed URL: ${t.psi_url ?? "-"}. Remote: ${t.remote ?? "none"}. Date: ${input.date ?? new Date().toISOString().slice(0, 10)}. Tools: http-audit, page-audit, psi${raw.redirects ? ", redirect-audit" : ""}.`);
   return { markdown: md.join("\n") + "\n", verdict: requiredFail.length ? "Not ready" : by("LOCAL").length ? "Ready locally" : "Ready to launch", counts: Object.fromEntries(RESULTS.map((r) => [r, by(r).length])) };
+}
+
+// The items the agent must answer: everything the tools' JSON can't decide on its own for this run.
+export function todo(list, raw, { local = false } = {}) {
+  const decided = new Set(Object.entries(EVALUATORS).filter(([, fn]) => fn(raw, { local })).map(([id]) => id));
+  return list.filter((i) => !decided.has(i.id)).map((i) => ({ id: i.id, severity: i.severity, title: i.title }));
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv.includes("--todo")) {
+  const args = process.argv.slice(2);
+  const opt = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : undefined; };
+  const dir = resolve(opt("--dir") ?? "launch");
+  const raw = { http: readJson(join(dir, "raw", "http.json")), pages: readJson(join(dir, "raw", "pages.json")), psi: readJson(join(dir, "raw", "psi.json")), redirects: readJson(join(dir, "raw", "redirects.json")) };
+  const list = parseList(readFileSync(join(HERE, "..", "launch-list.md"), "utf8"));
+  const local = opt("--url") ? isLocalHost(new URL(opt("--url")).hostname) : false;
+  const items = todo(list, raw, { local });
+  console.log(JSON.stringify({ agent_items: items.length, tools_decide: list.length - items.length, items }, null, 2));
+  process.exit(0);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

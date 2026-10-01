@@ -2,7 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { buildMarkdown, parseList, validate } from "./build.mjs";
+import { buildMarkdown, parseList, todo, validate } from "./build.mjs";
+import { EVALUATORS } from "./evaluate.mjs";
 
 const LIST = parseList(readFileSync(new URL("../launch-list.md", import.meta.url), "utf8"));
 const all = (result = "PASS") => LIST.map((i) => ({ id: i.id, result, evidence: "checked" }));
@@ -49,4 +50,15 @@ test("pipes in evidence can't break a table row, and PageSpeed for another URL i
   assert.match(markdown, /a \\\| b c/);
   assert.match(markdown, /PageSpeed measured `https:\/\/live.example\/`, not the audited site/);
   assert.match(markdown, /\| Mobile \| \*\*83\*\* \|/);
+});
+
+test("--todo lists exactly the items the tools can't decide for this run", () => {
+  const none = todo(LIST, {});
+  assert.equal(none.length, LIST.length, "with no tool output, the agent owns every item");
+  const raw = { http: { https: { redirects_to_https: true, https_status: 200 }, headers: {}, exposed: [], directory_listing: {}, xmlrpc: { open: false, status: 403 }, rest_users: { exposes_users: false, status: 401 }, robots: { status: 200, disallow_all: false, sitemap_line: true }, sitemap: null, not_found: { status: 404, themed: true }, search: { themed: true, no_results_marker: true }, favicon: {}, cache: { hit: false }, cdn: null, powered_by: null } };
+  const left = todo(LIST, raw).map((i) => i.id);
+  assert.ok(left.includes("SEC-1"), "wp-cli items stay with the agent");
+  assert.ok(!left.includes("SEC-11"), "xmlrpc is decided by http-audit");
+  assert.ok(left.every((id) => LIST.some((i) => i.id === id)));
+  assert.ok(Object.keys(EVALUATORS).every((id) => LIST.some((i) => i.id === id)), "every evaluator matches a list item");
 });

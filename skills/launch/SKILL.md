@@ -103,51 +103,55 @@ no other interpreter, no editing the guard. A denial means you stop and ask.
 8. **No git.** The skill never commits or pushes. The report files are left for the user.
 9. **When unsure, stop and ask.** This applies to unexpected output, a plugin that may be custom, or a value the list doesn't give. Never guess.
 
-## 0. Gather the target (detect first, ask at most once)
+## 0. Gather everything first: one message, typed answers
 
-**Re-check mode.** If `launch/report.md` already exists, the first question offers:
-- `Re-check what failed` (recommended): re-run the tools and only the agent checks that were `FAIL` or
-  `LOCAL`, then rebuild the report (step 5). This takes 1–2 minutes.
-- `Full audit`
+There are **exactly two interactions per run**: this intake message, and the `Launch fixes` click at
+the end. Never ask anything in between, never ask the same thing twice, never turn a value into options.
 
-Detect, without asking:
+**Detect first, without asking:**
 - **wp-cli:** `lando wp option get siteurl`, then `wp option get siteurl`. If Lando is installed but
   stopped, the first line of the approval list is `lando start`.
-- **Project name:** `Theme Name` in `$THEME/style.css`, or the theme folder name.
-- **Privacy page URL:** `wp option get wp_page_for_privacy_policy` returns an **ID**; turn it into the
-  URL with `wp post get <id> --field=url`. Zero means there is none.
+- **Project name:** `Theme Name` in `$THEME/style.css`.
+- **Privacy page:** `wp option get wp_page_for_privacy_policy` (an ID), then `wp post get <id> --field=url`.
+- **Terms page:** a published page whose slug contains `terms`, `termos` or `conditions`.
+- **Logo:** see **Logo** in `launch-list.md`.
+- **Contacts on the site:** run `page-audit.mjs` on the home page now and read `contacts` (`tel:`, `mailto:`, footer text).
+- **Admin email:** `wp user list --role=administrator --fields=user_login,user_email`.
+- **Timezone:** from `wp option get WPLANG` (`pt_BR` suggests `America/Sao_Paulo`).
+- **Default category:** `wp term list category --fields=term_id,slug,name`.
+- **Previous report:** whether `launch/report.md` exists.
 
-Then ask only what is still unknown, in **one plain chat message** (see **How to ask** below). Skip
-anything the user already gave in the command, for example `/launch https://acme.com`:
-- **`$URL`, the site to audit:** the public URL (live or staging), or the local `siteurl`. On a local
-  URL, public-only items come out `LOCAL`.
-- **`$PSI_URL`, the URL PageSpeed Insights tests:** it must be public, because Google can't reach
-  Lando. Suggest `$URL` when it is public; otherwise suggest "none, local estimate only".
-- **Migration, the old site:** its URL, a path to a file with the old URLs, or "none" if the site
-  isn't replacing an old one.
-- **Terms page URL:** WordPress has no setting for it. Suggest a published page whose slug looks like
-  terms, or "none".
+**Then send one plain chat message** (no `AskUserQuestion`) with every value numbered, the detected
+value or your suggestion after each, and `—` where there is nothing. End with the reply instruction:
 
-**How to ask.** There are two kinds of question, and they never mix:
-- **A value the user types** (a URL, an email, a file path, a name, a text) is asked in a **plain chat
-  message**, never as `AskUserQuestion` options. Number the values, put your suggestion after each,
-  and end with: "Reply with the values that differ, or `ok` to accept all." Then wait for the reply.
-  Example:
-  ```
-  1. Site to audit: http://acme.lndo.site (detected)
-  2. PageSpeed URL: none, local estimate only
-  3. Old site (migration): none
-  4. Terms page: https://acme.lndo.site/terms/ (found by slug)
-  Reply with the values that differ (e.g. "2: https://acme.com, 3: https://old-acme.com"), or ok.
-  ```
-  Use what the user writes as it is. Never turn a typed value into a list of options, and never ask
-  the same value again. If a reply is unclear, ask about that one value in plain text.
-- **A choice between fixed options** (re-check or full audit, the `Launch fixes` approval, skip or
-  apply something) uses `AskUserQuestion`.
+```
+Before I start, confirm or fill in (reply only what changes, e.g. "3 https://acme.com, 4 https://old.acme.com", or "ok"):
+1. Mode: full audit                      (or "re-check": only what failed in launch/report.md)
+2. Site to audit: http://acme.lndo.site  (detected)
+3. PageSpeed URL (public): —             (Google can't reach Lando; leave — for a local estimate)
+4. Old site, if this is a migration: —   (its URL, or a file with the old URLs)
+5. Terms page: —
+6. Logo file: —                          (for the site icon and share image)
+7. Inbox for the test email: luis@acme.com
+8. Client contacts (phone / email / address): —
+9. Admin's real email: luis@acme.com
+10. Timezone: America/Sao_Paulo
+11. Default category name: News
+```
+
+- Skip a number the user already gave in the command (for example `/launch https://acme.com`).
+- Use the reply exactly as written. "ok" accepts every suggestion. A value the user typed is never
+  re-asked and never offered as options.
+- A field left as `—` is **not** asked later: the item it serves gets its next step in the report
+  (for example, "SEO-11: give the old site's URL and run re-check").
+- If the reply is unreadable, ask once more in plain text for those numbers only.
+
+**Re-check mode** (field 1): re-run the tools and only the agent checks that were `FAIL` or `LOCAL`
+in `launch/report.md`, then rebuild the report. This takes 1–2 minutes.
 
 Remote wp-cli (Pantheon `terminus wp <site>.<env> -- …`, or SSH `wp --ssh=user@host:port/path …`)
-is used only when the user asks for the server to be checked. The key must already work: test it
-with `option get siteurl`.
+is used only when the user writes it in the reply. The key must already work: test it with
+`option get siteurl`.
 
 `$THEME` is the active theme root (the folder containing `.claude/`). Everything the skill generates
 goes in `launch/` at the theme root, so the user can delete it any time.
@@ -169,8 +173,9 @@ goes in `launch/` at the theme root, so the user can delete it any time.
    - Add `--w3c` to `page-audit` only for a public `$URL`, because it sends the HTML to validator.w3.org.
    - `psi.mjs` reads pagespeed.web.dev in headless Chrome (about 25 s, no API key). On a local URL,
      or when the page fails, it falls back to local Lighthouse and says why.
-2. Meanwhile, run the `wp …`, `grep` and `ls` checks of `launch-list.md`. These are the items the
-   tools can't see.
+2. Run `node .claude/skills/launch/report/build.mjs --todo --dir launch --url $URL`. It lists exactly
+   the items you must answer this run (the rest the tools decide). Run the `wp …`, `grep` and `ls`
+   checks of `launch-list.md` for those items only.
 3. **The tools decide their own items.** `report/evaluate.mjs` computes, from the JSON, every item
    the tools can see, with its evidence: HTTPS, headers, exposed files, robots, sitemap, canonical,
    H1, OG, alt, broken links, PageSpeed, migration, analytics, consent, forms, search and so on.
@@ -188,28 +193,21 @@ goes in `launch/` at the theme root, so the user can delete it any time.
 
 Nothing changes in this step, not even an "obvious" fix.
 
-## 2. Ask for the missing values (one round)
+## 2. Prepare the fixes (no questions)
 
-Collect every `FAIL` tagged `ask`, and ask for all of them in **one plain chat message** (see **How to
-ask** in step 0: numbered values, your suggestion after each, `ok` accepts all). Suggest:
-- the timezone, from the site language
-- the category name, from the site's content
-- an admin email at the client's domain, and the inbox for the MAIL-2 test email
-- a meta description you drafted from the page's real text, shown in full
-- the logo for the icon and OG image (see **Logo** in `launch-list.md`), with a background colour.
-  Run `brand-images.mjs`, open both PNGs and show them to the user before offering the fix.
-- **contacts (LIVE-3):** show `contacts.phones` and `contacts.emails` from `pages.json`, plus the
-  footer text, and ask the user to confirm them or write the right ones
-
-The user accepts or writes their own. Never invent a value the user hasn't seen. Mark a suggested
-value the user accepted without editing with `"suggested": true` in its result.
-
-**Two rounds of questions at most per run:** the values, then `Launch fixes`. Anything that turns up
-later goes into the report's next steps.
+Use the intake values: logo, inbox, contacts, admin email, timezone, category name, terms page.
+- **Logo:** run `brand-images.mjs`, then open both PNGs to check them.
+- **Texts you draft** (meta descriptions from the page's real text, a tagline): they go **inside the
+  commands** of the approval preview, so the user reads them before clicking. Approving accepts them.
+  Mark them `"suggested": true` in the results.
+- **Contacts (LIVE-3):** compare the user's values with `contacts` from `pages.json`. A field left
+  `—` makes LIVE-3 `MANUAL`, with the found values in the evidence.
+- A fix whose value is `—` isn't offered. Its item stays `FAIL`, and the report says which value to
+  give on the next run.
 
 ## 3. One approval for every fix
 
-Build the fix list from every `FAIL` tagged `fix` (with the values from step 2), **in this order**:
+Build the fix list from every `FAIL` tagged `fix` (with the intake values), **in this order**:
 1. `lando start`, if it's needed
 2. the backup (safety rule 3)
 3. the fixes, in the list's order
@@ -282,6 +280,8 @@ Don't commit anything.
 - Mark `PASS` without evidence, contradict a tool's result, or downgrade a `FAIL` to `MANUAL`/`LOCAL`
   to make the verdict look better.
 - Write or edit the report by hand.
+- Ask anything between the intake message and the `Launch fixes` click, ask a value twice, or offer
+  options for a value the user types.
 - Change anything before the user's approval.
 - Replace or rewrite `launch-list.md`, or any file the user didn't approve.
 - Touch WordPress core, third-party plugin code or `public/build/`.

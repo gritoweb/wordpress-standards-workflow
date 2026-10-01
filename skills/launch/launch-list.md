@@ -64,7 +64,7 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
   - Pass if: no plugin is `inactive`, and none of these is installed: `query-monitor`, `debug-bar*`, `fakerpress`, `user-switching`, `wp-reset`, `wp-crontrol`, `theme-check`, `show-current-template`, `what-the-file`, `hello`
   - Fix: `wp plugin delete <names…>`
 - [ ] **SEC-5** Required `auto`: No abandoned plugins
-  - Check: for each active plugin, open `https://api.wordpress.org/plugins/info/1.2/?action=plugin_information&request[slug]=<name>`
+  - Check: for each active plugin, `curl -sg "https://api.wordpress.org/plugins/info/1.2/?action=plugin_information&request%5Bslug%5D=<name>&request%5Bfields%5D%5Bsections%5D=0"` (the brackets must be encoded)
   - Pass if: `last_updated` is within 2 years and there is no `closed` error. Premium or custom plugins are `N/A`.
 - [ ] **SEC-6** Required `auto` `fix`: Required plugins active
   - Check: `wp plugin list --status=active --field=name`
@@ -194,7 +194,7 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
   - Pass if: only the active theme and its parent, if any
   - Fix: `wp theme delete <names…>`
 - [ ] **CON-7** Recommended `auto`: The Styleguide page is private
-  - Check: `wp post list --post_type=page --name=styleguide --fields=ID,post_status`, and `P.status` for `$URL/styleguide/`
+  - Check: `wp post list --post_type=page --pagename=styleguide --post_status=private,publish,draft --fields=ID,post_status` (pages match by `pagename`, not `name`), and `P.status` for `$URL/styleguide/`
   - Pass if: status `private` and HTTP 404, or no such page
 - [ ] **CON-8** Required `auto`: No broken links
   - Check: `P.links.broken` (from `page-audit.mjs … --links`)
@@ -292,8 +292,9 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
   - Check: `H.search`
   - Pass if: `themed` and `has_no_results_text` are true
 - [ ] **PAGE-3** Recommended `auto`: The password-protected page form is themed
-  - Check: `grep -rln "post_password_required\|the_password_form" $THEME/app $THEME/resources/views`
-  - Pass if: at least one match (the theme handles the form). Otherwise WordPress's bare form shows inside the theme.
+  - Check: `grep -rln "the_password_form" $THEME/app $THEME/resources/views | grep -v "partials/comments"`
+  - Pass if: at least one match: the theme renders or filters the password form. `post_password_required` alone
+    doesn't count, because the comments partial uses it to hide comments.
 - [ ] **PAGE-4** Recommended `auto`: Every public custom taxonomy has an archive template or `has_archive => false`
   - Check: `wp taxonomy list --public=1 --field=name` against the `$THEME/resources/views/taxonomy-*.blade.php` and `archive.blade.php` templates
 - [ ] **PAGE-5** Optional `auto`: Apple touch icon

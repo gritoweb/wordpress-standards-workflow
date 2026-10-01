@@ -2,6 +2,49 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — `launch` asks once, in plain text, and only the approval is a click
+
+### Changed
+- **Two interactions per run.** The developer's run had four:
+  - the target as options;
+  - the values again, because "Other" gave another selection;
+  - logo, email and contacts mid-audit;
+  - the approval.
+
+  Now the skill first detects what it can (siteurl, theme name, privacy
+  page, a terms page by slug, logo, contacts on the site, admin email,
+  timezone, default category). Then it sends **one plain message**, with
+  11 numbered fields and the suggestion for each. The developer types only
+  what changes, or `ok`.
+  - Mode (full or re-check) is one of the fields.
+  - A field left `—` is never asked later: its item gets a next step in
+    the report.
+  - Drafted texts (meta descriptions, tagline) appear inside the commands
+    of the `Launch fixes` preview, so the one click accepts them.
+- **`build.mjs --todo`** prints the items the agent must answer for this
+  run (the tools decide the rest), so it checks those from the start
+  instead of learning about them when the build refuses.
+
+### Fixed
+- **CON-7:** pages match by `pagename`, not `name`. With `--post_status`,
+  the private styleguide is found.
+- **SEC-5:** the plugin API URL encodes `request[slug]`, and curl runs
+  with `-g`. The bare brackets broke curl.
+- **PAGE-3:** only `the_password_form` counts, outside the comments
+  partial. The comments partial's `post_password_required` had made it a
+  false PASS.
+
+### Verified
+- `node --test "skills/launch/*/*.test.mjs"`: 33/33 pass (new: `--todo`).
+- On `luistest1300`, read-only:
+  - the new CON-7 command returns `6 private`, where the old one returned
+    nothing;
+  - the encoded SEC-5 URL returns `safe-svg 2026-09-22`;
+  - PAGE-3 finds no match, so it is FAIL and no longer a false PASS;
+  - `build.mjs --todo` lists 49 agent items and 24 decided by the tools.
+- In `SKILL.md`, `AskUserQuestion` is named only for the guard's
+  `Launch fixes` approval.
+
 ## 2026-10-01 — `launch` lets you type URLs and values instead of picking options
 
 ### Fixed
