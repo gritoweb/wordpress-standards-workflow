@@ -115,7 +115,7 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
 - [ ] **SEO-4** Required `auto` `fix` `ask`: Title and meta description on every key page
   - Check: `P.title`, `P.meta_description`, `duplicate_titles`
   - Pass if: every page has a title and a 50–160 character description, and no title is repeated
-  - Fix: home page: `wp option patch update wpseo_titles metadesc-home-wpseo "<text>"`. Other pages: `wp post meta update <id> _yoast_wpseo_metadesc "<text>"`. The agent drafts each text from the page's content, and the user accepts or edits it.
+  - Fix: `wp post update <id> --meta_input='{"_yoast_wpseo_metadesc":"<text>"}'` for each page, including a static front page. It must be `post update`, not `post meta update`, so that Yoast refreshes its index. Only a front page showing the latest posts uses `wp option patch update wpseo_titles metadesc-home-wpseo "<text>"`. The agent drafts each text from the page's content, and the user accepts or edits it.
 - [ ] **SEO-5** Required `auto`: Exactly one H1 per page
   - Check: `P.h1_count`
   - Pass if: 1 on every page. A fix is a template change, so the report names the page and the template.

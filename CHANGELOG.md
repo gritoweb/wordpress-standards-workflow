@@ -2,6 +2,25 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — Two launch fixes that didn't work on a real run
+
+### Fixed
+- **Local backup.** `lando wp db export ~/…` writes to the container's home,
+  which the host can't see, so the backup failed. The rule is now
+  `lando wp db export - > ~/launch-backup-…sql`, streamed to the host.
+- **Meta description (SEO-4).** `wp post meta update … _yoast_wpseo_metadesc`
+  stored the text, but Yoast kept serving no description because its index
+  only refreshes on save. The fix is `wp post update <id> --meta_input=…`,
+  for a static front page too.
+
+### Verified
+- Full `/launch` run on `luistest1300` (Lando) with 13 planted errors: 13/13
+  caught. 12 were fixed and re-checked after one approval; `debug.log` and
+  `backup.sql` were reported for the dev, as designed. The run took 6m41s.
+  It also found the header button still linking to the deleted sample page.
+- `wp post update 7 --meta_input=…` then `page-audit.mjs`: the home page's
+  `meta_description` is the new text.
+
 ## 2026-10-01 — The launch report reads professionally
 
 ### Changed

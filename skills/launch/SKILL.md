@@ -79,7 +79,7 @@ no other interpreter, no editing the guard. A denial means you stop and ask.
    the target and show it with the environment's name (local, staging or **PRODUCTION**). If the URL
    isn't what the user named, stop. Production gets the word **PRODUCTION** in the ask.
 3. **Back up before the first write**, on that same environment, and show the backup's path or ID:
-   - local: `lando wp db export ~/launch-backup-<site>-<date>.sql`, outside the web root
+   - local: `lando wp db export - > ~/launch-backup-<site>-<date>.sql`. Stream to the host: `~` inside `lando wp` is the container's home, which the host can't see.
    - Pantheon: `terminus backup:create <site>.<env> --element=db`
    - other remote: `wp db export ~/launch-backup-<date>.sql` in the user's home, **never** inside the web root (an exposed `.sql` is SEC-9's failure)
 
