@@ -109,7 +109,7 @@ footer.foot { margin-top: var(--s7); color: var(--faint); font-size: 12.5px; }
   .tabs, .copy { display: none !important; }
   .panel { display: block !important; }
   .card, .finding, figure { break-inside: avoid; box-shadow: none; }
-  .text figure img { max-height: 13cm; width: auto; }
+  .text figure img { max-height: 9cm; width: auto; }
 }
 `;
 

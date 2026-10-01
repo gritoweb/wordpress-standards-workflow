@@ -2,7 +2,7 @@
 // Builds the launch report from the agent's per-item results (JSON on stdin) plus the tools' raw JSON; counts and verdict are computed, never typed.
 // usage: node build.mjs [--dir launch] [--no-pdf] < results.json   |   node build.mjs --todo [--dir launch] [--url <audited url>]
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { printPdf, renderReport } from "./report.mjs";
 import { EVALUATORS, merge } from "./evaluate.mjs";
@@ -50,15 +50,17 @@ export function validate(input, list) {
 
 function pageSpeed(psi, target) {
   if (!psi) return ["## PageSpeed", "", "Not measured in this run."];
-  const row = (label, d) => d?.scores
-    ? `| ${label} | ${label === "Mobile" ? `**${d.scores.performance}**` : d.scores.performance} | ${d.scores.accessibility} | ${d.scores["best-practices"]} | ${d.scores.seo} | ${cell(d.metrics.lcp)} | ${cell(d.metrics.cls)} | ${cell(d.metrics.tbt)} |`
-    : `| ${label} | ${cell(d?.error ?? "not measured")} | | | | | | |`;
-  const out = ["## PageSpeed", "", "| Device | Performance | Accessibility | Best practices | SEO | LCP | CLS | TBT |", "|---|---|---|---|---|---|---|---|", row("Mobile", psi.mobile), row("Desktop", psi.desktop), ""];
+  const m = psi.mobile, d = psi.desktop, local = /local estimate/.test(psi.source);
+  const out = ["## PageSpeed", ""];
+  if (local) out.push("**Local estimate (Lighthouse on this machine), not the Google score.** Re-run once the site is public.", "");
+  if (m?.scores) out.push(`**Mobile ${m.scores.performance}** (minimum ${psi.min_mobile_score}: ${psi.mobile_pass ? "met" : "**not met**"}) · LCP ${m.metrics.lcp} · CLS ${m.metrics.cls} · TBT ${m.metrics.tbt} · Desktop ${d?.scores?.performance ?? "-"}${psi.borderline ? " · within 5 points of the minimum, run it again before deciding" : ""}`, "");
+  else out.push(`Mobile: ${cell(m?.error ?? "not measured")}`, "");
   const audited = target?.url ? new URL(target.url).host : null;
-  if (audited && new URL(psi.url).host !== audited) out.push(`PageSpeed measured \`${psi.url}\`, not the audited site (\`${target.url}\`).`, "");
-  out.push(`Minimum: ${psi.min_mobile_score} on mobile${psi.mobile_pass === false ? " (**not met**)" : ""}. Real users (Core Web Vitals): ${psi.mobile?.field_core_web_vitals ?? "not measured"}.`);
-  out.push(`Source: ${psi.source}. ${psi.report_url ? `Full report: [PageSpeed Insights](${psi.report_url})` : `Open in PageSpeed Insights: [mobile](${psi.psi_link}) · [desktop](${psi.psi_link_desktop})`}`);
-  if (psi.borderline) out.push("", "The mobile score is within 5 points of the minimum, and lab scores move between runs: run it again before deciding.");
+  if (audited && new URL(psi.url).host !== audited) out.push(`Measured \`${psi.url}\`, not the audited site.`, "");
+  if (psi.screenshot && existsSync(psi.screenshot)) out.push(`![PageSpeed, mobile](${basename(psi.screenshot)})`, "");
+  const links = psi.report_url ? `[PageSpeed Insights report](${psi.report_url})`
+    : [m?.report_file && `[Lighthouse mobile](${basename(m.report_file)})`, d?.report_file && `[Lighthouse desktop](${basename(d.report_file)})`, `[PageSpeed Insights](${psi.psi_link}) (when public)`].filter(Boolean).join(" · ");
+  out.push(`${links}${m?.field_core_web_vitals ? ` · Real users: ${m.field_core_web_vitals}` : ""}`);
   return out;
 }
 
@@ -73,34 +75,36 @@ function migration(r) {
   return out;
 }
 
+// Action-first: every item appears once, in the block that says what to do with it; passes collapse to one line per section.
 export function buildMarkdown(input, list, raw = {}) {
   const meta = new Map(list.map((i) => [i.id, i]));
-  const rows = input.items.map((r) => ({ ...meta.get(r.id), ...r }));
+  const order = new Map(list.map((i, n) => [i.id, n]));
+  const rows = input.items.map((r) => ({ ...meta.get(r.id), ...r })).sort((a, b) => order.get(a.id) - order.get(b.id));
   const by = (res) => rows.filter((r) => r.result === res);
-  const requiredFail = by("FAIL").filter((r) => r.severity === "Required");
-  const verdict = requiredFail.length ? `**Verdict: Not ready** (${requiredFail.length} required item${requiredFail.length > 1 ? "s" : ""} fail)`
-    : by("LOCAL").length ? `**Verdict: Ready locally** (${by("LOCAL").length} checks pending on the public URL or the launch environment)`
-    : "**Verdict: Ready to launch**";
-  const rank = { Required: 0, Recommended: 1, Optional: 2 };
-  const next = [...by("FAIL")].sort((a, b) => rank[a.severity] - rank[b.severity]).slice(0, 3);
-  const md = [`# Launch report: ${input.project}`, "", verdict, ""];
-  if (next.length) md.push(`**Next steps:** ${next.map((r, i) => `${i + 1}. **${r.id}** ${r.action}`).join(" ")}`, "");
-  md.push("| Result | Items |", "|---|---|", ...RESULTS.map((res) => `| ${res} | **${by(res).length}**${res === "FAIL" && by(res).length ? ` (${requiredFail.length} required)` : ""} |`), "");
-  md.push(...pageSpeed(raw.psi, input.target), "");
-  if (requiredFail.length) md.push("## Required items still failing", "", "| ID | Item | Evidence | What to do |", "|---|---|---|---|", ...requiredFail.map((r) => `| ${r.id} | ${cell(r.title)} | ${cell(r.evidence)} | ${cell(r.action)} |`), "");
+  const blockers = by("FAIL").filter((r) => r.severity === "Required"), shouldFix = by("FAIL").filter((r) => r.severity !== "Required");
+  const verdict = blockers.length ? "Not ready" : by("LOCAL").length ? "Ready locally" : "Ready to launch";
+  const counts = Object.fromEntries(RESULTS.map((r) => [r, by(r).length]));
+  const n = (k, label) => (counts[k] ? `${counts[k]} ${label}` : null);
+  const md = [`# Launch report: ${input.project}`, "",
+    `**${verdict}**${blockers.length ? ` · ${blockers.length} required to fix` : ""} · ${[n("FAIL", "fail"), n("FIXED", "fixed"), n("LOCAL", "to check on the public URL"), n("MANUAL", "manual"), n("PASS", "passed"), n("N/A", "n/a")].filter(Boolean).join(" · ")}`, ""];
+  const table = (items, withSeverity) => [`| ID | ${withSeverity ? "Severity | " : ""}Problem | Evidence | Do this |`, `|---|${withSeverity ? "---|" : ""}---|---|---|`,
+    ...items.map((r) => `| ${r.id} | ${withSeverity ? `${r.severity} | ` : ""}${cell(r.title)} | ${cell(r.evidence)}${r.suggested ? " (suggested value, confirm)" : ""} | ${cell(r.action)} |`), ""];
+  if (blockers.length) md.push("## Fix before launch", "", ...table(blockers, false));
   if (input.fixed?.length) md.push("## Fixed during this run", "", "| ID | Command | Re-check |", "|---|---|---|", ...input.fixed.map((f) => `| ${f.id} | \`${cell(f.command)}\` | ${cell(f.recheck)} |`), "", `Backup: ${input.backup ? `\`${cell(input.backup)}\`` : "none (nothing was changed)"}`, "");
+  md.push(...pageSpeed(raw.psi, input.target), "");
+  if (shouldFix.length) md.push("## Should fix", "", ...table(shouldFix, true));
   md.push(...migration(raw.redirects), "");
-  for (const section of [...new Set(list.map((i) => i.section))]) {
-    const sectionRows = rows.filter((r) => r.section === section).sort((a, b) => list.findIndex((i) => i.id === a.id) - list.findIndex((i) => i.id === b.id));
-    md.push(`## ${section}`, "", "| ID | Severity | Item | Result | Evidence |", "|---|---|---|---|---|",
-      ...sectionRows.map((r) => `| ${r.id} | ${r.severity} | ${cell(r.title)} | ${r.result} | ${cell(r.evidence)}${r.suggested ? " (suggested value, confirm)" : ""} |`), "");
-  }
-  const manual = by("MANUAL");
-  if (manual.length) md.push("## Manual checks", "", ...manual.map((r, i) => `${i + 1}. **${r.id}** ${r.title}: ${r.action ?? r.steps ?? r.evidence}`), "");
-  if (input.notes?.length) md.push("## Notes", "", ...input.notes.map((n) => `- ${n}`), "");
+  if (by("LOCAL").length) md.push("## Check on the public URL", "", "These can't be judged on a local site. Re-run `/launch` (re-check) on the live or staging URL.", "", "| ID | Item | What the local run saw |", "|---|---|---|", ...by("LOCAL").map((r) => `| ${r.id} | ${cell(r.title)} | ${cell(r.evidence)} |`), "");
+  if (by("MANUAL").length) md.push("## Manual checks", "", ...by("MANUAL").map((r, i) => `${i + 1}. **${r.id}** ${r.title}: ${r.action ?? r.steps ?? r.evidence}`), "");
+  const passed = [...new Set(list.map((i) => i.section))].map((sec) => [sec, by("PASS").filter((r) => r.section === sec)]).filter(([, xs]) => xs.length);
+  if (passed.length) md.push("## Passed", "", ...passed.map(([sec, xs]) => `- **${sec}** (${xs.length}): ${xs.map((r) => r.id).join(", ")}`), "", "Every result's evidence is in `results.json`.", "");
+  if (by("N/A").length) md.push(`**Not applicable:** ${by("N/A").map((r) => `${r.id} (${cell(r.evidence)})`).join("; ")}`, "");
+  if (input.notes?.length) md.push("## Notes", "", ...input.notes.map((x) => `- ${x}`), "");
   const t = input.target ?? {};
-  md.push("## How this was checked", "", `Target: ${t.environment ?? "?"} (\`${t.siteurl ?? "?"}\`). URL: ${t.url ?? "-"}. PageSpeed URL: ${t.psi_url ?? "-"}. Remote: ${t.remote ?? "none"}. Date: ${input.date ?? new Date().toISOString().slice(0, 10)}. Tools: http-audit, page-audit, psi${raw.redirects ? ", redirect-audit" : ""}.`);
-  return { markdown: md.join("\n") + "\n", verdict: requiredFail.length ? "Not ready" : by("LOCAL").length ? "Ready locally" : "Ready to launch", counts: Object.fromEntries(RESULTS.map((r) => [r, by(r).length])) };
+  md.push("---", "", `After fixing, run \`/launch\` again and choose **re-check**: only what failed is checked.`, "",
+    `Checked ${input.date ?? new Date().toISOString().slice(0, 10)} · target ${t.environment ?? "?"} (\`${t.siteurl ?? t.url ?? "?"}\`) · PageSpeed URL ${t.psi_url ?? "-"} · tools: http-audit, page-audit, psi${raw.redirects ? ", redirect-audit" : ""}`);
+  const results = rows.map(({ id, severity, title, result, evidence, action, suggested, source }) => ({ id, severity, title, result, evidence, action: action ?? null, suggested: !!suggested, decided_by: source ?? "agent" }));
+  return { markdown: md.join("\n") + "\n", verdict, counts, results };
 }
 
 // The items the agent must answer: everything the tools' JSON can't decide on its own for this run.
@@ -135,9 +139,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   input.items = merged.items;
   const errors = [...merged.errors, ...validate(input, list)];
   if (errors.length) { console.error("build: the results are incomplete or contradict the tools, nothing was written:\n- " + errors.join("\n- ")); process.exit(1); }
-  const { markdown, verdict, counts } = buildMarkdown(input, list, raw);
+  const { markdown, verdict, counts, results } = buildMarkdown(input, list, raw);
   const md = join(dir, "report.md"), html = join(dir, "report.html");
   writeFileSync(md, markdown);
+  writeFileSync(join(dir, "results.json"), JSON.stringify({ project: input.project, date: input.date ?? null, target: input.target ?? null, verdict, counts, results }, null, 2));
   writeFileSync(html, renderReport(markdown, { eyebrow: input.project, subtitle: "Pre-launch audit", baseDir: dir, meta: [["Date", input.date ?? new Date().toISOString().slice(0, 10)], ["URL", input.target?.url ? new URL(input.target.url).host : "-"], ["Verdict", verdict]] }));
   let pdf = null;
   if (!args.includes("--no-pdf")) { pdf = join(dir, "report.pdf"); try { printPdf(html, pdf); } catch (e) { console.error(`build: ${e.message}`); pdf = null; } }

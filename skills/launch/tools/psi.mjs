@@ -2,9 +2,9 @@
 // PERF-2 / LIVE-6: reads PageSpeed Insights from pagespeed.web.dev in headless Chrome (no API key), falling back to local Lighthouse.
 // usage: node psi.mjs <url> [--screenshot <file.png>]
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { findBrowser } from "../report/report.mjs";
 import { isLocalHost } from "./http-audit.mjs";
@@ -86,6 +86,25 @@ async function waitForPanel(evaluate, deadline) {
   return last;
 }
 
+// Crops the score gauges down to the end of the lab metrics, on the PSI page or on a Lighthouse HTML report alike.
+async function captureScores(send, evaluate, file) {
+  await evaluate(`[...document.querySelectorAll("button, a")].find((b) => /^ok, got it/i.test(b.textContent.trim()))?.click()`);
+  await sleep(400);
+  const box = await evaluate(`(() => {
+    const root = document.querySelector('[role="tabpanel"][data-tab-panel-active="true"]') ?? document;
+    // Skip the sticky header's copy of the gauges, which sits at the top of the page.
+    const gauge = [...root.querySelectorAll(".lh-gauge__wrapper")].find((g) => !g.closest(".lh-sticky-header"));
+    const top = gauge?.getBoundingClientRect();
+    const end = root.querySelector(".lh-metrics-container")?.getBoundingClientRect();
+    return top && end ? { x: end.left + scrollX - 24, y: top.top + scrollY - 70, width: end.width + 48, height: end.bottom - top.top + 100 } : null;
+  })()`);
+  const clip = box ? { x: Math.max(0, box.x), y: Math.max(0, box.y), width: box.width, height: Math.min(box.height, 1400), scale: 1 } : undefined;
+  const shot = await send("Page.captureScreenshot", { format: "png", captureBeyondViewport: true, ...(clip ? { clip } : {}) });
+  if (!shot.result?.data) { process.stderr.write(`psi: screenshot failed: ${JSON.stringify(shot.error ?? shot)}\n`); return null; }
+  writeFileSync(file, Buffer.from(shot.result.data, "base64"));
+  return file;
+}
+
 async function fromWeb(url, screenshot) {
   if (typeof WebSocket !== "function") throw new Error(`Node ${process.versions.node} has no built-in WebSocket (needs Node 22+)`);
   const chrome = findBrowser();
@@ -100,23 +119,7 @@ async function fromWeb(url, screenshot) {
     // The real-user (CrUX) block loads after the lab scores.
     for (let i = 0; i < 15 && !mobile.field_core_web_vitals; i++) { await sleep(1000); mobile = fromPanel(await evaluate(READ_PANEL)); }
     const reportUrl = (await evaluate("location.href")).replace(/form_factor=\w+/, "form_factor=mobile");
-    if (screenshot) {
-      // Close the cookie notice, then crop from the score gauges to the end of the lab metrics, which is what a reader looks for.
-      await evaluate(`[...document.querySelectorAll("button, a")].find((b) => /^ok, got it/i.test(b.textContent.trim()))?.click()`);
-      await sleep(400);
-      const box = await evaluate(`(() => {
-        const panel = document.querySelector('[role="tabpanel"][data-tab-panel-active="true"]');
-        // Skip the sticky header's copy of the gauges, which sits at the top of the page.
-        const gauge = [...(panel?.querySelectorAll(".lh-gauge__wrapper") ?? [])].find((g) => !g.closest(".lh-sticky-header"));
-        const top = gauge?.getBoundingClientRect();
-        const end = panel?.querySelector(".lh-metrics-container")?.getBoundingClientRect();
-        return top && end ? { y: top.top + scrollY - 70, height: end.bottom - top.top + 100 } : null;
-      })()`);
-      const clip = box ? { x: 170, y: Math.max(0, box.y), width: 1010, height: Math.min(box.height, 1400), scale: 1 } : undefined;
-      const shot = await send("Page.captureScreenshot", { format: "png", captureBeyondViewport: true, ...(clip ? { clip } : {}) });
-      if (shot.result?.data) writeFileSync(screenshot, Buffer.from(shot.result.data, "base64"));
-      else process.stderr.write(`psi: screenshot failed: ${JSON.stringify(shot.error ?? shot)} clip=${JSON.stringify(clip)}\n`);
-    }
+    const shotFile = screenshot ? await captureScores(send, evaluate, screenshot) : null;
     await evaluate(`document.getElementById("desktop_tab")?.click()`);
     const desktop = await waitForPanel(evaluate, Date.now() + 30000);
     const strip = ({ complete, page_error, ...rest }) => rest;
@@ -125,20 +128,35 @@ async function fromWeb(url, screenshot) {
       report_url: reportUrl,
       mobile: strip(mobile),
       desktop: desktop.complete && desktop.scores.performance != null ? strip(desktop) : { error: "desktop tab did not load" },
-      screenshot: screenshot ?? null,
+      screenshot: shotFile,
     };
   } finally { close(); }
 }
 
-function fromLighthouse(url, strategy) {
+// Lighthouse writes base.report.json and base.report.html; the HTML is kept next to the report as the full local evidence.
+function fromLighthouse(url, strategy, keepDir) {
   const dir = mkdtempSync(join(tmpdir(), "launch-lh-"));
-  const out = join(dir, "lh.json");
+  const base = join(dir, "lh");
   const chrome = findBrowser();
-  const args = ["-y", "lighthouse@12", url, "--output=json", `--output-path=${out}`, "--quiet", `--only-categories=${CATEGORIES.join(",")}`,
+  const args = ["-y", "lighthouse@12", url, "--output=json", "--output=html", `--output-path=${base}`, "--quiet", `--only-categories=${CATEGORIES.join(",")}`,
     "--chrome-flags=--headless=new --ignore-certificate-errors", ...(strategy === "desktop" ? ["--preset=desktop"] : [])];
   const r = spawnSync("npx", args, { encoding: "utf8", timeout: 240000, env: { ...process.env, ...(chrome ? { CHROME_PATH: chrome } : {}) } });
   if (r.status !== 0) throw new Error(`lighthouse exit ${r.status}: ${(r.stderr || "").trim().split("\n").pop()}`);
-  return summarize(JSON.parse(readFileSync(out, "utf8")));
+  const result = summarize(JSON.parse(readFileSync(`${base}.report.json`, "utf8")));
+  if (keepDir) { const html = join(keepDir, `lighthouse-${strategy}.html`); copyFileSync(`${base}.report.html`, html); result.report_file = html; }
+  return result;
+}
+
+async function shootFile(htmlFile, screenshot) {
+  const chrome = findBrowser();
+  if (!chrome || typeof WebSocket !== "function") return null;
+  const { send, evaluate, close } = await openChrome(chrome);
+  try {
+    await send("Page.enable");
+    await send("Page.navigate", { url: `file://${htmlFile}` });
+    for (let i = 0; i < 20 && !(await evaluate(`!!document.querySelector(".lh-metrics-container")`)); i++) await sleep(500);
+    return await captureScores(send, evaluate, screenshot);
+  } finally { close(); }
 }
 
 export async function psi(url, { screenshot } = {}) {
@@ -151,9 +169,11 @@ export async function psi(url, { screenshot } = {}) {
   }
   if (!result) {
     result = { source: `Lighthouse (local estimate, re-run on PageSpeed Insights). Reason: ${fallbackReason}`, report_url: null, screenshot: null };
+    const keepDir = screenshot ? dirname(screenshot) : null;
     for (const strategy of ["mobile", "desktop"]) {
-      try { result[strategy] = fromLighthouse(url, strategy); } catch (e) { result[strategy] = { error: e.message }; }
+      try { result[strategy] = fromLighthouse(url, strategy, keepDir); } catch (e) { result[strategy] = { error: e.message }; }
     }
+    if (screenshot && result.mobile.report_file) result.screenshot = await shootFile(result.mobile.report_file, screenshot);
   }
   // An estimate stands in only where Google can't reach (local URLs); on a public URL it is shown but never decides PERF-2.
   result.decisive = !fallbackReason || fallbackReason.startsWith("local URL");

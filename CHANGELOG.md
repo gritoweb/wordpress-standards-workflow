@@ -2,6 +2,50 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — The launch report is an action list, and PageSpeed always has its picture
+
+### Fixed
+- **The PageSpeed screenshot never reached the report.** `build.mjs`
+  replaced the hand-written report but never emitted the image line, even
+  when `pagespeed-mobile.png` existed. A room review (Sonnet) found it,
+  and `grep` confirmed 0 references in `build.mjs`. The local Lighthouse
+  fallback made no image at all. Now:
+  - the screenshot is embedded whenever its file exists;
+  - the fallback writes Lighthouse's own HTML reports
+    (`launch/lighthouse-mobile.html`, `-desktop.html`), and the same crop
+    code (`captureScores`) shoots their gauges and metrics, in the same
+    picture as pagespeed.web.dev;
+  - a local estimate is labelled in bold: not the Google score.
+
+### Changed
+- **The report says what to do, once per item.** The same failure used to
+  appear in "Next steps", "Required items still failing" and its section
+  table, MANUAL items appeared twice, and all 73 rows were printed. The
+  new order is:
+  1. verdict line
+  2. **Fix before launch**
+  3. **Fixed during this run**
+  4. **PageSpeed**
+  5. **Should fix**
+  6. **Migration**
+  7. **Check on the public URL**
+  8. **Manual checks**
+  9. **Passed**, as one line of IDs per section
+  10. "run `/launch` re-check after fixing"
+
+  The full evidence of every item goes to `launch/results.json`. A real
+  report went from 175 to 68 lines. The closing chat message lists only
+  the items to fix.
+
+### Verified
+- `node --test "skills/launch/*/*.test.mjs"`: 33/33 pass. The new tests
+  check that each item appears exactly once, that the screenshot line is
+  emitted when the file exists, and the local-estimate label and Lighthouse
+  links.
+- The fallback on a local test page wrote `pagespeed-mobile.png`
+  (gauges + metrics) and both Lighthouse HTML reports in 27 s. The built
+  PDF shows Fix before launch first and the PageSpeed picture embedded.
+
 ## 2026-10-01 — `launch` asks once, in plain text, and only the approval is a click
 
 ### Changed

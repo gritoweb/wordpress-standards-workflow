@@ -1,7 +1,9 @@
 // node --test "skills/launch/report/*.test.mjs" — the report builder: completeness check, computed counts and verdict.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { buildMarkdown, parseList, todo, validate } from "./build.mjs";
 import { EVALUATORS } from "./evaluate.mjs";
 
@@ -26,15 +28,21 @@ test("an incomplete or malformed result set is refused, naming what is wrong", (
   assert.ok(errors.some((e) => /SEO-2 appears twice/.test(e)) && errors.some((e) => /SEO-2: a FAIL needs an action/.test(e)));
 });
 
-test("counts and verdict are computed: a required FAIL means Not ready; only LOCAL left means Ready locally", () => {
+test("verdict is computed and every item appears once, in the block that says what to do", () => {
   const items = all();
-  items.find((i) => i.id === "SEC-1").result = "FAIL";
-  Object.assign(items.find((i) => i.id === "SEC-1"), { evidence: "`admin` exists", action: "create a new admin, delete `admin`" });
+  Object.assign(items.find((i) => i.id === "SEC-1"), { result: "FAIL", evidence: "`admin` exists", action: "create a new admin, delete `admin`" });
+  Object.assign(items.find((i) => i.id === "SEC-17"), { result: "FAIL", evidence: "x-powered-by: Acorn", action: "remove the header" });
   items.find((i) => i.id === "SEC-7").result = "LOCAL";
+  Object.assign(items.find((i) => i.id === "LIVE-7"), { result: "MANUAL", action: "test in four browsers" });
   let r = buildMarkdown({ project: "Acme", items }, LIST);
-  assert.equal(r.verdict, "Not ready"); assert.equal(r.counts.FAIL, 1); assert.equal(r.counts.LOCAL, 1);
-  assert.match(r.markdown, /\*\*Next steps:\*\* 1\. \*\*SEC-1\*\* create a new admin/);
-  assert.match(r.markdown, /## Required items still failing[\s\S]*\| SEC-1 \|/);
+  assert.equal(r.verdict, "Not ready"); assert.equal(r.counts.FAIL, 2); assert.equal(r.counts.LOCAL, 1);
+  assert.match(r.markdown, /\*\*Not ready\*\* · 1 required to fix/);
+  assert.match(r.markdown, /## Fix before launch[\s\S]*\| SEC-1 \|[\s\S]*## Should fix[\s\S]*\| SEC-17 \| Recommended/);
+  assert.match(r.markdown, /## Check on the public URL[\s\S]*\| SEC-7 \|/);
+  assert.match(r.markdown, /## Manual checks\n\n1\. \*\*LIVE-7\*\*/);
+  for (const id of ["SEC-1", "SEC-17", "SEC-7", "LIVE-7"]) assert.equal(r.markdown.split(new RegExp(`\\b${id}\\b`)).length - 1, 1, `${id} appears exactly once`);
+  assert.doesNotMatch(r.markdown, /- \*\*Security\*\* \(\d+\):[^\n]*\bSEC-1\b,/, "a failing item is not listed as passed");
+  assert.equal(r.results.find((x) => x.id === "SEC-1").result, "FAIL");
   items.find((i) => i.id === "SEC-1").result = "FIXED";
   r = buildMarkdown({ project: "Acme", items }, LIST);
   assert.equal(r.verdict, "Ready locally");
@@ -42,14 +50,20 @@ test("counts and verdict are computed: a required FAIL means Not ready; only LOC
   assert.equal(buildMarkdown({ project: "Acme", items }, LIST).verdict, "Ready to launch");
 });
 
-test("pipes in evidence can't break a table row, and PageSpeed for another URL is called out", () => {
+test("pipes in evidence can't break a table row; PageSpeed shows its screenshot and calls out another URL", () => {
   const items = all();
-  items[0].evidence = "a | b\nc";
-  const psi = { url: "https://live.example/", min_mobile_score: 70, mobile_pass: true, source: "PageSpeed Insights (pagespeed.web.dev)", report_url: "https://pagespeed.web.dev/analysis/x", mobile: { scores: { performance: 83, accessibility: 100, "best-practices": 100, seo: 92 }, metrics: { lcp: "4.1 s", cls: "0", tbt: "30 ms" }, field_core_web_vitals: "No data" } };
+  Object.assign(items[0], { result: "FAIL", evidence: "a | b\nc", action: "fix" });
+  const dir = mkdtempSync(join(tmpdir(), "launch-build-"));
+  writeFileSync(join(dir, "pagespeed-mobile.png"), "png");
+  const psi = { url: "https://live.example/", min_mobile_score: 70, mobile_pass: true, source: "PageSpeed Insights (pagespeed.web.dev)", report_url: "https://pagespeed.web.dev/analysis/x", screenshot: join(dir, "pagespeed-mobile.png"), mobile: { scores: { performance: 83, accessibility: 100, "best-practices": 100, seo: 92 }, metrics: { lcp: "4.1 s", cls: "0", tbt: "30 ms" }, field_core_web_vitals: "No data" } };
   const { markdown } = buildMarkdown({ project: "Acme", items, target: { url: "http://acme.lndo.site/" } }, LIST, { psi });
   assert.match(markdown, /a \\\| b c/);
-  assert.match(markdown, /PageSpeed measured `https:\/\/live.example\/`, not the audited site/);
-  assert.match(markdown, /\| Mobile \| \*\*83\*\* \|/);
+  assert.match(markdown, /Measured `https:\/\/live.example\/`, not the audited site/);
+  assert.match(markdown, /\*\*Mobile 83\*\* \(minimum 70: met\)/);
+  assert.match(markdown, /!\[PageSpeed, mobile\]\(pagespeed-mobile.png\)/);
+  const local = buildMarkdown({ project: "Acme", items }, LIST, { psi: { ...psi, source: "Lighthouse (local estimate, re-run on PageSpeed Insights). Reason: local URL", report_url: null, mobile: { ...psi.mobile, report_file: join(dir, "lighthouse-mobile.html") } } }).markdown;
+  assert.match(local, /\*\*Local estimate \(Lighthouse on this machine\), not the Google score\.\*\*/);
+  assert.match(local, /\[Lighthouse mobile\]\(lighthouse-mobile.html\)/);
 });
 
 test("--todo lists exactly the items the tools can't decide for this run", () => {

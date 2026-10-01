@@ -262,16 +262,22 @@ JSON
   your results and run it again. Never work around it by writing the report by hand.
 - It prints the verdict and counts as JSON. The verdict is computed: **Ready to launch** only with no
   Required `FAIL` and nothing `LOCAL`.
+- The report is action-first and never repeats an item: **Fix before launch** (required fails), **Fixed
+  during this run**, **PageSpeed** (with the screenshot from pagespeed.web.dev or, for a local
+  estimate, from Lighthouse's own report, saved as `launch/lighthouse-*.html`), **Should fix**,
+  **Migration**, **Check on the public URL** (LOCAL), **Manual checks**, then **Passed** as one line per
+  section. Every item's evidence is in `launch/results.json`.
+- `notes` are only for what no item says. Don't repeat an item's evidence or action there.
 
 ## 6. Close
 
-Tell the user:
-- the verdict
-- the counts
-- the PageSpeed mobile score, with its report link
-- what was fixed
-- the required items still failing, each with its next step
+Tell the user, briefly:
+- the verdict line from the report
+- the **Fix before launch** items, each with its action
+- the PageSpeed mobile score (and whether it is a local estimate)
 - `launch/report.pdf`
+
+Don't repeat the whole report in the chat.
 
 Don't commit anything.
 
