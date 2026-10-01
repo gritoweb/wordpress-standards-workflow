@@ -17,6 +17,12 @@ Notable changes to the GritoWeb WordPress standards.
   before removing `admin`, and `--reassign` is always used, so nobody gets
   locked out. It stops if a fix fails or the site answers 5xx. No secrets
   or emails go into the report, and it never touches git.
+- **Enforced guard (`skills/launch/guard/`).** The skill registers a
+  `PreToolUse` hook. Read commands run. Any write (wp-cli, ssh, terminus,
+  rm, curl with data…) is denied until the **user** approves the exact
+  command with `! node .claude/skills/launch/guard/approve.mjs`, and each
+  approval runs once and expires in 2 hours. Commands that wipe sites or
+  databases never run from the agent.
 
 ### Changed
 - **`docs/launch-list.md` rewritten for verification.** Every item has an ID,
@@ -32,7 +38,11 @@ Notable changes to the GritoWeb WordPress standards.
   - one H1, canonical and `alt` on key pages
 
 ### Verified
-- `node --test "skills/launch/report/*.test.mjs"`: 4/4 pass (escaping, tables, English page, PDF).
+- `node --test "skills/launch/*/*.test.mjs"`: 10/10 pass (guard: reads, writes, never-run list,
+  self-approval blocked, single-use approval, unreadable input blocks; report: escaping, tables, PDF).
+- In a real `claude -p` session in `bypassPermissions` mode, after loading the skill:
+  `rm marker.txt` was denied and the file was kept, `rm -rf store` was blocked, and `ls` ran.
+  After the user approved, `rm marker.txt` ran once, and the approval was consumed.
 - A sample report renders with the same CSS as the reference report (only
   unused tab ids differ) and prints to PDF.
 

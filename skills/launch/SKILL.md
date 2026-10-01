@@ -2,6 +2,12 @@
 name: launch
 description: >
   Pre-launch audit of a WordPress site against docs/launch-list.md. It checks every item it can (wp-cli, theme files, HTTP on the public URL), asks before fixing anything it knows how to fix (local or remote, one approval per remote command), re-checks, and writes a pass/fail/fixed/manual report as Markdown + HTML + PDF. Use when the user says "/launch", "launch check", "is the site ready to go live?", "pre-launch audit" or "go-live checklist".
+hooks:
+  PreToolUse:
+    - matcher: "Bash|Write|Edit|MultiEdit|NotebookEdit"
+      hooks:
+        - type: command
+          command: 'node "$CLAUDE_PROJECT_DIR/.claude/skills/launch/guard/guard.mjs" || exit 2'
 ---
 
 # /launch: pre-launch audit and report
@@ -13,6 +19,35 @@ marks an item as passed without evidence. If the list and this file disagree,
 the list wins.
 
 Everything the skill writes (the report, chat summaries of results, commit text) is **English**.
+
+## The guard (enforced, not advisory)
+
+Loading this skill registers a `PreToolUse` hook (`guard/guard.mjs`) for the rest of the session.
+It sorts every Bash command into one of three groups:
+
+- **Reads** run: the read-only wp-cli, Terminus and SSH commands, `curl` GET/HEAD, `grep`, `ls`.
+- **Writes are denied until the USER approves them.** This covers a wp-cli write, `rm`, `mv`,
+  `sed -i`, `scp`, `rsync`, `mysql`, interactive `ssh`, a remote non-read command, `curl` with data,
+  `git push`, and `bash -c`/`eval` wrapping any of these.
+- **Never** runs, even if it was approved:
+  - `rm -r`
+  - `wp db reset|drop|clean`, `wp site empty|delete`
+  - `terminus env:wipe|site:delete|env:clone-content`
+  - `DROP`/`TRUNCATE` SQL
+  - `mkfs`, `dd`, `chmod -R 777`
+
+  The user runs these by hand if they are ever really needed.
+
+How a write gets approved:
+1. Write the exact commands, one per line, to `.launch-pending.txt` in the project root, and show
+   the list to the user with what each command does and where it runs.
+2. Ask the user to type `! node .claude/skills/launch/guard/approve.mjs`. That approves all the
+   listed commands. To approve only some of them, the user adds their numbers: `… approve.mjs 1 3`.
+3. Run each approved command **exactly** as written. Every approval works once and expires in 2 hours.
+
+You can't approve anything yourself. The guard denies any tool call that touches
+`approve.mjs` or `~/.launch-guard/`. Never try to get around a denial: no rewording the command,
+no other interpreter, no editing the guard. A denial means you stop and ask.
 
 ## Safety rules (they override every step below)
 
@@ -98,7 +133,7 @@ the ID, what's wrong, the **exact command** that will run, and where it runs (lo
 2. SEO-1  search engines discouraged    REMOTE  terminus wp acme.live -- option update blog_public 1
 ```
 
-- Ask which to apply: numbers, `all local`, or `none`.
+- Ask which to apply: numbers, `all local`, or `none`. Then write the chosen commands to `.launch-pending.txt`, and have the user approve them with the guard (above).
 - A fix that needs a value the list doesn't give (a new admin login and email, a timezone, a theme
   name) is asked for. **Never invent it.**
 - `CON-2` (drafts and trash): show the titles before deleting, because a draft can be real work.
@@ -106,10 +141,10 @@ the ID, what's wrong, the **exact command** that will run, and where it runs (lo
 
 ## 3. Apply what was approved
 
-- **Local** fixes run after the user's approval in step 2.
-- **Remote** fixes (`terminus wp … -- <write>`, anything that changes the server) need a **separate
-  explicit OK for each command**, shown in full just before it runs, even if the user said "all".
-  This is the kit's rule (`CLAUDE.md`: never write to a remote environment without explicit permission).
+- Run only commands the user approved through the guard. The backup (safety rule 3) is the first line of the pending list.
+- **Remote** fixes (`terminus wp … -- <write>`, `wp --ssh=…`, `ssh … wp …`) go in the pending list **one
+  per line, never chained**, so the user approves each one on its own. This is the kit's rule (`CLAUDE.md`:
+  never write to a remote environment without explicit permission).
 - Run one fix at a time. If one fails, stop, show the output, and ask before going on.
 - After the fixes, **re-run the Check** of every fixed item. An item is `🔧 Fixed` only if its
   re-check passes. Otherwise it stays `❌ Fail`, with the new evidence.
