@@ -28,7 +28,6 @@ global-skills/
   commit-rules.md                  # commit convention — NOT per-project; recommend installing to ~/.claude/skills/ (user-level)
 docs/
   examples/                        # reference blocks, one file each + README with the shared rules — imported to <project>/docs/
-  launch-list.md                   # pre-launch checklist — imported to <project>/docs/
 gitignore.example                  # base .gitignore template — imported as <project>/.gitignore (only if missing)
 prettier.config.example.js         # Prettier + Tailwind/Blade class sorting — copied to <theme>/prettier.config.js
 install-git-hooks.example.mjs      # pre-commit hook installer — copied to <theme>/scripts/install-git-hooks.mjs
@@ -74,9 +73,8 @@ the manifest **is** the source of truth either way.
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy the whole folder — block screenshot generator (Chrome headless → webp + svg fallback) |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — adds a tab to the Site Settings page (Secure Custom Fields), only when asked |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy the whole folder — builds the css-foundation-wizard files from a Figma file (inventory, foundation, components) |
-| `skills/launch/` | `<theme>/.claude/skills/launch/` | Copy the whole folder — runs `docs/launch-list.md`, fixes what you approve, writes the launch report (HTML + PDF, Node 18+, no packages) |
+| `skills/launch/` | `<theme>/.claude/skills/launch/` | Copy the whole folder — runs its own `launch-list.md` (the pre-launch checklist), fixes what you approve, writes the launch report (HTML + PDF, Node 18+, no packages) |
 | `docs/examples/` | `<theme>/docs/examples/` | Reference blocks the AI uses for grounding: `README.md` (shared rules) + one file per block |
-| `docs/launch-list.md` | `<theme>/docs/launch-list.md` | Pre-launch checklist for go-live |
 | `docs/kit-log.md` | `<theme>/docs/kit-log.md` | Only if absent — the project's log of what the kit got wrong or lacked |
 | `docs/site-settings-pattern.md` | `<theme>/docs/site-settings-pattern.md` | The Site Settings pattern (SCF page, empty by default; tabs on request) |
 | `docs/editor-fidelity-checklist.md` | `<theme>/docs/editor-fidelity-checklist.md` | Canvas fidelity checklist |
@@ -128,7 +126,6 @@ cp -R "$KIT/skills/html-qa-smoketest" .claude/skills/
 cp -R "$KIT/skills/create-block" .claude/skills/
 cp -R "$KIT/skills/launch" .claude/skills/
 cp -r "$KIT/docs/examples"     ./docs/examples
-cp "$KIT/docs/launch-list.md"  ./docs/launch-list.md
 cp -n "$KIT/docs/kit-log.md"    ./docs/kit-log.md
 # only if the project has no .gitignore yet:
 cp "$KIT/gitignore.example" ./.gitignore
@@ -246,7 +243,7 @@ Composer and Node run on the **host**; Lando only serves WordPress.
 5. Scaffold Sage into the theme dir, **naming the theme after the project —
    not `sage`**. Every `<theme>` placeholder below is that name (e.g.
    `acme-2026`); shipping a theme still called `sage` is a launch blocker
-   (see `docs/launch-list.md` › Theme identity).
+   (see `.claude/skills/launch/launch-list.md` › Theme identity).
    ```bash
    cd wp-content/themes
    composer create-project roots/sage <theme>

@@ -1,7 +1,7 @@
 ---
 name: launch
 description: >
-  Pre-launch audit of a WordPress site against docs/launch-list.md. It checks every item it can (wp-cli, theme files, HTTP on the public URL), asks before fixing anything it knows how to fix (one user approval for the whole ordered list of commands, enforced by a hook), re-checks, and writes a pass/fail/fixed/manual report as Markdown + HTML + PDF. Use when the user says "/launch", "launch check", "is the site ready to go live?", "pre-launch audit" or "go-live checklist".
+  Pre-launch audit of a WordPress site against its own launch-list.md. It checks every item it can (wp-cli, theme files, HTTP on the public URL), asks before fixing anything it knows how to fix (one user approval for the whole ordered list of commands, enforced by a hook), re-checks, and writes a pass/fail/fixed/manual report as Markdown + HTML + PDF. Use when the user says "/launch", "launch check", "is the site ready to go live?", "pre-launch audit" or "go-live checklist".
 hooks:
   PreToolUse:
     - matcher: "Bash|Write|Edit|MultiEdit|NotebookEdit"
@@ -12,7 +12,7 @@ hooks:
 
 # /launch: pre-launch audit and report
 
-The source of truth is **`docs/launch-list.md`**. Every item there has an ID,
+The source of truth is **`launch-list.md` in this skill's folder** (`.claude/skills/launch/launch-list.md`). It is read-only: if it is missing or has no item IDs, stop and ask. Never replace or rewrite it. Every item there has an ID,
 tags (`auto`, `fix`, `manual`), a **Check**, a **Pass if** and sometimes a
 **Fix**. This skill runs those checks. It never invents items, and it never
 marks an item as passed without evidence. If the list and this file disagree,
@@ -54,7 +54,7 @@ no other interpreter, no editing the guard. A denial means you stop and ask.
 ## Safety rules (they override every step below)
 
 1. **Only listed commands run.** The check phase runs only the **Check** commands from
-   `docs/launch-list.md`. These are read-only: `wp … get|list|check-update|config get`,
+   `launch-list.md`. These are read-only: `wp … get|list|check-update|config get`,
    `curl` GET/HEAD, `grep`, `ls`, `head`. The fix phase runs only that item's **Fix**.
    Anything else that writes needs its own explicit ask, even when it looks harmless. That includes:
    - `wp db query` with UPDATE/DELETE/INSERT, `wp search-replace`, `wp db import|reset`
@@ -107,7 +107,7 @@ Ask the user for the following, and wait for the answers:
 
 ## 1. Run the checks
 
-Go through `docs/launch-list.md` section by section. For each item tagged `auto`:
+Go through `launch-list.md` section by section. For each item tagged `auto`:
 
 - Run the **Check** exactly as written: `lando wp …` locally, `terminus wp … -- …` remotely,
   `curl` against `$URL`, `grep`/`ls` in `$THEME`.

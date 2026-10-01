@@ -73,7 +73,7 @@ project:
 
 If `Text Domain` is missing, or either value is still `sage`, **bail out**: the
 theme's identity hasn't been claimed yet (`project-init` › Phase 3,
-`docs/launch-list.md` › Theme identity). Anything scaffolded now would bake the
+`.claude/skills/launch/launch-list.md` › Theme identity). Anything scaffolded now would bake the
 wrong domain/path into every file.
 
 ### Required infra (skill bootstraps if missing)

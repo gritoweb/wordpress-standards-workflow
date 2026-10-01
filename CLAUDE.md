@@ -44,9 +44,10 @@
 
 ## Project docs
 
-The kit's docs live in `docs/` (reference blocks, launch list, kit log, Site
-Settings pattern). Projects set up before 2026-09-25 keep them in `_docs/`:
-read there when `docs/` doesn't have the file.
+The kit's docs live in `docs/` (reference blocks, kit log, Site Settings
+pattern). Projects set up before 2026-09-25 keep them in `_docs/`: read
+there when `docs/` doesn't have the file. The launch checklist ships inside
+the `launch` skill (`.claude/skills/launch/launch-list.md`).
 
 ---
 

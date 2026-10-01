@@ -2,7 +2,7 @@
 
 Pre-launch verification for WordPress sites built on the GritoWeb standards.
 Run it before any production go-live. The `launch` skill
-(`.claude/skills/launch/`) reads this file, checks every item it can, asks
+reads this file (it ships in the skill's folder), checks every item it can, asks
 before fixing anything, and writes the report. You can also tick items by hand.
 
 **Severity**

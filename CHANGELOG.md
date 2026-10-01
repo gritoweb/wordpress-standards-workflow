@@ -2,6 +2,22 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — The launch checklist ships inside the `launch` skill
+
+### Changed
+- **`docs/launch-list.md` moved to `skills/launch/launch-list.md`.** The
+  skill read the list from the project's `docs/`. When a project updated
+  only its skills, it kept the old list (no IDs), and on the first real run
+  the agent replaced the project's file to have something to check. Now the
+  list travels with the skill, the skill treats it as read-only (if it's
+  missing or malformed, the skill stops and asks), and `project-init` no
+  longer copies it to `docs/`. An old `docs/launch-list.md` in a project is
+  simply unused.
+
+### Verified
+- `grep -rn "docs/launch-list"` over the kit (outside CHANGELOG and the
+  dated design notes) returns nothing.
+
 ## 2026-10-01 — `launch` skill and a launch list the AI can check
 
 ### Added
