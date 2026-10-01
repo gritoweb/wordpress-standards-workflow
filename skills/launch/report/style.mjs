@@ -87,6 +87,8 @@ h1.title { margin: var(--s2) 0 var(--s3); font-size: clamp(26px, 4vw, 34px); lin
 .text pre { position: relative; font: var(--mono); background: var(--sunken); border: 1px solid var(--line); padding: var(--s3) var(--s4); border-radius: var(--r2); overflow-x: auto; margin: 0 0 var(--s3); }
 .text pre code { background: none; padding: 0; }
 .text blockquote { margin: 0 0 var(--s3); padding: var(--s1) var(--s4); border-left: 3px solid var(--line-strong); color: var(--muted); }
+.text figure { margin: 0 0 var(--s3); }
+.text figure img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: var(--r2); }
 .text hr { border: 0; border-top: 1px solid var(--line); margin: var(--s5) 0; }
 .text .table { overflow-x: auto; margin: 0 0 var(--s3); border: 1px solid var(--line); border-radius: var(--r2); }
 .text table { border-collapse: collapse; width: 100%; font-size: 14px; }
@@ -106,7 +108,8 @@ footer.foot { margin-top: var(--s7); color: var(--faint); font-size: 12.5px; }
   .page { padding: 0; max-width: none; }
   .tabs, .copy { display: none !important; }
   .panel { display: block !important; }
-  .card, .finding { break-inside: avoid; box-shadow: none; }
+  .card, .finding, figure { break-inside: avoid; box-shadow: none; }
+  .text figure img { max-height: 13cm; width: auto; }
 }
 `;
 

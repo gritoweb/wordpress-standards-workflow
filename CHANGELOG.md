@@ -2,6 +2,51 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — PageSpeed from pagespeed.web.dev, no API key; faster, quieter runs
+
+Asking every developer for a PageSpeed API key was a bad experience, and
+the keyless API answered 429 because the shared daily quota ran out.
+
+### Changed
+- **`psi.mjs` reads pagespeed.web.dev the way a person would.**
+  - It drives headless Chrome over the DevTools protocol (Node 22+ built-in
+    WebSocket, no packages) with a normal browser user agent. The default
+    headless one made the analysis fail with a 4xx.
+  - It returns the mobile and desktop scores, the lab metrics, the
+    real-user Core Web Vitals verdict and the shareable report link.
+  - It crops a screenshot of the score gauges and lab metrics.
+  - A local URL, or a page that fails or changes layout, falls back to
+    local Lighthouse, and `source` says why.
+  - The API path and `PAGESPEED_API_KEY` are gone.
+  - `borderline` flags a score within 5 points of 70, because lab scores
+    move between runs. The same page scored 49 to 77 across runs.
+- **The report embeds the PageSpeed screenshot.** `![alt](file.png)` next
+  to the report becomes a data URI, so the HTML and the PDF stay single
+  files. URLs, absolute paths, `..` and missing files stay text. In print,
+  the image fits under the PageSpeed table.
+- **The skill asks less and runs faster.**
+  - It detects `siteurl` and the project name.
+  - It asks once for the site to audit and a separate public URL for
+    PageSpeed, so you can audit Lando and measure the staging or live URL.
+  - It runs the three tools in parallel into `docs/.launch/`: 37 s in total,
+    where PageSpeed dominates.
+  - It keeps to two rounds of questions.
+  - It offers a "re-check what failed" mode when a report already exists.
+  - The verdict gets "Next steps", and accepted suggested values are marked
+    "(suggested, confirm)".
+
+### Verified
+- `node --test "skills/launch/*/*.test.mjs"`: 20/20 pass (new: reading the
+  PSI panel, local image embedding and its refusals).
+- `psi.mjs https://wordpress.org/`: read from pagespeed.web.dev in 25 s, with
+  the report link, the screenshot and the field verdict. The screenshot
+  matched the scores it read.
+- `psi.mjs` on a Lando URL fell back to Lighthouse, with the reason given.
+- The parallel command from `SKILL.md`, run in a test theme, finished in
+  37 s and the guard allowed it. A first version raced (`mkdir … && node … &`
+  backgrounded the mkdir) and was fixed.
+- A sample report rendered to PDF with the screenshot on page 1.
+
 ## 2026-10-01 — Two launch fixes that didn't work on a real run
 
 ### Fixed

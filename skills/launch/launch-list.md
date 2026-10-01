@@ -28,7 +28,7 @@ every item it can, fixes what the user approves, and writes the report.
 - `$TOOLS` is `.claude/skills/launch/tools`. Its three scripts return JSON:
   - `http-audit.mjs $URL` runs the site-level HTTP checks (`H.<field>` below)
   - `page-audit.mjs <urls…> --links [--w3c]` runs the page checks (`P.<field>`)
-  - `psi.mjs $URL` runs PageSpeed (`S.<field>`)
+  - `psi.mjs $PSI_URL --screenshot docs/launch-pagespeed-mobile.png` runs PageSpeed (`S.<field>`)
 
   Run each one once and read every item from its output.
 - The pages for the `P.` checks are the home page plus every page in the main menu
@@ -147,11 +147,11 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
   - Check: `H.cache`, and `sg-cachepress` active (SEC-6)
   - Pass if: `hit` is true, or Speed Optimizer is active
 - [ ] **PERF-2** Required `auto`: PageSpeed mobile on the home page of at least 70
-  - Check: `S.mobile.scores.performance`, `S.mobile.metrics`, `S.desktop`
-  - Pass if: the mobile performance score is at least 70. The report shows the mobile and desktop
-    scores, LCP, CLS, TBT, the source (the PSI API, or local Lighthouse when there is no
-    `PAGESPEED_API_KEY` or the quota ran out) and both `psi_link`s. A score from a local URL is
-    labelled "local estimate, re-run on PageSpeed Insights".
+  - Check: `S.mobile.scores.performance`, `S.mobile.metrics`, `S.desktop`, `S.mobile.field_core_web_vitals`
+  - Pass if: the mobile performance score is at least 70. `psi.mjs` reads it from pagespeed.web.dev
+    for the public `$PSI_URL` (no API key), saves a screenshot and the shareable `report_url`. With no
+    public URL, or when the page fails, it runs local Lighthouse, and the result is labelled "local
+    estimate, re-run on PageSpeed Insights". `borderline` (within 5 points of 70) means run it again.
 - [ ] **PERF-3** Optional `auto` `public`: CDN in front of static files
   - Check: `H.cdn`
   - Pass if: true, or the host's own edge (Pantheon, SiteGround) is detected

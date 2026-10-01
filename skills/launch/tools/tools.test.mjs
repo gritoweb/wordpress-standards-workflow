@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { isLocalHost } from "./http-audit.mjs";
 import { auditHtml } from "./page-audit.mjs";
-import { MIN_MOBILE_SCORE, psiLink, summarize } from "./psi.mjs";
+import { MIN_MOBILE_SCORE, fromPanel, psiLink, summarize } from "./psi.mjs";
 
 test("local hosts give LOCAL results, real hosts don't", () => {
   for (const h of ["luistest1300.lndo.site", "localhost", "127.0.0.1", "acme.test", "acme.local", "acme.ddev.site"]) assert.ok(isLocalHost(h), h);
@@ -37,4 +37,19 @@ test("PageSpeed results are summarized the same way from the API or Lighthouse",
   assert.equal(s.metrics.lcp, "3.1 s"); assert.equal(s.metrics.fcp, null);
   assert.ok(s.scores.performance < MIN_MOBILE_SCORE, "69 fails the 70 minimum");
   assert.equal(psiLink("https://acme.com/"), "https://pagespeed.web.dev/analysis?url=https%3A%2F%2Facme.com%2F&form_factor=mobile");
+});
+
+test("the PageSpeed page is read only once all four scores and five lab metrics are there", () => {
+  const partial = { scores: { performance: 64 }, metrics: {}, field: null, error: null };
+  assert.equal(fromPanel(partial).complete, false);
+  assert.equal(fromPanel(null).complete, false);
+  const full = fromPanel({
+    scores: { performance: 64, accessibility: 100, "best-practices": 100, seo: 100 },
+    metrics: { "first-contentful-paint": "2.0 s", "largest-contentful-paint": "11.4 s", "total-blocking-time": "330 ms", "cumulative-layout-shift": "0", "speed-index": "4.0 s" },
+    field: "Failed", error: null,
+  });
+  assert.equal(full.complete, true);
+  assert.deepEqual(full.metrics, { lcp: "11.4 s", cls: "0", tbt: "330 ms", fcp: "2.0 s", si: "4.0 s" });
+  assert.equal(full.field_core_web_vitals, "Failed");
+  assert.equal(fromPanel({ scores: {}, metrics: {}, error: "Lighthouse returned error: NO_FCP" }).page_error, "Lighthouse returned error: NO_FCP");
 });

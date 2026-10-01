@@ -5,7 +5,7 @@ import { existsSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { markdownToHtml } from "./markdown.mjs";
-import { findBrowser, printPdf, renderReport } from "./report.mjs";
+import { findBrowser, localImage, printPdf, renderReport } from "./report.mjs";
 
 test("evidence pasted from a site can never inject HTML or script links", () => {
   const html = markdownToHtml('<script>alert(1)</script>\n\n**<img src=x onerror=alert(1)>** and [click](javascript:alert(1)) and `<b>`');
@@ -45,4 +45,15 @@ test("result and severity words become coloured labels, other cells stay escaped
   assert.match(html, /<td><span class="tag tag-bad">Required<\/span><\/td><td><span class="tag tag-bad">FAIL<\/span><\/td>/);
   assert.match(html, /<td><span class="tag tag-none">Optional<\/span><\/td><td><span class="tag tag-ok">PASS<\/span><\/td>/);
   assert.match(html, /<td>&lt;b&gt;FAIL&lt;\/b&gt;<\/td><td>PASSED<\/td>/, "only an exact word becomes a label");
+});
+
+test("a local image next to the report is embedded; URLs, absolute paths and .. stay text", () => {
+  const dir = mkdtempSync(join(tmpdir(), "launch-img-"));
+  writeFileSync(join(dir, "shot.png"), Buffer.from("89504e470d0a1a0a", "hex"));
+  const image = localImage(dir);
+  const html = markdownToHtml(["![PageSpeed mobile](shot.png)", "", "![x](https://evil.example/x.png)", "", "![x](/etc/x.png)", "", "![x](../shot.png)", "", "![x](missing.png)"].join("\n"), { image });
+  assert.match(html, /<figure><img src="data:image\/png;base64,iVBORw0KGgo=" alt="PageSpeed mobile"><\/figure>/);
+  assert.equal((html.match(/<img/g) ?? []).length, 1, "only the local file becomes an image");
+  assert.doesNotMatch(html, /<img[^>]+(evil|etc|\.\.\/|missing)/);
+  assert.match(renderReport("# R\n\n![s](shot.png)", { baseDir: dir }), /data:image\/png;base64/);
 });

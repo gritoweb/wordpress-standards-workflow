@@ -28,7 +28,8 @@ const cell = (c) => (Object.hasOwn(TAGS, c) ? `<span class="tag tag-${TAGS[c]}">
 const isTableRow = (line) => /^\s*\|.*\|\s*$/.test(line);
 const cells = (line) => line.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
 
-export function markdownToHtml(source) {
+// `image(path)` returns a safe src (a data URI) for a block-level ![alt](path) line, or null to leave it as text.
+export function markdownToHtml(source, { image } = {}) {
   const lines = source.replace(/\r\n/g, "\n").split("\n");
   const out = [];
   let i = 0;
@@ -66,7 +67,7 @@ export function markdownToHtml(source) {
     if (/^\s*>/.test(line)) {
       const quote = [];
       for (; i < lines.length && /^\s*>/.test(lines[i]); i++) quote.push(lines[i].replace(/^\s*>\s?/, ""));
-      out.push(`<blockquote>${markdownToHtml(quote.join("\n"))}</blockquote>`);
+      out.push(`<blockquote>${markdownToHtml(quote.join("\n"), { image })}</blockquote>`);
       continue;
     }
 
@@ -85,6 +86,10 @@ export function markdownToHtml(source) {
       out.push(`<${ordered ? "ol" : "ul"}>${items.join("")}</${ordered ? "ol" : "ul"}>`);
       continue;
     }
+
+    const img = line.match(/^\s*!\[([^\]]*)\]\(([^)\s]+)\)\s*$/);
+    const src = img && image ? image(img[2]) : null;
+    if (src) { out.push(`<figure><img src="${escapeHtml(src)}" alt="${escapeHtml(img[1])}"></figure>`); i++; continue; }
 
     const paragraph = [];
     for (; i < lines.length && lines[i].trim() && !/^\s*(```|#{1,4}\s|>|[-*+]\s|\d+[.)]\s)/.test(lines[i]) && !isTableRow(lines[i]); i++) paragraph.push(lines[i].trim());

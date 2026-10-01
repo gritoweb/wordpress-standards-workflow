@@ -2,11 +2,23 @@
 // Markdown report → one self-contained HTML page in the shared visual language, optionally printed to PDF by a headless browser.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { escapeHtml, markdownToHtml } from "./markdown.mjs";
 import { COPY_BUTTONS_JS, PAGE_CSS } from "./style.mjs";
 
+
+const IMAGE_TYPES = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" };
+
+// Only image files next to the report (no URLs, no absolute paths, no ..) are embedded, so the page stays one self-contained file.
+export function localImage(baseDir) {
+  return (path) => {
+    const type = IMAGE_TYPES[extname(path).toLowerCase()];
+    if (!type || /^[a-z]+:|^\/|(^|\/)\.\.(\/|$)/i.test(path)) return null;
+    const file = join(baseDir, path);
+    return existsSync(file) ? `data:${type};base64,${readFileSync(file).toString("base64")}` : null;
+  };
+}
 
 export function renderReport(markdown, o = {}) {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
@@ -32,7 +44,7 @@ ${o.subtitle ? `<p class="lede">${escapeHtml(o.subtitle)}</p>` : ""}
 ${pills ? `<div class="meta">${pills}</div>` : ""}
 </header>
 <article class="text">
-${markdownToHtml(body)}
+${markdownToHtml(body, { image: o.baseDir ? localImage(o.baseDir) : undefined })}
 </article>
 </main>
 <script>${COPY_BUTTONS_JS}</script>
@@ -68,7 +80,7 @@ function main(argv) {
   }
   const meta = argv.flatMap((a, i) => (a === "--meta" && argv[i + 1]?.includes("=") ? [argv[i + 1].split(/=(.*)/s).slice(0, 2)] : []));
   const output = resolve(value("-o") ?? join(dirname(input), basename(input).replace(/\.md$/i, "") + ".html"));
-  writeFileSync(output, renderReport(readFileSync(input, "utf8"), { title: value("--title"), subtitle: value("--subtitle"), eyebrow: value("--about"), meta }));
+  writeFileSync(output, renderReport(readFileSync(input, "utf8"), { title: value("--title"), subtitle: value("--subtitle"), eyebrow: value("--about"), meta, baseDir: dirname(resolve(input)) }));
   console.log(`html: ${output}`);
   if (argv.includes("--pdf")) {
     const pdf = output.replace(/\.html?$/i, "") + ".pdf";
