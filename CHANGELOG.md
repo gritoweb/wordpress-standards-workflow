@@ -7,7 +7,7 @@ Notable changes to the GritoWeb WordPress standards.
 ### Added
 - **`skills/launch/`.** Runs `docs/launch-list.md` against the local site
   (wp-cli), the theme files and the public URL. It asks before fixing
-  anything, and asks for each remote write on its own. Then it re-checks and
+  anything (one user approval for the whole ordered list of commands). Then it re-checks and
   writes `docs/launch-report.md` plus HTML and PDF. The report generator
   (`report/report.mjs`) ships inside the skill (Node 18+, no packages), so
   it works for anyone who installs the kit.
@@ -20,8 +20,9 @@ Notable changes to the GritoWeb WordPress standards.
 - **Enforced guard (`skills/launch/guard/`).** The skill registers a
   `PreToolUse` hook. Read commands run. Any write (wp-cli, ssh, terminus,
   rm, curl with data…) is denied until the **user** approves the exact
-  command with `! node .claude/skills/launch/guard/approve.mjs`, and each
-  approval runs once and expires in 2 hours. Commands that wipe sites or
+  commands with one `! node .claude/skills/launch/guard/approve.mjs`. The
+  commands then run once each, in the approved order (so a fix can't skip
+  the backup), within 2 hours. Commands that wipe sites or
   databases never run from the agent.
 
 ### Changed
@@ -38,8 +39,8 @@ Notable changes to the GritoWeb WordPress standards.
   - one H1, canonical and `alt` on key pages
 
 ### Verified
-- `node --test "skills/launch/*/*.test.mjs"`: 10/10 pass (guard: reads, writes, never-run list,
-  self-approval blocked, single-use approval, unreadable input blocks; report: escaping, tables, PDF).
+- `node --test "skills/launch/*/*.test.mjs"`: 11/11 pass (guard: reads, writes, never-run list,
+  self-approval blocked, single-use approval, approved order, unreadable input blocks; report: escaping, tables, PDF).
 - In a real `claude -p` session in `bypassPermissions` mode, after loading the skill:
   `rm marker.txt` was denied and the file was kept, `rm -rf store` was blocked, and `ls` ran.
   After the user approved, `rm marker.txt` ran once, and the approval was consumed.

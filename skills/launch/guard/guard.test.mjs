@@ -88,3 +88,15 @@ test("the hook process blocks when its input can't be read", () => {
   const r = spawnSync(process.execPath, [fileURLToPath(new URL("./guard.mjs", import.meta.url))], { input: "not json", encoding: "utf8" });
   assert.equal(r.status, 2);
 });
+
+test("approved commands run only in the approved order", () => {
+  const dir = mkdtempSync(join(tmpdir(), "launch-order-"));
+  const [backup, fix] = ["lando wp db export ~/b.sql", "lando wp option update blog_public 1"];
+  spawnSync("sh", ["-c", `printf '%s\\n%s\\n' "${backup}" "${fix}" > .launch-pending.txt`], { cwd: dir });
+  const approve = fileURLToPath(new URL("./approve.mjs", import.meta.url));
+  assert.equal(spawnSync(process.execPath, [approve], { cwd: dir, env: process.env }).status, 0);
+  assert.match(decide(bash(fix)).hookSpecificOutput.permissionDecisionReason, /Out of order.*db export/, "the fix can't skip the backup");
+  assert.equal(decide(bash("lando wp option get blog_public")), null, "reads still run between approved steps");
+  assert.equal(decide(bash(backup)), null);
+  assert.equal(decide(bash(fix)), null);
+});

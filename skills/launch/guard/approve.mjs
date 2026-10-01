@@ -13,10 +13,10 @@ const pending = readFileSync(PENDING_FILE, "utf8").split("\n").map((l) => l.trim
 const picked = process.argv.slice(2).map(Number).filter((n) => n >= 1 && n <= pending.length);
 const chosen = picked.length ? picked.map((n) => pending[n - 1]) : pending;
 
-let approved = [];
-try { approved = JSON.parse(readFileSync(APPROVED_FILE, "utf8")).filter((a) => a.expires > Date.now()); } catch {}
+// A new batch replaces whatever was left of the previous one.
+const approved = [];
 
-console.log("Pending commands:");
+console.log("Commands, in the order they will run:");
 pending.forEach((c, i) => {
   const v = verdict(c);
   const mark = v.level === "never" ? "BLOCKED (never runs: " + v.reason + ")" : chosen.includes(c) ? "APPROVED" : "skipped";
@@ -27,4 +27,4 @@ pending.forEach((c, i) => {
 mkdirSync(STORE_DIR, { recursive: true });
 writeFileSync(APPROVED_FILE, JSON.stringify(approved, null, 2));
 rmSync(PENDING_FILE);
-console.log(`\nEach approved command may run once, exactly as written, within 2 hours.`);
+console.log(`\nEach approved command runs once, exactly as written, in this order, within 2 hours.`);

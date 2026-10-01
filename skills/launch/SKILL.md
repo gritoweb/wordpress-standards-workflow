@@ -1,7 +1,7 @@
 ---
 name: launch
 description: >
-  Pre-launch audit of a WordPress site against docs/launch-list.md. It checks every item it can (wp-cli, theme files, HTTP on the public URL), asks before fixing anything it knows how to fix (local or remote, one approval per remote command), re-checks, and writes a pass/fail/fixed/manual report as Markdown + HTML + PDF. Use when the user says "/launch", "launch check", "is the site ready to go live?", "pre-launch audit" or "go-live checklist".
+  Pre-launch audit of a WordPress site against docs/launch-list.md. It checks every item it can (wp-cli, theme files, HTTP on the public URL), asks before fixing anything it knows how to fix (one user approval for the whole ordered list of commands, enforced by a hook), re-checks, and writes a pass/fail/fixed/manual report as Markdown + HTML + PDF. Use when the user says "/launch", "launch check", "is the site ready to go live?", "pre-launch audit" or "go-live checklist".
 hooks:
   PreToolUse:
     - matcher: "Bash|Write|Edit|MultiEdit|NotebookEdit"
@@ -41,9 +41,11 @@ It sorts every Bash command into one of three groups:
 How a write gets approved:
 1. Write the exact commands, one per line, to `.launch-pending.txt` in the project root, and show
    the list to the user with what each command does and where it runs.
-2. Ask the user to type `! node .claude/skills/launch/guard/approve.mjs`. That approves all the
-   listed commands. To approve only some of them, the user adds their numbers: `… approve.mjs 1 3`.
-3. Run each approved command **exactly** as written. Every approval works once and expires in 2 hours.
+2. Ask the user to type `! node .claude/skills/launch/guard/approve.mjs`. That one step approves the
+   whole list. To approve only some of them, the user adds their numbers: `… approve.mjs 1 3`.
+3. Run the approved commands **exactly** as written and **in the listed order**. The guard refuses
+   a command that skips ahead. Reads (re-checks) can run between them. Every approval works once
+   and expires in 2 hours, and a new approval replaces whatever was left of the last one.
 
 You can't approve anything yourself. The guard denies any tool call that touches
 `approve.mjs` or `~/.launch-guard/`. Never try to get around a denial: no rewording the command,
@@ -143,8 +145,8 @@ the ID, what's wrong, the **exact command** that will run, and where it runs (lo
 
 - Run only commands the user approved through the guard. The backup (safety rule 3) is the first line of the pending list.
 - **Remote** fixes (`terminus wp … -- <write>`, `wp --ssh=…`, `ssh … wp …`) go in the pending list **one
-  per line, never chained**, so the user approves each one on its own. This is the kit's rule (`CLAUDE.md`:
-  never write to a remote environment without explicit permission).
+  per line, never chained**, so the user sees every remote write in the list they approve. This is the kit's
+  rule (`CLAUDE.md`: never write to a remote environment without explicit permission).
 - Run one fix at a time. If one fails, stop, show the output, and ask before going on.
 - After the fixes, **re-run the Check** of every fixed item. An item is `🔧 Fixed` only if its
   re-check passes. Otherwise it stays `❌ Fail`, with the new evidence.

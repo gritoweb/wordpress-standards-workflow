@@ -120,15 +120,16 @@ export function verdict(command) {
 
 const readApproved = () => { try { return JSON.parse(readFileSync(APPROVED_FILE, "utf8")).filter((a) => a.expires > Date.now()); } catch { return []; } };
 
-// One approval = one run of exactly that command.
+// One approval = one run of exactly that command, in the order the user approved them.
 export function consumeApproval(command) {
   const list = readApproved();
   const i = list.findIndex((a) => a.command === command.trim());
-  if (i < 0) return false;
-  list.splice(i, 1);
+  if (i < 0) return { ok: false };
+  if (i > 0) return { ok: false, next: list[0].command };
+  list.shift();
   mkdirSync(STORE_DIR, { recursive: true });
   writeFileSync(APPROVED_FILE, JSON.stringify(list, null, 2));
-  return true;
+  return { ok: true };
 }
 
 export function decide(input) {
@@ -140,7 +141,9 @@ export function decide(input) {
   const v = verdict(command);
   if (v.level === "allow") return null;
   if (v.level === "never") return deny(`Blocked by the launch guard: ${v.reason}. This never runs from the agent. If it is really needed, the user runs it by hand.`);
-  if (consumeApproval(command)) return null;
+  const approval = consumeApproval(command);
+  if (approval.ok) return null;
+  if (approval.next) return deny(`Out of order. The user approved these commands to run in sequence, and the next one is: ${approval.next}`);
   return deny(`Needs the user's approval (${v.reason}). Write the exact command as one line in ${PENDING_FILE} (one command per line), show the list to the user, and ask them to type: ! node .claude/skills/launch/guard/approve.mjs. Then run the command exactly as approved.`);
 }
 
