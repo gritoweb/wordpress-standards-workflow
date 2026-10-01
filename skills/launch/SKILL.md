@@ -4,10 +4,15 @@ description: >
   Pre-launch audit of a WordPress site against its own launch-list.md. It checks every item it can (wp-cli, theme files, HTTP on the public URL), asks before fixing anything it knows how to fix (one user approval for the whole ordered list of commands, enforced by a hook), re-checks, and writes a pass/fail/fixed/manual report as Markdown + HTML + PDF. Use when the user says "/launch", "launch check", "is the site ready to go live?", "pre-launch audit" or "go-live checklist".
 hooks:
   PreToolUse:
-    - matcher: "Bash|Write|Edit|MultiEdit|NotebookEdit"
+    - matcher: "Bash|Write|Edit|MultiEdit|NotebookEdit|AskUserQuestion"
       hooks:
         - type: command
           command: 'node "$CLAUDE_PROJECT_DIR/.claude/skills/launch/guard/guard.mjs" || exit 2'
+  PostToolUse:
+    - matcher: "AskUserQuestion"
+      hooks:
+        - type: command
+          command: 'node "$CLAUDE_PROJECT_DIR/.claude/skills/launch/guard/guard.mjs" post'
 ---
 
 # /launch: pre-launch audit and report
@@ -38,17 +43,26 @@ It sorts every Bash command into one of three groups:
 
   The user runs these by hand if they are ever really needed.
 
-How a write gets approved:
-1. Write the exact commands, one per line, to `.launch-pending.txt` in the project root, and show
-   the list to the user with what each command does and where it runs.
-2. Ask the user to type `! node .claude/skills/launch/guard/approve.mjs`. That one step approves the
-   whole list. To approve only some of them, the user adds their numbers: `… approve.mjs 1 3`.
-3. Run the approved commands **exactly** as written and **in the listed order**. The guard refuses
-   a command that skips ahead. Reads (re-checks) can run between them. Every approval works once
-   and expires in 2 hours, and a new approval replaces whatever was left of the last one.
+How a write gets approved (one click):
+1. Put every command you need, **in run order**, into **one** `AskUserQuestion`:
+   - header `Launch fixes`
+   - the question says where they run (local / staging / **PRODUCTION** + `siteurl`)
+   - an option labelled exactly `Approve all`, whose `preview` is the numbered list, one exact
+     command per line: `1. lando wp db export - > ~/launch-backup-<site>-<date>.sql`
+   - a `Cancel` option
+
+   Never pre-fill `answers`; the guard denies it.
+2. The user clicks. A `PostToolUse` hook reads the answer and approves **exactly the previewed lines**
+   (minus anything on the never-run list). It tells you how many were approved.
+3. Run them **exactly** as written and **in the listed order**. The guard refuses a command that
+   skips ahead. Reads (re-checks) can run between them. Every approval works once and expires in
+   2 hours, and a new question replaces whatever was left of the last batch. `Cancel` clears it.
+
+Fallback without the question UI: write the list to `.launch-pending.txt` and ask the user to type
+`! node .claude/skills/launch/guard/approve.mjs`.
 
 You can't approve anything yourself. The guard denies any tool call that touches
-`approve.mjs` or `~/.launch-guard/`. Never try to get around a denial: no rewording the command,
+`approve.mjs` or `~/.launch-guard/`, and any question with pre-filled answers. Never try to get around a denial: no rewording the command,
 no other interpreter, no editing the guard. A denial means you stop and ask.
 
 ## Safety rules (they override every step below)

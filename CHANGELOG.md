@@ -2,6 +2,27 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-01 — Approve the launch fixes with one click
+
+### Changed
+- **Approval is a native question, not a typed command.** Typing
+  `! node .claude/skills/launch/guard/approve.mjs` was clunky. Now the skill
+  asks one `Launch fixes` question whose `Approve all` option previews the
+  numbered command list. A `PostToolUse` hook reads the user's click and
+  approves exactly the previewed lines, in order, once each. The guard
+  denies a question with pre-filled `answers`, so the agent can't answer
+  for the user. `approve.mjs` stays as the fallback.
+
+### Verified
+- `node --test "skills/launch/*/*.test.mjs"`: 14/14 pass (new: previewed list
+  approved in order, never-run lines dropped, Cancel clears, forged answers
+  denied).
+- In a real interactive session in `bypassPermissions` mode, the hook
+  received the clicked answer (the input had no `answers` at PreToolUse
+  time). With the skill loaded, `rm two.txt` was denied, the question
+  showed `1. rm one.txt` / `2. rm two.txt`, one Enter on `Approve all`
+  ran both in that order, and the approval store ended empty.
+
 ## 2026-10-01 — The launch checklist ships inside the `launch` skill
 
 ### Changed

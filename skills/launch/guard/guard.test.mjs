@@ -8,7 +8,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 process.env.LAUNCH_GUARD_DIR = mkdtempSync(join(tmpdir(), "launch-guard-"));
-const { verdict, decide } = await import("./guard.mjs");
+const { verdict, decide, decidePost } = await import("./guard.mjs");
 const level = (c) => verdict(c).level;
 const bash = (command) => ({ tool_name: "Bash", tool_input: { command } });
 
@@ -99,4 +99,33 @@ test("approved commands run only in the approved order", () => {
   assert.equal(decide(bash("lando wp option get blog_public")), null, "reads still run between approved steps");
   assert.equal(decide(bash(backup)), null);
   assert.equal(decide(bash(fix)), null);
+});
+
+const question = (answer, preview) => ({
+  tool_name: "AskUserQuestion",
+  tool_input: { questions: [{ question: "Run these fixes?", header: "Launch fixes", options: [{ label: "Approve all", preview }, { label: "Cancel" }] }] },
+  tool_response: { answers: { "Run these fixes?": answer } },
+});
+
+test("one click approves exactly the previewed list, in order", () => {
+  const [backup, fix] = ["lando wp db export - > ~/b.sql", "lando wp option update blog_public 1"];
+  const out = decidePost(question("Approve all", `1. ${backup}\n2. ${fix}\n3. rm -rf public_html`));
+  assert.match(out.hookSpecificOutput.additionalContext, /approved 2 commands.*Never-run commands were dropped: rm -rf public_html/s);
+  assert.match(decide(bash(fix)).hookSpecificOutput.permissionDecisionReason, /Out of order/);
+  assert.equal(decide(bash(backup)), null);
+  assert.equal(decide(bash(fix)), null);
+  assert.equal(decide(bash("rm -rf public_html")).hookSpecificOutput.permissionDecision, "deny");
+});
+
+test("Cancel, or any other answer, approves nothing and clears the last batch", () => {
+  decidePost(question("Approve all", "1. lando wp option update blog_public 1"));
+  assert.match(decidePost(question("Cancel", "1. lando wp option update blog_public 1")).hookSpecificOutput.additionalContext, /did not approve/);
+  assert.equal(decide(bash("lando wp option update blog_public 1")).hookSpecificOutput.permissionDecision, "deny");
+});
+
+test("the agent can't pre-fill the user's answer", () => {
+  const forged = { tool_name: "AskUserQuestion", tool_input: { questions: [], answers: { "Run these fixes?": "Approve all" } } };
+  assert.match(decide(forged).hookSpecificOutput.permissionDecisionReason, /can't be pre-filled/);
+  assert.equal(decide({ tool_name: "AskUserQuestion", tool_input: { questions: [] } }), null);
+  assert.equal(decidePost({ tool_name: "AskUserQuestion", tool_input: { questions: [{ header: "Other", question: "x" }] }, tool_response: { answers: { x: "Approve all" } } }), null, "only the Launch fixes question approves");
 });

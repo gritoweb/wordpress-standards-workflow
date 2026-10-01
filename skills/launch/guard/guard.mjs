@@ -120,6 +120,44 @@ export function verdict(command) {
 
 const readApproved = () => { try { return JSON.parse(readFileSync(APPROVED_FILE, "utf8")).filter((a) => a.expires > Date.now()); } catch { return []; } };
 
+export const APPROVAL_HEADER = "Launch fixes";
+export const APPROVE_LABEL = "Approve all";
+const TTL_MS = 2 * 60 * 60 * 1000;
+
+// Replaces any previous batch: the new list, in order, minus anything on the never-run list.
+export function approveCommands(commands) {
+  const approved = [], blocked = [];
+  for (const command of commands.map((c) => c.trim()).filter(Boolean)) {
+    const v = verdict(command);
+    if (v.level === "never") blocked.push({ command, reason: v.reason });
+    else approved.push({ command, expires: Date.now() + TTL_MS });
+  }
+  mkdirSync(STORE_DIR, { recursive: true });
+  writeFileSync(APPROVED_FILE, JSON.stringify(approved, null, 2));
+  return { approved: approved.map((a) => a.command), blocked };
+}
+
+// The click path: the commands approved are exactly the numbered lines of the preview the user saw.
+export const previewCommands = (preview) => (preview ?? "").split("\n").map((l) => l.match(/^\s*\d+\.\s+(.+?)\s*$/)?.[1]).filter(Boolean);
+
+export function decidePost(input) {
+  if (input.tool_name !== "AskUserQuestion") return null;
+  const questions = input.tool_input?.questions ?? [];
+  const answers = input.tool_response?.answers ?? {};
+  const q = questions.find((x) => x.header === APPROVAL_HEADER);
+  if (!q) return null;
+  const option = q.options?.find((o) => o.label === APPROVE_LABEL);
+  if (answers[q.question] !== APPROVE_LABEL || !option) {
+    approveCommands([]);
+    return post("The user did not approve the launch fixes. Nothing is approved; do not run any of them.");
+  }
+  const { approved, blocked } = approveCommands(previewCommands(option.preview));
+  const never = blocked.length ? ` Never-run commands were dropped: ${blocked.map((b) => b.command).join(" | ")}.` : "";
+  return post(`The user approved ${approved.length} commands. Run them exactly as listed, in this order, one at a time: ${approved.map((c, i) => `${i + 1}. ${c}`).join("  ")}.${never}`);
+}
+
+const post = (context) => ({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: context } });
+
 // One approval = one run of exactly that command, in the order the user approved them.
 export function consumeApproval(command) {
   const list = readApproved();
@@ -135,6 +173,7 @@ export function consumeApproval(command) {
 export function decide(input) {
   const tool = input.tool_name, ti = input.tool_input ?? {};
   const touchesStore = (s) => /launch-guard|approve\.mjs/.test(s ?? "");
+  if (tool === "AskUserQuestion") return ti.answers && Object.keys(ti.answers).length ? deny("Answers can't be pre-filled: ask the question and let the user pick.") : null;
   if (tool !== "Bash") return touchesStore(ti.file_path ?? ti.notebook_path) ? deny("Only the user approves commands. Ask them to run the approve command themselves.") : null;
   const command = ti.command ?? "";
   if (touchesStore(command)) return deny("Only the user approves commands. Ask them to type: ! node .claude/skills/launch/guard/approve.mjs");
@@ -144,7 +183,7 @@ export function decide(input) {
   const approval = consumeApproval(command);
   if (approval.ok) return null;
   if (approval.next) return deny(`Out of order. The user approved these commands to run in sequence, and the next one is: ${approval.next}`);
-  return deny(`Needs the user's approval (${v.reason}). Write the exact command as one line in ${PENDING_FILE} (one command per line), show the list to the user, and ask them to type: ! node .claude/skills/launch/guard/approve.mjs. Then run the command exactly as approved.`);
+  return deny(`Needs the user's approval (${v.reason}). Put every command you need, in run order, in ONE AskUserQuestion: header "${APPROVAL_HEADER}", an option labelled "${APPROVE_LABEL}" whose preview is the numbered list ("1. <exact command>" per line), and a "Cancel" option. Then run them exactly as approved, in order.`);
 }
 
 const deny = (reason) => ({ hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: reason } });
@@ -155,7 +194,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   process.stdin.on("end", () => {
     let input;
     try { input = JSON.parse(raw); } catch { process.stderr.write("launch guard: unreadable hook input, blocking to be safe\n"); process.exit(2); }
-    const out = decide(input);
+    const out = process.argv[2] === "post" ? decidePost(input) : decide(input);
     if (out) process.stdout.write(JSON.stringify(out));
     process.exit(0);
   });

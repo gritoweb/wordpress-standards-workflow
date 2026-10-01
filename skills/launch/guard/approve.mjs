@@ -1,9 +1,7 @@
 #!/usr/bin/env node
-// Run by the USER (`! node .claude/skills/launch/guard/approve.mjs [numbers]`): approves the agent's pending commands for one run each.
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { APPROVED_FILE, PENDING_FILE, STORE_DIR, verdict } from "./guard.mjs";
-
-const TTL_MS = 2 * 60 * 60 * 1000;
+// Fallback for sessions without the question UI: the USER runs `! node .claude/skills/launch/guard/approve.mjs [numbers]`.
+import { existsSync, readFileSync, rmSync } from "node:fs";
+import { PENDING_FILE, approveCommands, verdict } from "./guard.mjs";
 
 if (!existsSync(PENDING_FILE)) {
   console.error(`No ${PENDING_FILE} in ${process.cwd()}: nothing to approve.`);
@@ -13,18 +11,11 @@ const pending = readFileSync(PENDING_FILE, "utf8").split("\n").map((l) => l.trim
 const picked = process.argv.slice(2).map(Number).filter((n) => n >= 1 && n <= pending.length);
 const chosen = picked.length ? picked.map((n) => pending[n - 1]) : pending;
 
-// A new batch replaces whatever was left of the previous one.
-const approved = [];
-
 console.log("Commands, in the order they will run:");
 pending.forEach((c, i) => {
   const v = verdict(c);
-  const mark = v.level === "never" ? "BLOCKED (never runs: " + v.reason + ")" : chosen.includes(c) ? "APPROVED" : "skipped";
-  console.log(`  ${i + 1}. [${mark}] ${c}`);
-  if (chosen.includes(c) && v.level !== "never") approved.push({ command: c, expires: Date.now() + TTL_MS });
+  console.log(`  ${i + 1}. [${v.level === "never" ? "BLOCKED (never runs: " + v.reason + ")" : chosen.includes(c) ? "APPROVED" : "skipped"}] ${c}`);
 });
-
-mkdirSync(STORE_DIR, { recursive: true });
-writeFileSync(APPROVED_FILE, JSON.stringify(approved, null, 2));
+approveCommands(chosen);
 rmSync(PENDING_FILE);
 console.log(`\nEach approved command runs once, exactly as written, in this order, within 2 hours.`);
