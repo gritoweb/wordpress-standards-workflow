@@ -2,6 +2,24 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-14 — Section buttons open their editor in a Popover
+
+From the RH Construction admin QA: the button editor opened inline inside
+the canvas iframe, where core's `LinkControl` has no stylesheet, so the
+link destination rendered as a squashed row with the arrow below the URL
+and the URL printed twice.
+
+### Changed
+- **`ButtonPair` opens `ActionEditor` in a core `Popover`** anchored below
+  the button (`bottom-start`, closes on Escape or a click outside), like
+  core's paragraph link. The Popover renders in the admin document, so the
+  link reads as one line: icon, clickable URL, actions. The "Button pair"
+  rule in `create-block` now says Popover; the earlier same-day reverts are
+  kept there as the known risk (it covers the block below while open).
+- **`LinkPicker` hides core's duplicate URL line.** A stored link has no
+  title, so `LinkControl` printed the URL as the title and again as the
+  info line; scoped to `.link-picker`.
+
 ## 2026-10-14 — `launch` is fail-closed: it only approves what it proved
 
 The Griddl launch went live with 14 problems the skill didn't catch, fixed

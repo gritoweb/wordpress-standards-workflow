@@ -58,6 +58,9 @@ if (typeof window !== 'undefined' && window.HTMLElement) {
   });
 }
 
+// A stored link has no title, so core's preview would print the URL twice; scoped to this wrapper.
+const LINK_PREVIEW_CSS = '.link-picker .block-editor-link-control__preview-info{display:none}';
+
 const fullWidthStyles = {
   wrapper: { position: 'relative', width: '100%' },
   label: {
@@ -107,6 +110,7 @@ export const LinkPicker = ({
         className={`link-picker ${className}`.trim()}
         style={fullWidthStyles.wrapper}
       >
+        <style>{LINK_PREVIEW_CSS}</style>
         {label && <label style={fullWidthStyles.label}>{label}</label>}
         <div style={fullWidthStyles.control}>{control}</div>
       </div>
@@ -131,7 +135,10 @@ export const LinkPicker = ({
 
       {isOpen && (
         <Popover position="bottom center" onClose={() => setIsOpen(false)}>
-          <div style={{ padding: '16px', minWidth: '300px' }}>{control}</div>
+          <div className="link-picker" style={{ padding: '16px', minWidth: '300px' }}>
+            <style>{LINK_PREVIEW_CSS}</style>
+            {control}
+          </div>
         </Popover>
       )}
     </div>

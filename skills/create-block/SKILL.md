@@ -199,7 +199,7 @@ builds every block.
 | `bg`/`background image`/`cover image` (fills the block behind other content) | image (ID-first) | `<name>Id` (number) | In the **sidebar**, inside a `PanelBody title="Background Media"`: `<AttachmentImageControl imageId={...} onSelect={...} onRemove={...} noStylesheet />` + `<ImagePositionControl />` right under it for the focal point. The canvas keeps only the **passive** full-bleed preview (`backgroundImage`/`<img>` with `focalCss(<name>Position)`) — no click target there. |
 | `icon` | string (Dashicon slug or arbitrary name) | `<name>` | `<TextControl>` (or `<IconPicker>` if the project ships one) |
 | `link`, `url`, `cta link`, `href` | link (Gutenberg `LinkControl` object: `{url, opensInNewTab}`) | `<name>` | `<LinkPicker label="..." value={...} onChange={...} />` — inside `ActionEditor` for a button, never in the sidebar |
-| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor>` inline**, directly below the button — always on canvas, never in the sidebar, never a floating `Popover`. `stacked={false}` (two-column layout) for a full-width/single CTA; `stacked={true}` (single vertical column) when the trigger sits inside a narrow per-item container (grid card, list item) — see the "Buttons / CTAs" rule below. **`ActionEditor` and `LinkPicker` never go inside `<InspectorControls>`.** |
+| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor>` in a core `Popover`** right below the button — always on canvas, never in the sidebar. `stacked={false}` (two-column layout) for a full-width/single CTA; `stacked={true}` (single vertical column) when the trigger sits inside a narrow per-item container (grid card, list item) — see the "Buttons / CTAs" rule below. **`ActionEditor` and `LinkPicker` never go inside `<InspectorControls>`.** |
 | `color`, `bg color`, `text color` | string (hex / palette slug) | `<name>` | `<ColorPalette>` or `<PanelColorSettings>` |
 | `size`, `width`, `height`, `count`, `amount`, plain `number` | number (unsigned) | `<name>` | `<TextControl type="number">` or `<RangeControl>` |
 | `show X`, `enable X`, `visible`, `active`, `toggle`, "is X" boolean | boolean | `<name>` | `<ToggleControl>` |
@@ -249,48 +249,28 @@ builds every block.
    it. An empty string renders `LinkControl`'s normal "search for a link"
    empty state instead — this is true anywhere `LinkControl`/`LinkPicker`
    appears, not just in `ActionEditor`. **Always canvas, never the
-   sidebar, never a floating `Popover`** — clicking the styled `<span>`
-   preview opens `<ActionEditor>` **inline**, directly below the button, in
-   both cases. The only thing that changes with context is the `stacked`
-   prop:
-   - **Full-width / single CTA** (hero, banner, one button per block):
-     `<ActionEditor stacked={false}>` (two-column layout — label field
-     beside the link picker), inside exactly
-     `<div className="w-full max-w-xl text-left">`. The block already
-     has the width and naturally grows to contain it. **The wrapper around
-     `ActionEditor` (either mode) is layout only — never give it `bg-*`,
-     `p-*`, `rounded-*`, `shadow-*`, `border` or a top margin:**
-     `ActionEditor` draws its own panel, so a styled wrapper puts a card
-     inside a card.
-   - **CTA inside a repeater item** (a grid card, a list item):
-     `<ActionEditor stacked={true}>` — the SAME component, just a single
-     vertical column (label, then the link picker, then the checkbox, each
-     full width). A ~280px grid
-     column has no room for `stacked={false}`'s two-column layout, but
-     easily fits one stacked field at a time — no separate mechanism
-     needed, just the prop `ActionEditor` was already built with.
-   - **The link field is the one exception:** inside `ActionEditor`, the
-     destination is a button showing the URL that opens core's
-     `LinkControl` in a small `Popover`. Keep it — `LinkControl` rendered
-     inline on the canvas is broken by the theme CSS (squashed icon row,
-     stray ↗), while its `Popover` renders outside the canvas and looks like
-     core everywhere else. Only the CTA editor as a whole must not float.
-   - **Why not `Popover`, twice**: floating a `Popover` around
-     `ActionEditor` for consistency, then again only for the narrow-item
-     case, both got reverted the same day. A `Popover` doesn't participate
-     in layout, so it never grows its own block/card to fit; on a shorter
-     block it spilled into whatever rendered next, and inside a grid it
-     spilled into the row below — its collision handling only avoids the
-     *viewport* edge, never a sibling element a few inches away. There is
-     no `position`/`placement` value that fixes that, because the problem
-     isn't positioning, it's that a floating overlay is the wrong tool
-     here at all.
+   sidebar** — clicking the styled `<span>` button opens `<ActionEditor>` in
+   a core `Popover` anchored right below it (`placement="bottom-start"`,
+   closes on Escape or a click outside), the way core edits a paragraph's
+   link. `ButtonPair` already does this; never rebuild it per block.
+   - **Why a `Popover` (decided 2026-10-14, after the RH Construction QA):**
+     the `Popover` renders in the admin document, where core's
+     `LinkControl` has its stylesheet, so the link reads as one line (icon,
+     clickable URL, actions) instead of the squashed row with a stray ↗ it
+     gets inside the canvas iframe. Editors read it as a modal and asked
+     for it on every button.
+   - **Known risk, accepted:** a `Popover` doesn't take part in layout, so
+     while it's open it covers whatever sits next to the button (the block
+     below, the next grid row). That spill is why a `Popover` was tried and
+     reverted twice in favor of an inline editor before; it's accepted now
+     because the editor closes on Escape or a click outside, so nothing
+     stays covered.
    - **Why not the sidebar either**: moving the repeater-item's link
      **destination** into a sidebar panel tied to an "active" item (mirror
      of `<ItemList>`'s pattern) does avoid every overlap — sidebar and
      canvas never touch — but it was never what was asked for, and it
      reads as inconsistent with every other button in the theme, which
-     opens inline on the canvas right where you clicked. `stacked={true}`
+     opens on the canvas right where you clicked. `stacked={true}`
      gets the same "fits a narrow column" property without leaving the
      canvas.
 
@@ -368,9 +348,8 @@ Attributes:
     re-type the pair. See the "Button pair" rule above for the full
     reasoning (including three same-day mistakes worth reading before
     touching this again). Styled `<span>` preview on canvas; clicking it
-    always opens `<ActionEditor>` **inline**, directly below the button —
-    never the sidebar, never a floating `Popover`. Only the `stacked` prop
-    changes:
+    opens `<ActionEditor>` in a core `Popover` right below the button —
+    never the sidebar. Only the `stacked` prop changes:
     - Full-width/single CTA → `stacked={false}` (two-column layout); the
       block grows to contain it, on its own.
     - CTA inside a repeater item (grid card, list item) → `stacked={true}`
@@ -624,7 +603,7 @@ End with a summary table listing every file created/modified.
     ├── AttachmentImageControl.jsx   ← default image control (X on hover, image icon when empty)
     ├── useAttachmentUrls.js         ← hook for resolving attachment URLs
     ├── ActionEditor.jsx             ← CTA label + link editor (canvas popover)
-    ├── ButtonPair.jsx               ← a section button on the canvas: preview + ActionEditor on click
+    ├── ButtonPair.jsx               ← a section button on the canvas: click opens ActionEditor in a Popover
     ├── AutoGrowingTextarea.jsx      ← inline heading/subtitle editor
     ├── editorCanvas.js              ← canvas constants (EDITOR_TYPE, emptyLink)
     ├── EntranceControl.jsx          ← entrance animation sidebar panel
