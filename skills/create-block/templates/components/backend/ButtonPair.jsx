@@ -36,7 +36,7 @@ export function ButtonPair({
       >
         {text || addLabel}
       </span>
-      {/* The Popover renders in the admin document, where core's LinkControl has its stylesheet; inline in the canvas iframe it lays out unstyled. */}
+      {/* The Popover renders in the admin document, which loads core's styles but not the theme's Tailwind, so the editor is the inline-styled stacked one. */}
       {editing && (
         <Popover
           anchor={anchor}
@@ -52,6 +52,7 @@ export function ButtonPair({
               linkLabel={__('Button link', '__TEXT_DOMAIN__')}
               text={text}
               link={link}
+              stacked
               onTextChange={onTextChange}
               onLinkChange={onLinkChange}
             />

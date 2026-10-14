@@ -142,6 +142,7 @@ export function ActionEditor({
           label={linkLabel}
           value={link || emptyLink()}
           onChange={onLinkChange}
+          fullWidth={stacked}
         />
         {/* The picker's LinkControl has no toggle of its own here, so the
             flag sits directly under it. Every renderer that reads

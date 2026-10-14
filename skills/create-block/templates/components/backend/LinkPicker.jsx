@@ -58,8 +58,10 @@ if (typeof window !== 'undefined' && window.HTMLElement) {
   });
 }
 
-// A stored link has no title, so core's preview would print the URL twice; scoped to this wrapper.
-const LINK_PREVIEW_CSS = '.link-picker .block-editor-link-control__preview-info{display:none}';
+// Scoped to this wrapper: core's 350px min-width overflows a narrow popover, and a stored link has no title, so core's preview prints the URL twice.
+const LINK_PREVIEW_CSS =
+  '.link-picker .block-editor-link-control{min-width:0;max-width:100%}' +
+  '.link-picker .block-editor-link-control__preview-info{display:none}';
 
 const fullWidthStyles = {
   wrapper: { position: 'relative', width: '100%' },

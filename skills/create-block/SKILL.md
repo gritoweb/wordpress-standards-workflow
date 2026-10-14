@@ -199,7 +199,7 @@ builds every block.
 | `bg`/`background image`/`cover image` (fills the block behind other content) | image (ID-first) | `<name>Id` (number) | In the **sidebar**, inside a `PanelBody title="Background Media"`: `<AttachmentImageControl imageId={...} onSelect={...} onRemove={...} noStylesheet />` + `<ImagePositionControl />` right under it for the focal point. The canvas keeps only the **passive** full-bleed preview (`backgroundImage`/`<img>` with `focalCss(<name>Position)`) — no click target there. |
 | `icon` | string (Dashicon slug or arbitrary name) | `<name>` | `<TextControl>` (or `<IconPicker>` if the project ships one) |
 | `link`, `url`, `cta link`, `href` | link (Gutenberg `LinkControl` object: `{url, opensInNewTab}`) | `<name>` | `<LinkPicker label="..." value={...} onChange={...} />` — inside `ActionEditor` for a button, never in the sidebar |
-| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor>` in a core `Popover`** right below the button — always on canvas, never in the sidebar. `stacked={false}` (two-column layout) for a full-width/single CTA; `stacked={true}` (single vertical column) when the trigger sits inside a narrow per-item container (grid card, list item) — see the "Buttons / CTAs" rule below. **`ActionEditor` and `LinkPicker` never go inside `<InspectorControls>`.** |
+| `button`, `cta` (alone, no "link") | button **PAIR** | `<name>Text` (string) + `<name>Link` (object) | Styled `<span>` preview on canvas reflecting the button label. **Click opens `<ActionEditor>` in a core `Popover`** right below the button — always on canvas, never in the sidebar. `ButtonPair` always renders it `stacked` with a full-width `LinkPicker`: the Popover lives in the admin document, which has core's styles but not the theme's Tailwind, so only the inline-styled editor holds up there — see the "Buttons / CTAs" rule below. **`ActionEditor` and `LinkPicker` never go inside `<InspectorControls>`.** |
 | `color`, `bg color`, `text color` | string (hex / palette slug) | `<name>` | `<ColorPalette>` or `<PanelColorSettings>` |
 | `size`, `width`, `height`, `count`, `amount`, plain `number` | number (unsigned) | `<name>` | `<TextControl type="number">` or `<RangeControl>` |
 | `show X`, `enable X`, `visible`, `active`, `toggle`, "is X" boolean | boolean | `<name>` | `<ToggleControl>` |
@@ -270,9 +270,7 @@ builds every block.
      of `<ItemList>`'s pattern) does avoid every overlap — sidebar and
      canvas never touch — but it was never what was asked for, and it
      reads as inconsistent with every other button in the theme, which
-     opens on the canvas right where you clicked. `stacked={true}`
-     gets the same "fits a narrow column" property without leaving the
-     canvas.
+     opens on the canvas right where you clicked.
 
 3. **Array recursion**: when the dev says "list of X with title, image, and description", recurse the inference for each sub-field (`title` → string, `image` → pair, `description` → string). The final shape is one array attribute whose items are objects with typed sub-fields. Sanitize per-sub-field in `block.php`'s `array_map(...)`.
 
@@ -349,12 +347,12 @@ Attributes:
     reasoning (including three same-day mistakes worth reading before
     touching this again). Styled `<span>` preview on canvas; clicking it
     opens `<ActionEditor>` in a core `Popover` right below the button —
-    never the sidebar. Only the `stacked` prop changes:
-    - Full-width/single CTA → `stacked={false}` (two-column layout); the
-      block grows to contain it, on its own.
-    - CTA inside a repeater item (grid card, list item) → `stacked={true}`
-      (the same single-column layout `ActionEditor` already has for
-      sidebar use) — fits a narrow column without leaving the canvas.
+    never the sidebar. The editor in the Popover is always `stacked` with a
+    full-width `LinkPicker` (`fullWidth={stacked}`): the Popover renders in
+    the admin document, which has no theme Tailwind, so the two-column
+    `stacked={false}` layout and the picker's Tailwind button fall apart
+    there (unstyled labels, the URL as a bare link). A section CTA and a
+    repeater item's link use the same `ButtonPair`.
   - **Repeaters (any array: cards, slides, accordion items, tabs, logos,
     team…) — ONE pattern, no exceptions:**
     - **Sidebar:** a `PanelBody` ("Items" / "Slides" / "Cards") holding
