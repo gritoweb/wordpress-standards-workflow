@@ -199,7 +199,9 @@ goes in `launch/` at the theme root, so the user can delete it any time.
    - `N/A`: the item doesn't apply (no e-commerce, not a migration). Say why.
 
    The evidence is real: the command's output line, or the file and line. A check that errors is
-   `MANUAL` with the error, never `PASS`.
+   `MANUAL` with the error, never `PASS`. For a **Required** item you mark `PASS`, `FIXED` or `N/A`,
+   also give `"command"`: the exact command you ran. The builder refuses the report without it, and the
+   report prints the command next to its output, so anyone can run it again.
 
 Nothing changes in this step, not even an "obvious" fix.
 
@@ -257,8 +259,8 @@ node .claude/skills/launch/report/build.mjs --dir launch <<'JSON'
   "date": "<YYYY-MM-DD>",
   "target": { "environment": "local|staging|production", "siteurl": "<siteurl>", "url": "<$URL>", "psi_url": "<$PSI_URL>", "remote": null },
   "items": [
-    { "id": "SEC-1", "result": "PASS", "evidence": "wp user list: no admin" },
-    { "id": "SET-1", "result": "FIXED", "evidence": "timezone_string America/Sao_Paulo", "suggested": true },
+    { "id": "SEC-1", "result": "PASS", "command": "lando wp user list --field=user_login", "evidence": "luis, editor (no admin)" },
+    { "id": "SET-1", "result": "FIXED", "command": "lando wp option get timezone_string", "evidence": "America/Sao_Paulo", "suggested": true },
     { "id": "MAIL-1", "result": "FAIL", "evidence": "no SMTP plugin active", "action": "Install WP Mail SMTP and set the credentials." }
   ],
   "fixed": [ { "id": "SET-1", "command": "wp option update timezone_string America/Sao_Paulo", "recheck": "option is set" } ],

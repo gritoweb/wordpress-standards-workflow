@@ -28,6 +28,20 @@ test("an incomplete or malformed result set is refused, naming what is wrong", (
   assert.ok(errors.some((e) => /SEO-2 appears twice/.test(e)) && errors.some((e) => /SEO-2: a FAIL needs an action/.test(e)));
 });
 
+test("a required item the agent clears needs the command that proved it", () => {
+  const items = all().map((i) => ({ ...i, command: "wp option get x" }));
+  assert.deepEqual(validate({ project: "Acme", items }, LIST), []);
+  delete items.find((i) => i.id === "SEC-1").command;
+  delete items.find((i) => i.id === "SEC-17").command;
+  items.find((i) => i.id === "LIVE-4").result = "N/A"; delete items.find((i) => i.id === "LIVE-4").command;
+  const errors = validate({ project: "Acme", items }, LIST);
+  assert.ok(errors.some((e) => /SEC-1: a required PASS needs the command/.test(e)));
+  assert.ok(errors.some((e) => /LIVE-4: a required N\/A needs the command/.test(e)));
+  assert.ok(!errors.some((e) => /SEC-17/.test(e)), "recommended items don't need it");
+  items.find((i) => i.id === "SEC-1").source = "tools";
+  assert.ok(!validate({ project: "Acme", items }, LIST).some((e) => /SEC-1:/.test(e)), "tool results carry their own evidence");
+});
+
 test("counts by status, the launch blockers, then every check with its status", () => {
   const items = all();
   Object.assign(items.find((i) => i.id === "SEC-1"), { result: "FAIL", evidence: "`admin` exists", action: "create a new admin, delete `admin`" });

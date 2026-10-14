@@ -40,6 +40,9 @@ export function validate(input, list) {
     if (!RESULTS.includes(r.result)) errors.push(`${r.id}: result must be one of ${RESULTS.join(", ")}`);
     if (!r.evidence) errors.push(`${r.id}: evidence is required`);
     if (r.result === "FAIL" && !r.action) errors.push(`${r.id}: a FAIL needs an action (what to do)`);
+    // The agent can't approve itself: a required item it clears must name the command whose output is the evidence.
+    if (r.source !== "tools" && known.get(r.id)?.severity === "Required" && ["PASS", "FIXED", "N/A"].includes(r.result) && !String(r.command ?? "").trim())
+      errors.push(`${r.id}: a required ${r.result} needs the command that proved it ("command")`);
     seen.add(r.id);
   }
   const missing = list.filter((i) => !seen.has(i.id)).map((i) => i.id);
@@ -102,7 +105,7 @@ export function buildMarkdown(input, list, raw = {}) {
     md.push(`### ${section}`, "", "| ID | Severity | Item | Result | Evidence |", "|---|---|---|---|---|",
       ...xs.map((r) => {
         const next = ["FAIL", "MANUAL", "LOCAL"].includes(r.result) && r.action ? ` → **${cell(r.action)}**` : "";
-        return `| ${r.id} | ${r.severity} | ${cell(r.title)} | ${r.result} | ${cell(r.evidence)}${r.suggested ? " (suggested value, confirm)" : ""}${next} |`;
+        return `| ${r.id} | ${r.severity} | ${cell(r.title)} | ${r.result} | ${r.command ? `\`${cell(r.command)}\`: ` : ""}${cell(r.evidence)}${r.suggested ? " (suggested value, confirm)" : ""}${next} |`;
       }), "");
   }
   // The PageSpeed section already says which URL it measured; a note repeating it is noise.
@@ -111,7 +114,7 @@ export function buildMarkdown(input, list, raw = {}) {
   const t = input.target ?? {};
   md.push("---", "", "After fixing, run `/launch` again and choose **re-check**: only what failed is checked. Full evidence: `results.json`.", "",
     `Checked ${input.date ?? new Date().toISOString().slice(0, 10)} · target ${t.environment ?? "?"} (\`${t.siteurl ?? t.url ?? "?"}\`) · PageSpeed URL ${t.psi_url ?? "-"} · tools: http-audit, page-audit, psi${raw.redirects ? ", redirect-audit" : ""}`);
-  const results = rows.map(({ id, severity, title, result, evidence, action, suggested, source }) => ({ id, severity, title, result, evidence, action: action ?? null, suggested: !!suggested, decided_by: source ?? "agent" }));
+  const results = rows.map(({ id, severity, title, result, evidence, command, action, suggested, source }) => ({ id, severity, title, result, evidence, command: command ?? null, action: action ?? null, suggested: !!suggested, decided_by: source ?? "agent" }));
   return { markdown: md.join("\n") + "\n", verdict, counts, results };
 }
 
