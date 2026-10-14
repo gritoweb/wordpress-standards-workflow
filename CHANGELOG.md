@@ -2,6 +2,62 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-10-14 — `launch` is fail-closed: it only approves what it proved
+
+The Griddl launch went live with 14 problems the skill didn't catch, fixed
+by hand afterwards. Rebuilt on a Lando copy with the same faults
+(`griddlsim`), the previous skill caught 1 of 14 and blocked on none.
+
+### Changed
+- **The verdict is fail-closed.** A Required item left `MANUAL` or `LOCAL`
+  blocks the launch like a `FAIL`, listed under a new **Prove before
+  launch** section. "Ready locally" is gone: before, an unconfirmed form
+  submission (MAIL-2's manual step) still gave "Ready to launch".
+- **The agent can't approve itself.** A Required `PASS`, `FIXED` or `N/A`
+  from the agent needs `"command"`, the exact command it ran; the builder
+  refuses the report without it and prints it next to the output.
+- **Reports are written to `~/launch-reports/<theme>/`.** They used to go in
+  `<theme>/launch/`, which the site serves: the report PDF and JSON were
+  public (a Griddl fault the skill itself caused). `build.mjs` has no
+  default folder now; only the public icon and share image stay in
+  `<theme>/launch-brand/`.
+- PAGE-2 (search) and MAIL-4 (anti-spam) are Required; SEC-6 requires
+  Redirection; pages with a form join the page audit even outside the menu.
+
+### Added
+- SEC-18: theme files the site serves (`.env`, reports, `docs/`,
+  `CLAUDE.md`, `.claude/`, `graphify-out/`, manifests), a few per folder.
+- SEC-19: author enumeration (`/?author=1` to `/author/<login>/`, author
+  sitemap).
+- PAGE-7: author, date and category archives on Sage's `index` fallback.
+- MAIL-5: a form whose `action` is a missing page. MAIL-6 (manual): each
+  form submitted on the launch environment, confirmed by the user.
+- `repo-audit.mjs`: CODE-5 (`/home/<user>/` paths), CODE-6 (repository or
+  WordPress copied without a submodule), LIVE-8 (`docs/tech-debt.md` with no
+  open `[blocker]`, every code TODO with owner and date). `project-init`
+  installs the `docs/tech-debt.md` template.
+
+### Fixed
+- SEO-10 and PAGE-2 passed Sage's own 404 and search, because "themed" only
+  meant "has a `<header>`". They now fail on the starter's default text, and
+  search may instead be switched off (404 on `?s=`).
+- PAGE-1 passed with a `<link rel="icon">` while `/favicon.ico` answered
+  WordPress's logo or HTML: it now follows `/favicon.ico` to a real image.
+- SEC-9 only probed root paths: the theme's exposed files are SEC-18.
+
+### Verified
+- `node --test "skills/launch/**/*.test.mjs"`: 42/42 pass, with a test per
+  new rule (Sage 404 fails, search off passes, a form posting to a 404
+  fails, a required MANUAL blocks, an agent PASS without a command is
+  refused).
+- `griddlsim` (copy of `luistest1300` with the 14 Griddl faults), same
+  pages and scoring before and after: **1/14 caught, 0 blocking** on
+  `ba7f931` → **14/14 caught, 14 blocking** on this version. A finding only
+  counts if its evidence names the right file (SEC-9's `readme.html` fail
+  doesn't count for the theme's exposed reports).
+- The fixed live `griddl.co`: the new 404, search, favicon, author,
+  exposed-files and form checks all pass, so no false positive there.
+
 ## 2026-10-01 — Launch report: counts and every check are back, the PDF prints cleanly
 
 ### Changed
