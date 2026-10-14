@@ -270,10 +270,13 @@ JSON
 
 - If it exits 1, read the list it prints (missing IDs, contradictions, a FAIL without an action), fix
   your results and run it again. Never work around it by writing the report by hand.
-- It prints the verdict and counts as JSON. The verdict is computed: **Ready to launch** only with no
-  Required `FAIL` and nothing `LOCAL`.
+- It prints the verdict and counts as JSON. The verdict is computed and **fail-closed**: **Ready to launch**
+  only when every Required item is `PASS`, `FIXED` or `N/A`. A Required item left `MANUAL` or `LOCAL` was
+  not proven, so it blocks the launch exactly like a `FAIL`. A local run is therefore never "ready": re-check on
+  the launch environment's public URL.
 - The report opens with the verdict and a **count per status**, then:
   - **Fix before launch** (the required fails, with the action);
+  - **Prove before launch** (required items still `MANUAL` or `LOCAL`, with what is missing);
   - **Fixed during this run**;
   - **PageSpeed** (with the screenshot from pagespeed.web.dev or, for a local estimate, from
     Lighthouse's own report, saved as `launch/lighthouse-*.html`);

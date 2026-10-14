@@ -82,12 +82,16 @@ export function buildMarkdown(input, list, raw = {}) {
   const rows = input.items.map((r) => ({ ...meta.get(r.id), ...r })).sort((a, b) => order.get(a.id) - order.get(b.id));
   const by = (res) => rows.filter((r) => r.result === res);
   const blockers = by("FAIL").filter((r) => r.severity === "Required");
-  const verdict = blockers.length ? "Not ready" : by("LOCAL").length ? "Ready locally" : "Ready to launch";
+  // Fail-closed: a required item nobody proved (MANUAL, or LOCAL on a dev URL) blocks the launch like a FAIL.
+  const unproven = rows.filter((r) => r.severity === "Required" && ["MANUAL", "LOCAL"].includes(r.result));
+  const verdict = blockers.length || unproven.length ? "Not ready" : "Ready to launch";
   const counts = Object.fromEntries(RESULTS.map((r) => [r, by(r).length]));
+  const plural = (n, s) => `${n} required item${n > 1 ? "s" : ""} ${s}`;
   const md = [`# Launch report: ${input.project}`, "",
-    `**${verdict}**${blockers.length ? ` · ${blockers.length} required item${blockers.length > 1 ? "s" : ""} to fix` : ""}${verdict === "Ready locally" ? ` · ${counts.LOCAL} to check on the public URL` : ""}`, "",
+    `**${verdict}**${blockers.length ? ` · ${plural(blockers.length, "to fix")}` : ""}${unproven.length ? ` · ${plural(unproven.length, "not proven yet")}` : ""}`, "",
     "| Result | Items |", "|---|---|", ...RESULTS.map((res) => `| ${res} | **${counts[res]}**${res === "FAIL" && counts.FAIL ? ` (${blockers.length} required)` : ""} |`), ""];
   if (blockers.length) md.push("## Fix before launch", "", "| ID | Problem | Do this |", "|---|---|---|", ...blockers.map((r) => `| ${r.id} | ${cell(r.title)} | ${cell(r.action)} |`), "");
+  if (unproven.length) md.push("## Prove before launch", "", "| ID | Item | Result | What is missing |", "|---|---|---|---|", ...unproven.map((r) => `| ${r.id} | ${cell(r.title)} | ${r.result} | ${cell(r.action ?? (r.result === "LOCAL" ? "Re-check on the launch environment's public URL." : r.evidence))} |`), "");
   if (input.fixed?.length) md.push("## Fixed during this run", "", "| ID | Command | Re-check |", "|---|---|---|", ...input.fixed.map((f) => `| ${f.id} | \`${cell(f.command)}\` | ${cell(f.recheck)} |`), "", `Backup: ${input.backup ? `\`${cell(input.backup)}\`` : "none (nothing was changed)"}`, "");
   md.push(...pageSpeed(raw.psi, input.target), "");
   md.push(...migration(raw.redirects), "");

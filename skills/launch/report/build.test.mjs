@@ -45,9 +45,15 @@ test("counts by status, the launch blockers, then every check with its status", 
   assert.equal((r.markdown.match(/^\| [A-Z]+-\d+ \| (Required|Recommended|Optional) \|/gm) ?? []).length, LIST.length, "every check is listed once in All checks");
   items.find((i) => i.id === "SEC-1").result = "FIXED";
   r = buildMarkdown({ project: "Acme", items }, LIST);
-  assert.equal(r.verdict, "Ready locally");
+  assert.equal(r.verdict, "Not ready", "a required item still LOCAL is not proven");
+  assert.match(r.markdown, /1 required item not proven yet/);
+  assert.match(r.markdown, /## Prove before launch\n\n\| ID \| Item \| Result \| What is missing \|\n\|---\|---\|---\|---\|\n\| SEC-7 \|[^\n]*\| LOCAL \|/);
   items.find((i) => i.id === "SEC-7").result = "PASS";
-  assert.equal(buildMarkdown({ project: "Acme", items }, LIST).verdict, "Ready to launch");
+  assert.equal(buildMarkdown({ project: "Acme", items }, LIST).verdict, "Ready to launch", "a recommended MANUAL doesn't block");
+  Object.assign(items.find((i) => i.id === "SEC-15"), { result: "MANUAL", evidence: "could not read the 2FA meta", action: "Each admin enables 2FA." });
+  r = buildMarkdown({ project: "Acme", items }, LIST);
+  assert.equal(r.verdict, "Not ready", "a required MANUAL blocks the launch");
+  assert.match(r.markdown, /\| SEC-15 \|[^\n]*\| MANUAL \| Each admin enables 2FA\. \|/);
 });
 
 test("pipes in evidence can't break a table row; PageSpeed shows its screenshot and calls out another URL", () => {
