@@ -57,6 +57,7 @@ export function auditHtml(html, pageUrl, { privacyUrl, termsUrl } = {}) {
       footer_text: text(footer).slice(0, 400) || null,
     },
     forms: forms.length,
+    form_actions: [...new Set(forms.map((f) => attr(f.match(/<form\b[^>]*>/i)[0], "action")).filter((a) => a && !/^(#|javascript:)/i.test(a)).map((a) => { try { return new URL(a, pageUrl).href; } catch { return null; } }).filter(Boolean))],
     forms_protected: forms.filter((f) => SIG.captcha.test(f) || SIG.honeypot.test(f)).length,
     page_has_captcha_script: found(SIG.captcha, html),
     links: abs,
@@ -90,6 +91,8 @@ export async function pageAudit(urls, { links = false, validate = false, privacy
     if (r.status === 200) {
       const a = auditHtml(r.text, r.url, { privacyUrl, termsUrl });
       if (a.og.image) a.og.image_status = (await get(new URL(a.og.image, r.url).href, "HEAD")).status;
+      // A form whose action is a missing page sends the visitor to a 404: GET is enough to see that it doesn't exist.
+      a.form_actions = await Promise.all(a.form_actions.map(async (action) => ({ action, status: (await get(action)).status })));
       Object.assign(page, a);
       if (validate) page.w3c = await w3c(r.text);
     }

@@ -35,8 +35,9 @@ every item it can, fixes what the user approves, and writes the report.
   - `brand-images.mjs <logo> --out launch/brand [--bg <colour>]` makes the site icon and OG image
 
   Run each one once and read every item from its output.
-- The pages for the `P.` checks are the home page plus every page in the main menu
-  (`wp menu item list <menu> --fields=url`), 15 at most.
+- The pages for the `P.` checks are the home page, every page in the main menu
+  (`wp menu item list <menu> --fields=url`) and every published page with a form, 15 at most. Pages with a form:
+  `wp db query "SELECT ID FROM wp_posts WHERE post_status='publish' AND post_type='page' AND post_content REGEXP '<form|contact-form-7|wpforms|gravityform|fluentform'"`, then `wp post get <id> --field=url`.
 
 Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when there is one, **Fix**.
 
@@ -141,9 +142,9 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
   - Check: `wp option get permalink_structure`
   - Pass if: not empty
   - Fix: `wp rewrite structure '/%postname%/'`, then `wp rewrite flush`
-- [ ] **SEO-10** Required `auto`: A themed 404
+- [ ] **SEO-10** Required `auto`: The project's own 404
   - Check: `H.not_found`
-  - Pass if: status 404 and `themed` is true
+  - Pass if: status 404, `themed` is true and `starter_default` is null (Sage's "Sorry, but the page you are trying to view does not exist" is a fail)
 - [ ] **SEO-11** Required `auto` `ask`: Every old URL still works after a migration
   - Ask: is this site replacing an old one? No / the old site's URL / a file with the old URLs
   - Check: `R` from `redirect-audit.mjs $URL --old <old-site>` (it reads the old sitemap, or the Wayback
@@ -254,19 +255,24 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
   - Check: `wp plugin list --status=active --field=name`
   - Pass if: `wp-mail-smtp` or `fluent-smtp` is listed
   - Fix: `wp plugin install wp-mail-smtp --activate`. The credentials stay manual (MAIL-3).
-- [ ] **MAIL-2** Required `auto` `fix` `ask`: WordPress sends email, and every form delivers
+- [ ] **MAIL-2** Required `auto` `fix` `ask`: WordPress sends email
   - Ask: an inbox to receive the test (suggest the admin email)
   - Fix (it sends one real email, so it goes in the approval list):
     `wp eval 'var_export(wp_mail("<inbox>", "Launch check: <site>", "Sent by the launch skill."));'`
-  - Pass if: it prints `true`, meaning WordPress handed the message to the mailer. The report still asks the user
-    to confirm it arrived (not in spam), and to submit each form on the site once.
+  - Pass if: it prints `true`, meaning WordPress handed the message to the mailer. Whether each form delivers is MAIL-5 and MAIL-6.
 - [ ] **MAIL-3** Recommended `auto`: Sender is a real domain address, and the mailer is configured
   - Check: `wp option pluck wp_mail_smtp mail from_email`, `wp option pluck wp_mail_smtp mail mailer`
   - Pass if: the From Email ends with the site's own domain (not `wordpress@` or a free webmail), and the mailer
     is not `mail` (PHP's default). The SMTP credentials stay the dev's: WP Mail SMTP › Settings.
-- [ ] **MAIL-4** Recommended `auto`: Every form has anti-spam
+- [ ] **MAIL-4** Required `auto`: Every form has anti-spam
   - Check: `P.forms`, `P.forms_protected`
   - Pass if: they are equal on every page (each form has Turnstile, reCAPTCHA, hCaptcha or a honeypot)
+- [ ] **MAIL-5** Required `auto`: Every form's action exists
+  - Check: `P.form_actions` (each form's `action`, fetched once)
+  - Pass if: no action answers 404, 410, 5xx or nothing. An empty action posts to its own page and counts as existing.
+- [ ] **MAIL-6** Required `manual`: Every form was submitted on the launch environment and its message arrived
+  - Steps: submit each form once on the environment that goes live; confirm the message reached the inbox (not spam) and the visitor saw the success state, not a 404 or a blank page
+  - Pass if: the user confirms it for every form. The agent writes the user's confirmation as the `command` (for example `user: "contact form received at 14:02"`). No forms anywhere: `N/A`, with the `wp db query` above as the command.
 
 ## Analytics and legal
 
@@ -284,13 +290,13 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
 
 ## Pages and icons
 
-- [ ] **PAGE-1** Required `auto` `fix` `ask`: Site icon
-  - Check: `H.favicon`, `wp option get site_icon`
-  - Pass if: `site_icon` is set (non-zero) or `icon_link` is true, and `default_wp_icon` is false
+- [ ] **PAGE-1** Required `auto` `fix` `ask`: Site icon, and `/favicon.ico` answers with it
+  - Check: `H.favicon` (it follows `/favicon.ico` to the end)
+  - Pass if: status 200, `is_image` is true and `default_wp_icon` is false. A `<link rel="icon">` alone doesn't count: browsers and crawlers still ask for `/favicon.ico`.
   - Fix: see **Logo** below. `wp media import launch/brand/site-icon-512.png --porcelain`, then `wp option update site_icon <id>`.
-- [ ] **PAGE-2** Recommended `auto`: Search results themed, with a "no results" state
-  - Check: `H.search`
-  - Pass if: `themed` and `has_no_results_text` are true
+- [ ] **PAGE-2** Required `auto`: Search is the project's, or switched off
+  - Check: `H.search` (`/?s=zzzz` and the empty `/?s=`)
+  - Pass if: `disabled` is true (both answer 404 or redirect away from `?s=`), or both answer 200, `themed` and `no_results_marker` are true and `starter_default` is null. A site that doesn't use search switches it off in code.
 - [ ] **PAGE-3** Recommended `auto`: The password-protected page form is themed
   - Check: `grep -rln "the_password_form" $THEME/app $THEME/resources/views | grep -v "partials/comments"`
   - Pass if: at least one match: the theme renders or filters the password form. `post_password_required` alone

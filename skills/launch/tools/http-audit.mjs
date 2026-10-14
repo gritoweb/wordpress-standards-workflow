@@ -11,9 +11,9 @@ async function get(url, { method = "GET", body, redirect = "manual", headers } =
   try {
     const r = await fetch(url, { method, body, redirect, headers: { "user-agent": "GritoWeb-launch-check/1.0", ...headers }, signal: AbortSignal.timeout(20000) });
     const text = method === "HEAD" ? "" : await r.text();
-    return { status: r.status, headers: Object.fromEntries(r.headers), text, error: null };
+    return { status: r.status, url: r.url, headers: Object.fromEntries(r.headers), text, error: null };
   } catch (e) {
-    return { status: 0, headers: {}, text: "", error: e.cause?.code ?? e.message };
+    return { status: 0, url, headers: {}, text: "", error: e.cause?.code ?? e.message };
   }
 }
 
@@ -74,14 +74,23 @@ export async function httpAudit(base) {
   }
 
   const missing = await get(origin + "/launch-check-missing-page-" + Date.now() + "/", { redirect: "follow" });
-  out.not_found = { status: missing.status, themed: /<header|class="[^"]*(site-header|banner)/i.test(missing.text) && !/wp-die-message/.test(missing.text) };
+  const themed = (r) => /<header|class="[^"]*(site-header|banner)/i.test(r.text) && !/wp-die-message/.test(r.text);
+  // A starter's own template renders inside the theme too, so "themed" alone can't tell a project 404 from Sage's.
+  const starter = (r) => r.text.match(SIG.starterDefault)?.[0] ?? null;
+  out.not_found = { status: missing.status, themed: themed(missing), starter_default: starter(missing) };
 
+  // Search must be either a project template with an empty state, or switched off (404 or a redirect away from ?s=).
+  const off = (r) => r.status === 404 || !/[?&]s=/.test(r.url);
   const search = await get(origin + "/?s=zzzzlaunchcheck", { redirect: "follow" });
+  const blank = await get(origin + "/?s=", { redirect: "follow" });
   // body_class() marks an empty search with search-no-results, whatever the site's language.
-  out.search = { status: search.status, themed: /<header/i.test(search.text), no_results_marker: /<body[^>]*class=["'][^"']*\bsearch-no-results\b/i.test(search.text) };
+  out.search = { status: search.status, themed: themed(search), no_results_marker: /<body[^>]*class=["'][^"']*\bsearch-no-results\b/i.test(search.text), starter_default: starter(search),
+    blank: { status: blank.status, themed: themed(blank) }, disabled: off(search) && off(blank) };
 
-  const fav = await get(origin + "/favicon.ico", { method: "HEAD" });
-  out.favicon = { status: fav.status, location: fav.headers.location ?? null, default_wp_icon: /w-logo/.test(fav.headers.location ?? ""), icon_link: /<link[^>]+rel=["'][^"']*icon/i.test(home.text) };
+  // Browsers and crawlers ask for /favicon.ico whatever the <link> says: it must end at a real image that isn't WordPress's.
+  const fav = await get(origin + "/favicon.ico", { redirect: "follow" });
+  const favType = fav.headers["content-type"] ?? null;
+  out.favicon = { status: fav.status, final_url: fav.url, content_type: favType, is_image: /^image\//i.test(favType ?? ""), default_wp_icon: /w-logo/.test(fav.url ?? ""), icon_link: /<link[^>]+rel=["'][^"']*icon/i.test(home.text) };
   out.apple_touch_icon = (await get(origin + "/apple-touch-icon.png", { method: "HEAD" })).status;
 
   const second = await get(url.href, { redirect: "follow" });

@@ -62,7 +62,12 @@ export const EVALUATORS = {
   },
   "SEO-7": ({ pages }) => { const h = home({ pages }); if (!h?.og) return null; const ok = h.og.title && h.og.description && h.og.image && h.og.image_status === 200; return ok ? pass(`og:title, og:description, og:image (${h.og.image}, 200)`) : fail(`og: title ${h.og.title}, description ${h.og.description}, image ${h.og.image ?? "none"}${h.og.image ? ` (${h.og.image_status})` : ""}`, "Set the default OG image and the home description (SEO-7 fix)."); },
   "SEO-8": ({ pages }) => { if (!pages) return null; const bad = (pages.pages ?? []).flatMap((p) => p.images_without_alt ?? []); return bad.length ? fail(`img without alt: ${bad.slice(0, 5).join(", ")}${bad.length > 5 ? ` (+${bad.length - 5})` : ""}`, "Add alt text in the Media Library or the block.") : pass("every img has an alt attribute"); },
-  "SEO-10": ({ http }) => http && (http.not_found.status === 404 && http.not_found.themed ? pass("missing page → 404 inside the theme") : fail(`missing page → ${http.not_found.status}${http.not_found.themed ? "" : ", not themed"}`, "Add a themed 404 template.")),
+  "SEO-10": ({ http }) => {
+    if (!http) return null;
+    const n = http.not_found;
+    if (n.status === 404 && n.themed && !n.starter_default) return pass("missing page → 404 with the project's own template");
+    return fail(`missing page → ${n.status}${n.themed ? "" : ", not themed"}${n.starter_default ? `, starter's default text: "${n.starter_default}"` : ""}`, "Write the project's 404 template (resources/views/404.blade.php): message, search or links back.");
+  },
   "SEO-11": ({ redirects }) => {
     if (!redirects) return null;
     if (redirects.error) return { result: "MANUAL", evidence: redirects.error, action: "Paste the old URLs into a file and run redirect-audit with --list." };
@@ -104,12 +109,28 @@ export const EVALUATORS = {
     const bad = withForms.filter((p) => p.forms_protected < p.forms);
     return bad.length ? fail(`unprotected forms on ${bad.map((p) => new URL(p.url).pathname).join(", ")}`, "Add Turnstile/reCAPTCHA or a honeypot to each form.") : pass(`${withForms.reduce((n, p) => n + p.forms, 0)} form(s), all with anti-spam`);
   },
-  "PAGE-1": ({ http }) => (http?.favicon?.default_wp_icon ? fail(`favicon.ico → ${http.favicon.location}`, "Set the site icon (PAGE-1 fix).") : null),
+  "PAGE-1": ({ http }) => {
+    const f = http?.favicon;
+    if (!f) return null;
+    if (f.status === 200 && f.is_image && !f.default_wp_icon) return pass(`/favicon.ico → ${f.final_url} (${f.content_type})`);
+    return fail(`/favicon.ico → ${f.status} ${f.final_url ?? ""} (${f.content_type ?? "no type"})${f.default_wp_icon ? ", WordPress's own icon" : ""}`, "Set the site icon (PAGE-1 fix), so WordPress answers /favicon.ico with it.");
+  },
   "PAGE-2": ({ http }) => {
-    if (!http) return null;
-    if (!http.search.themed) return fail(`search page not themed (${http.search.status})`, "Add a themed search template.");
-    return http.search.no_results_marker ? pass("empty search renders in the theme with body class search-no-results")
-      : { result: "MANUAL", evidence: "themed, but the body has no search-no-results class", action: "Search a nonsense term and check the 'no results' message." };
+    const s = http?.search;
+    if (!s) return null;
+    if (s.disabled) return pass(`search switched off: /?s= → ${s.blank.status}, /?s=zzzz → ${s.status}`);
+    const problems = [s.status !== 200 && `/?s=zzzz → ${s.status}`, s.blank.status !== 200 && `/?s= → ${s.blank.status}`, !s.themed && "not themed",
+      s.starter_default && `starter's default text: "${s.starter_default}"`, !s.no_results_marker && "no search-no-results state"].filter(Boolean);
+    return problems.length ? fail(`search: ${problems.join(", ")}`, "Write the project's search template with a 'no results' state, or switch search off in code (404 on ?s=) if the site doesn't use it.")
+      : pass("/?s= and /?s=zzzz render the project's search template with a no-results state");
+  },
+  "MAIL-5": ({ pages }) => {
+    if (!pages) return null;
+    const withForms = (pages.pages ?? []).filter((p) => p.forms > 0);
+    if (!withForms.length) return { result: "N/A", evidence: "no forms on the audited pages" };
+    const broken = withForms.flatMap((p) => (p.form_actions ?? []).filter((a) => a.status === 0 || a.status === 404 || a.status === 410 || a.status >= 500).map((a) => `${new URL(p.url).pathname} → ${a.action} (${a.status})`));
+    return broken.length ? fail(`form action is missing: ${broken.join(", ")}`, "Point each form at its real handler (form plugin or theme endpoint), then submit it once.")
+      : pass(`${withForms.reduce((n, p) => n + p.forms, 0)} form(s); every action exists or posts to its own page`);
   },
   "PAGE-5": ({ http }) => (http?.apple_touch_icon === 200 ? pass("/apple-touch-icon.png → 200") : null),
 };

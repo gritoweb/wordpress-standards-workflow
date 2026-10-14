@@ -9,8 +9,8 @@ const http = (over = {}) => ({
   powered_by: null, soft_404: false, exposed: [], directory_listing: { "wp-content/uploads/": false },
   xmlrpc: { status: 403, open: false }, rest_users: { status: 401, exposes_users: false },
   robots: { status: 200, disallow_all: false, sitemap_line: true }, sitemap: { path: "sitemap_index.xml", entries: 3 },
-  not_found: { status: 404, themed: true }, search: { status: 200, themed: true, no_results_marker: true },
-  favicon: { status: 200, default_wp_icon: false }, apple_touch_icon: 404, cache: { headers: {}, hit: false }, cdn: null, ...over,
+  not_found: { status: 404, themed: true, starter_default: null }, search: { status: 200, themed: true, no_results_marker: true, starter_default: null, blank: { status: 200, themed: true }, disabled: false },
+  favicon: { status: 200, final_url: "https://acme.com/favicon.ico", content_type: "image/x-icon", is_image: true, default_wp_icon: false }, apple_touch_icon: 404, cache: { headers: {}, hit: false }, cdn: null, ...over,
 });
 const pages = { pages: [{ url: "https://acme.com/", final_url: "https://acme.com/", status: 200, title: "Acme", meta_description: "A".repeat(80), h1_count: 1, canonical: "https://acme.com/", og: { title: true, description: true, image: "/og.png", image_status: 200 }, images_without_alt: [], placeholder_images: [], forms: 0, analytics: "gtag('config','G-1", consent_banner: null, footer_links: { privacy: null, terms: null } }], duplicate_titles: [], links: { checked: 4, broken: [] } };
 
@@ -42,4 +42,33 @@ test("PageSpeed decides PERF-2 only when the reading is decisive", () => {
   assert.equal(EVALUATORS["PERF-2"]({ psi: psi({ decisive: true }) }).result, "FAIL");
   assert.equal(EVALUATORS["PERF-2"]({ psi: psi({ decisive: false }) }).result, "MANUAL");
   assert.equal(EVALUATORS["PERF-2"]({ psi: psi({ decisive: true, source: "Lighthouse (local estimate, re-run on PageSpeed Insights). Reason: local URL" }) }).result, "LOCAL");
+});
+
+test("Sage's own 404 and search fail; search switched off passes", () => {
+  const sage404 = http({ not_found: { status: 404, themed: true, starter_default: "Sorry, but the page you are trying to view does not exist" } });
+  assert.equal(EVALUATORS["SEO-10"]({ http: sage404 }).result, "FAIL");
+  assert.equal(EVALUATORS["SEO-10"]({ http: http() }).result, "PASS");
+  const sageSearch = http({ search: { status: 200, themed: true, no_results_marker: true, starter_default: "Sorry, no results were found", blank: { status: 200, themed: true }, disabled: false } });
+  assert.match(EVALUATORS["PAGE-2"]({ http: sageSearch }).evidence, /starter's default text/);
+  const off = http({ search: { status: 404, themed: true, no_results_marker: false, starter_default: null, blank: { status: 404, themed: true }, disabled: true } });
+  assert.equal(EVALUATORS["PAGE-2"]({ http: off }).result, "PASS");
+  const broken = http({ search: { status: 500, themed: false, no_results_marker: false, starter_default: null, blank: { status: 200, themed: true }, disabled: false } });
+  assert.equal(EVALUATORS["PAGE-2"]({ http: broken }).result, "FAIL");
+});
+
+test("/favicon.ico must end at a real image that isn't WordPress's", () => {
+  const html = http({ favicon: { status: 200, final_url: "https://acme.com/favicon.ico", content_type: "text/html; charset=UTF-8", is_image: false, default_wp_icon: false, icon_link: true } });
+  assert.equal(EVALUATORS["PAGE-1"]({ http: html }).result, "FAIL", "a <link rel=icon> alone doesn't pass");
+  const wp = http({ favicon: { status: 200, final_url: "https://acme.com/wp-includes/images/w-logo-blue-white-bg.png", content_type: "image/png", is_image: true, default_wp_icon: true } });
+  assert.match(EVALUATORS["PAGE-1"]({ http: wp }).evidence, /WordPress's own icon/);
+  assert.equal(EVALUATORS["PAGE-1"]({ http: http() }).result, "PASS");
+});
+
+test("a form whose action is a missing page fails MAIL-5; no forms is N/A", () => {
+  const page = (actions) => ({ pages: [{ ...pages.pages[0], url: "https://acme.com/contact/", forms: 1, forms_protected: 0, form_actions: actions }] });
+  assert.equal(EVALUATORS["MAIL-5"]({ pages: page([{ action: "https://acme.com/contact-thanks/", status: 404 }]) }).result, "FAIL");
+  assert.equal(EVALUATORS["MAIL-5"]({ pages: page([{ action: "https://acme.com/wp-admin/admin-post.php", status: 400 }]) }).result, "PASS", "a handler that refuses GET still exists");
+  assert.equal(EVALUATORS["MAIL-5"]({ pages: page([]) }).result, "PASS", "an empty action posts to its own page");
+  assert.equal(EVALUATORS["MAIL-5"]({ pages }).result, "N/A");
+  assert.equal(EVALUATORS["MAIL-4"]({ pages: page([]) }).result, "FAIL", "the form has no anti-spam");
 });

@@ -32,7 +32,8 @@ test("page audit reads the SEO, content and legal signals from the HTML", () => 
   assert.deepEqual(a.footer_links.privacy, { expected: "https://acme.com/privacy-policy", found: true }, "matched by URL, trailing slash ignored");
   assert.deepEqual(a.footer_links.terms, { expected: "https://acme.com/terms/", found: false });
   assert.equal(auditHtml(html, "https://acme.com/").footer_links.privacy, null, "no URL given: unknown, never guessed from words");
-  assert.equal(a.forms, 2); assert.equal(a.forms_protected, 1);
+  assert.equal(a.forms, 2); assert.equal(a.forms_protected, 1); assert.deepEqual(a.form_actions, []);
+  assert.deepEqual(auditHtml('<form action="/thanks/"><input name="e"></form><form action="#"></form><form role="search" action="/"><input name="s"></form>', "https://acme.com/contact/").form_actions, ["https://acme.com/thanks/"], "search forms and # are left out");
   assert.deepEqual(a.links, ["https://acme.com/about/", "https://other.com/x", "https://acme.com/privacy-policy/", "https://wordpress.org/"]);
   const c = auditHtml('<footer>Call <a href="tel:+55%2011%204000-1234">us</a> or <a href="mailto:Hello@Acme.com?subject=hi">mail</a>, Rua A 1</footer>', "https://acme.com/").contacts;
   assert.deepEqual(c.phones, ["+55 11 4000-1234"]); assert.deepEqual(c.emails, ["hello@acme.com"]); assert.match(c.footer_text, /Rua A 1/);

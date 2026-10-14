@@ -50,7 +50,7 @@ test("counts by status, the launch blockers, then every check with its status", 
   Object.assign(items.find((i) => i.id === "LIVE-7"), { result: "MANUAL", action: "test in four browsers" });
   let r = buildMarkdown({ project: "Acme", items }, LIST);
   assert.equal(r.verdict, "Not ready"); assert.equal(r.counts.FAIL, 2); assert.equal(r.counts.LOCAL, 1);
-  assert.match(r.markdown, /\| PASS \| \*\*69\*\* \|[\s\S]*\| FAIL \| \*\*2\*\* \(1 required\) \|/);
+  assert.match(r.markdown, new RegExp(`\\| PASS \\| \\*\\*${LIST.length - 4}\\*\\* \\|[\\s\\S]*\\| FAIL \\| \\*\\*2\\*\\* \\(1 required\\) \\|`));
   assert.match(r.markdown, /## Fix before launch\n\n\| ID \| Problem \| Do this \|\n\|---\|---\|---\|\n\| SEC-1 \|[^\n]*create a new admin/);
   assert.doesNotMatch(r.markdown, /## Fix before launch[\s\S]*SEC-17[\s\S]*## PageSpeed/, "a recommended fail is not a blocker");
   assert.match(r.markdown, /### Security[\s\S]*\| SEC-1 \| Required \| [^|]+ \| FAIL \| `admin` exists → \*\*create a new admin/);
@@ -89,7 +89,7 @@ test("pipes in evidence can't break a table row; PageSpeed shows its screenshot 
 test("--todo lists exactly the items the tools can't decide for this run", () => {
   const none = todo(LIST, {});
   assert.equal(none.length, LIST.length, "with no tool output, the agent owns every item");
-  const raw = { http: { https: { redirects_to_https: true, https_status: 200 }, headers: {}, exposed: [], directory_listing: {}, xmlrpc: { open: false, status: 403 }, rest_users: { exposes_users: false, status: 401 }, robots: { status: 200, disallow_all: false, sitemap_line: true }, sitemap: null, not_found: { status: 404, themed: true }, search: { themed: true, no_results_marker: true }, favicon: {}, cache: { hit: false }, cdn: null, powered_by: null } };
+  const raw = { http: { https: { redirects_to_https: true, https_status: 200 }, headers: {}, exposed: [], directory_listing: {}, xmlrpc: { open: false, status: 403 }, rest_users: { exposes_users: false, status: 401 }, robots: { status: 200, disallow_all: false, sitemap_line: true }, sitemap: null, not_found: { status: 404, themed: true, starter_default: null }, search: { status: 200, themed: true, no_results_marker: true, starter_default: null, blank: { status: 200, themed: true }, disabled: false }, favicon: {}, cache: { hit: false }, cdn: null, powered_by: null } };
   const left = todo(LIST, raw).map((i) => i.id);
   assert.ok(left.includes("SEC-1"), "wp-cli items stay with the agent");
   assert.ok(!left.includes("SEC-11"), "xmlrpc is decided by http-audit");

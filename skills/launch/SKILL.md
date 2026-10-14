@@ -115,6 +115,8 @@ the end. Never ask anything in between, never ask the same thing twice, never tu
 - **Privacy page:** `wp option get wp_page_for_privacy_policy` (an ID), then `wp post get <id> --field=url`.
 - **Terms page:** a published page whose slug contains `terms`, `termos` or `conditions`.
 - **Logo:** see **Logo** in `launch-list.md`.
+- **Pages with a form:** the `wp db query` in the page rule of `launch-list.md`. They join the page audit,
+  so a contact page outside the menu is still checked (MAIL-4, MAIL-5).
 - **Contacts on the site:** run `page-audit.mjs` on the home page now and read `contacts` (`tel:`, `mailto:`, footer text).
 - **Admin email:** `wp user list --role=administrator --fields=user_login,user_email`.
 - **Timezone:** from `wp option get WPLANG` (`pt_BR` suggests `America/Sao_Paulo`).
@@ -137,6 +139,7 @@ Before I start, confirm or fill in (reply only what changes, e.g. "3 https://acm
 9. Admin's real email: luis@acme.com
 10. Timezone: America/Sao_Paulo
 11. Default category name: Blog
+12. Forms submitted on the launch site and received: —   (MAIL-6: "yes, <form>: <time>" per form)
 ```
 
 - **Always suggest a concrete value when a sensible default exists, so `ok` leads to fixes**, never `—`:
@@ -148,7 +151,8 @@ Before I start, confirm or fill in (reply only what changes, e.g. "3 https://acm
     when the content is thin), and shown in the approval preview.
 
   Leave `—` only where nothing can be guessed: the PageSpeed public URL, the old site, the terms page,
-  the logo file and the client's contacts.
+  the logo file, the client's contacts and the form confirmation (field 12 is never suggested: only the
+  user can say a message arrived, so `—` leaves MAIL-6 `MANUAL`, which blocks the launch).
 - Skip a number the user already gave in the command (for example `/launch https://acme.com`).
 - Use the reply exactly as written. "ok" accepts every suggestion. A value the user typed is never
   re-asked and never offered as options.
@@ -174,7 +178,7 @@ goes in `launch/` at the theme root, so the user can delete it any time.
    ```bash
    mkdir -p launch/raw
    node .claude/skills/launch/tools/http-audit.mjs $URL > launch/raw/http.json 2>/dev/null &
-   node .claude/skills/launch/tools/page-audit.mjs $URL <menu page URLs…> --links --privacy-url <url> --terms-url <url> > launch/raw/pages.json 2>/dev/null &
+   node .claude/skills/launch/tools/page-audit.mjs $URL <menu page URLs…> <pages with a form…> --links --privacy-url <url> --terms-url <url> > launch/raw/pages.json 2>/dev/null &
    node .claude/skills/launch/tools/psi.mjs $PSI_URL --screenshot launch/pagespeed-mobile.png > launch/raw/psi.json 2>/dev/null &
    node .claude/skills/launch/tools/redirect-audit.mjs $URL --old <old-site> > launch/raw/redirects.json 2>/dev/null &
    wait
