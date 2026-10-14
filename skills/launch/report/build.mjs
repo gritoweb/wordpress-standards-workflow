@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Builds the launch report from the agent's per-item results (JSON on stdin) plus the tools' raw JSON; counts and verdict are computed, never typed.
-// usage: node build.mjs [--dir launch] [--no-pdf] < results.json   |   node build.mjs --todo [--dir launch] [--url <audited url>]
+// usage: node build.mjs --dir <out> [--no-pdf] < results.json   |   node build.mjs --todo --dir <out> [--url <audited url>]
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -118,6 +118,12 @@ export function buildMarkdown(input, list, raw = {}) {
   return { markdown: md.join("\n") + "\n", verdict, counts, results };
 }
 
+// No default folder: the old default, launch/ in the theme, is served by the site and made the report public.
+function outDir(dir) {
+  if (!dir) { console.error("build: pass --dir <folder outside the web root>, e.g. --dir ~/launch-reports/<theme>"); process.exit(2); }
+  return resolve(dir);
+}
+
 // The items the agent must answer: everything the tools' JSON can't decide on its own for this run.
 export function todo(list, raw, { local = false } = {}) {
   const decided = new Set(Object.entries(EVALUATORS).filter(([, fn]) => fn(raw, { local })).map(([id]) => id));
@@ -127,7 +133,7 @@ export function todo(list, raw, { local = false } = {}) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv.includes("--todo")) {
   const args = process.argv.slice(2);
   const opt = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : undefined; };
-  const dir = resolve(opt("--dir") ?? "launch");
+  const dir = outDir(opt("--dir"));
   const raw = { http: readJson(join(dir, "raw", "http.json")), pages: readJson(join(dir, "raw", "pages.json")), psi: readJson(join(dir, "raw", "psi.json")), redirects: readJson(join(dir, "raw", "redirects.json")) };
   const list = parseList(readFileSync(join(HERE, "..", "launch-list.md"), "utf8"));
   const local = opt("--url") ? isLocalHost(new URL(opt("--url")).hostname) : false;
@@ -138,7 +144,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
-  const dir = resolve(args[args.indexOf("--dir") + 1] && args.includes("--dir") ? args[args.indexOf("--dir") + 1] : "launch");
+  const dir = outDir(args.includes("--dir") ? args[args.indexOf("--dir") + 1] : undefined);
   let input;
   try { input = JSON.parse(readFileSync(0, "utf8")); } catch (e) { console.error(`build: stdin is not valid JSON (${e.message})`); process.exit(2); }
   const list = parseList(readFileSync(join(HERE, "..", "launch-list.md"), "utf8"));

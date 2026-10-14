@@ -27,12 +27,13 @@ every item it can, fixes what the user approves, and writes the report.
 - `wp …` runs locally as `lando wp …`. Remotely it runs as `terminus wp <site>.<env> -- …` or
   `wp --ssh=<user>@<host>:<port>/<path> …`.
 - `$URL` is the site URL, and `$THEME` is the active theme root.
+- `$OUT` is `~/launch-reports/<theme folder name>`, outside the web root (see the skill).
 - `$TOOLS` is `.claude/skills/launch/tools`. Its scripts return JSON:
   - `http-audit.mjs $URL` runs the site-level HTTP checks (`H.<field>` below)
   - `page-audit.mjs <urls…> --links [--w3c]` runs the page checks (`P.<field>`)
-  - `psi.mjs $PSI_URL --screenshot launch/pagespeed-mobile.png` runs PageSpeed (`S.<field>`)
+  - `psi.mjs $PSI_URL --screenshot $OUT/pagespeed-mobile.png` runs PageSpeed (`S.<field>`)
   - `redirect-audit.mjs $URL (--old <old-site> | --list <file>)` checks a migration (`R.<field>`)
-  - `brand-images.mjs <logo> --out launch/brand [--bg <colour>]` makes the site icon and OG image
+  - `brand-images.mjs <logo> --out launch-brand [--bg <colour>]` makes the site icon and OG image
 
   Run each one once and read every item from its output.
 - The pages for the `P.` checks are the home page, every page in the main menu
@@ -134,7 +135,7 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
 - [ ] **SEO-7** Required `auto` `fix` `ask`: Open Graph on the home page
   - Check: `P.og` on the home page
   - Pass if: title, description and image are all present, and `image_status` is 200
-  - Fix: see **Logo** below. The image is `launch/brand/og-default-1200x630.png`: `wp media import <file> --porcelain`, then `wp option patch update wpseo_social og_default_image "<url>"` and `wp option patch update wpseo_social og_default_image_id <id>`. The description comes from SEO-4.
+  - Fix: see **Logo** below. The image is `launch-brand/og-default-1200x630.png`: `wp media import <file> --porcelain`, then `wp option patch update wpseo_social og_default_image "<url>"` and `wp option patch update wpseo_social og_default_image_id <id>`. The description comes from SEO-4.
 - [ ] **SEO-8** Required `auto`: Images have `alt`
   - Check: `P.images_without_alt`
   - Pass if: empty on every page. Decorative images may have `alt=""`. For a single page in depth, use `html-qa-smoketest`.
@@ -293,7 +294,7 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
 - [ ] **PAGE-1** Required `auto` `fix` `ask`: Site icon, and `/favicon.ico` answers with it
   - Check: `H.favicon` (it follows `/favicon.ico` to the end)
   - Pass if: status 200, `is_image` is true and `default_wp_icon` is false. A `<link rel="icon">` alone doesn't count: browsers and crawlers still ask for `/favicon.ico`.
-  - Fix: see **Logo** below. `wp media import launch/brand/site-icon-512.png --porcelain`, then `wp option update site_icon <id>`.
+  - Fix: see **Logo** below. `wp media import launch-brand/site-icon-512.png --porcelain`, then `wp option update site_icon <id>`.
 - [ ] **PAGE-2** Required `auto`: Search is the project's, or switched off
   - Check: `H.search` (`/?s=zzzz` and the empty `/?s=`)
   - Pass if: `disabled` is true (both answer 404 or redirect away from `?s=`), or both answer 200, `themed` and `no_results_marker` are true and `starter_default` is null. A site that doesn't use search switches it off in code.
@@ -313,7 +314,7 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
 **Logo** (shared by SEO-7, PAGE-1 and PAGE-5): find it in `wp option get site_logo`, the `custom_logo` theme mod
 (`wp theme mod get custom_logo`), `$THEME/resources/**/*logo*` and `$THEME/public/**/*logo*` (png, svg, jpg, webp),
 or `wp post list --post_type=attachment --s=logo --fields=ID,guid`. When there's none, the values question asks for a
-file path (for the icon, a square symbol works better than a wide wordmark). Then `node $TOOLS/brand-images.mjs <logo> --out launch/brand --bg <colour>` makes
+file path (for the icon, a square symbol works better than a wide wordmark). Then `node $TOOLS/brand-images.mjs <logo> --out launch-brand --bg <colour>` makes
 `site-icon-512.png` and `og-default-1200x630.png`. The agent opens both images before offering the fix.
 
 ## Go-live

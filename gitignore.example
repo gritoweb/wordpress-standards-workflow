@@ -22,6 +22,10 @@ wp-content/backup-db/
 wp-content/blogs.dir/
 *.log
 
+# Launch skill: reports belong in ~/launch-reports/<theme>, never in the repo (it is the web root)
+launch/
+launch-brand/
+
 # Secrets / local config
 .env
 .env.*

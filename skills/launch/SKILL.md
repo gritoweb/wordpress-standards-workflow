@@ -121,14 +121,14 @@ the end. Never ask anything in between, never ask the same thing twice, never tu
 - **Admin email:** `wp user list --role=administrator --fields=user_login,user_email`.
 - **Timezone:** from `wp option get WPLANG` (`pt_BR` suggests `America/Sao_Paulo`).
 - **Default category:** `wp term list category --fields=term_id,slug,name`.
-- **Previous report:** whether `launch/report.md` exists.
+- **Previous report:** whether `$OUT/report.md` exists.
 
 **Then send one plain chat message** (no `AskUserQuestion`) with every value numbered, the detected
 value or your suggestion after each, and `—` where there is nothing. End with the reply instruction:
 
 ```
 Before I start, confirm or fill in (reply only what changes, e.g. "3 https://acme.com, 4 https://old.acme.com", or "ok"):
-1. Mode: full audit                      (or "re-check": only what failed in launch/report.md)
+1. Mode: full audit                      (or "re-check": only what failed in $OUT/report.md)
 2. Site to audit: http://acme.lndo.site  (detected)
 3. PageSpeed URL (public): —             (Google can't reach Lando; leave — for a local estimate)
 4. Old site, if this is a migration: —   (its URL, or a file with the old URLs)
@@ -161,33 +161,40 @@ Before I start, confirm or fill in (reply only what changes, e.g. "3 https://acm
 - If the reply is unreadable, ask once more in plain text for those numbers only.
 
 **Re-check mode** (field 1): re-run the tools and only the agent checks that were `FAIL` or `LOCAL`
-in `launch/report.md`, then rebuild the report. This takes 1–2 minutes.
+in `$OUT/report.md`, then rebuild the report. This takes 1–2 minutes.
 
 Remote wp-cli (Pantheon `terminus wp <site>.<env> -- …`, or SSH `wp --ssh=user@host:port/path …`)
 is used only when the user writes it in the reply. The key must already work: test it with
 `option get siteurl`.
 
-`$THEME` is the active theme root (the folder containing `.claude/`). Everything the skill generates
-goes in `launch/` at the theme root, so the user can delete it any time.
+`$THEME` is the active theme root (the folder containing `.claude/`). `$OUT` is
+`~/launch-reports/<theme folder name>`: the report, its raw JSON, the PDF and the PageSpeed files go there,
+**outside the web root and the repository**. Anything under the theme is served by the site (on Pantheon the
+whole repo is the web root), so a report written there becomes a public PDF and JSON. The only exception is
+`$THEME/launch-brand/`: the site icon and share image, which go public anyway once imported (`wp media import`
+under Lando only sees files inside the app).
+
+**Old reports in the theme:** if `$THEME/launch/` exists (written by an older version of this skill), the
+fix list offers `mv launch $OUT/previous-launch`, and SEC-18 shows whether the site serves it.
 
 ## 1. Check everything (read-only)
 
-1. Run the tools **in parallel, in one Bash call**, writing their JSON to `launch/raw/`. Put the
+1. Run the tools **in parallel, in one Bash call**, writing their JSON to `$OUT/raw/`. Put the
    `mkdir` on its own line first. Write the paths literally, because the guard only lets the skill's
    own tools through. Leave out a flag whose value is unknown:
    ```bash
-   mkdir -p launch/raw
-   node .claude/skills/launch/tools/http-audit.mjs $URL > launch/raw/http.json 2>/dev/null &
-   node .claude/skills/launch/tools/page-audit.mjs $URL <menu page URLs…> <pages with a form…> --links --privacy-url <url> --terms-url <url> > launch/raw/pages.json 2>/dev/null &
-   node .claude/skills/launch/tools/psi.mjs $PSI_URL --screenshot launch/pagespeed-mobile.png > launch/raw/psi.json 2>/dev/null &
-   node .claude/skills/launch/tools/redirect-audit.mjs $URL --old <old-site> > launch/raw/redirects.json 2>/dev/null &
+   mkdir -p $OUT/raw
+   node .claude/skills/launch/tools/http-audit.mjs $URL > $OUT/raw/http.json 2>/dev/null &
+   node .claude/skills/launch/tools/page-audit.mjs $URL <menu page URLs…> <pages with a form…> --links --privacy-url <url> --terms-url <url> > $OUT/raw/pages.json 2>/dev/null &
+   node .claude/skills/launch/tools/psi.mjs $PSI_URL --screenshot $OUT/pagespeed-mobile.png > $OUT/raw/psi.json 2>/dev/null &
+   node .claude/skills/launch/tools/redirect-audit.mjs $URL --old <old-site> > $OUT/raw/redirects.json 2>/dev/null &
    wait
    ```
    - `redirect-audit` runs only for a migration. With a list of old URLs, use `--list <file>`.
    - Add `--w3c` to `page-audit` only for a public `$URL`, because it sends the HTML to validator.w3.org.
    - `psi.mjs` reads pagespeed.web.dev in headless Chrome (about 25 s, no API key). On a local URL,
      or when the page fails, it falls back to local Lighthouse and says why.
-2. Run `node .claude/skills/launch/report/build.mjs --todo --dir launch --url $URL`. It lists exactly
+2. Run `node .claude/skills/launch/report/build.mjs --todo --dir $OUT --url $URL`. It lists exactly
    the items you must answer this run (the rest the tools decide). Run the `wp …`, `grep` and `ls`
    checks of `launch-list.md` for those items only.
 3. **The tools decide their own items.** `report/evaluate.mjs` computes, from the JSON, every item
@@ -228,6 +235,7 @@ Build the fix list from every `FAIL` tagged `fix` (with the intake values), **in
 2. the backup (safety rule 3)
 3. the fixes, in the list's order
 4. `rm docs/launch-list.md`, if that old copy is still in the project
+5. `mv launch $OUT/previous-launch`, if an older run left its reports in the theme
 
 Then ask the single `Launch fixes` question (see **The guard**). Its question text says the environment
 and `siteurl`. Its `Approve all` preview is the numbered list of exact commands. Write remote commands
@@ -246,18 +254,18 @@ They go in the report as actions for the dev.
 
 - Run the approved commands exactly, in order, one at a time (safety rule 5).
 - After each fix, re-run that item's check. It's `FIXED` only if the re-check passes.
-- When everything has run, run `http-audit.mjs` and `page-audit.mjs` again into `launch/raw/`, because
+- When everything has run, run `http-audit.mjs` and `page-audit.mjs` again into `$OUT/raw/`, because
   fixes change what they see. `psi.mjs` isn't re-run unless a fix targeted performance.
 
 ## 5. Build the report (no hand-written report)
 
 Pipe your results as JSON on stdin to the builder. It merges them with the tools' decisions,
 **refuses** an incomplete set or one that contradicts the tools, computes the counts, verdict and next
-steps, and writes `launch/report.md`, `report.html` and `report.pdf`, with the PageSpeed screenshot
+steps, and writes `$OUT/report.md`, `report.html` and `report.pdf`, with the PageSpeed screenshot
 embedded:
 
 ```bash
-node .claude/skills/launch/report/build.mjs --dir launch <<'JSON'
+node .claude/skills/launch/report/build.mjs --dir $OUT <<'JSON'
 {
   "project": "<Theme Name>",
   "date": "<YYYY-MM-DD>",
@@ -285,12 +293,12 @@ JSON
   - **Prove before launch** (required items still `MANUAL` or `LOCAL`, with what is missing);
   - **Fixed during this run**;
   - **PageSpeed** (with the screenshot from pagespeed.web.dev or, for a local estimate, from
-    Lighthouse's own report, saved as `launch/lighthouse-*.html`);
+    Lighthouse's own report, saved as `$OUT/lighthouse-*.html`);
   - **Migration**;
   - **All checks**: one table per section with every item's status and evidence, plus the next step for
     FAIL, MANUAL and LOCAL items.
 
-  `launch/results.json` has every result as data.
+  `$OUT/results.json` has every result as data.
 - `notes` are only for what no item says. Don't repeat an item's evidence or action there.
 
 ## 6. Close
@@ -299,7 +307,7 @@ Tell the user, briefly:
 - the verdict line from the report
 - the **Fix before launch** items, each with its action
 - the PageSpeed mobile score (and whether it is a local estimate)
-- `launch/report.pdf`
+- `$OUT/report.pdf`
 
 Don't repeat the whole report in the chat.
 
