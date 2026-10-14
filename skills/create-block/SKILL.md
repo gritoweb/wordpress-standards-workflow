@@ -26,7 +26,7 @@ that themselves.
 
 > **Hard rule — no content editing in the sidebar.** A button (label +
 > link), a link or any text is edited on the **canvas**: click the button
-> preview → `<ActionEditor>` opens inline right under it. `<InspectorControls>`
+> on the canvas → `<ActionEditor>` opens in a `Popover` right under it. `<InspectorControls>`
 > holds configuration only (item list, background media, block settings,
 > Spacing, Entrance animation) and must never contain `ActionEditor`,
 > `LinkPicker`, `LinkControl`, `TextControl`, `RichText` or
@@ -736,7 +736,7 @@ import { resolveEntrance, entranceRootProps, entrancePartProps } from '../compon
 // Uncomment the imports your attributes actually need:
 // import { PanelBody } from '@wordpress/components'; // needed if this block has a Background Media panel
 // import { AttachmentImageControl } from '../components/backend/AttachmentImageControl.jsx';
-// import { ActionEditor }           from '../components/backend/ActionEditor.jsx';
+// import { ButtonPair }             from '../components/backend/ButtonPair.jsx';
 // import { AutoGrowingTextarea }     from '../components/backend/AutoGrowingTextarea.jsx';
 // import { ParagraphsField }         from '../components/backend/ParagraphsField.jsx';
 // import { ItemList }                from '../components/backend/ItemList.jsx';
@@ -757,7 +757,6 @@ registerBlockType(metadata, {
         const rootEntrance = entranceRootProps(entrance);
         // Destructure your block's other attributes here.
         // Example: const { heading, bgImageId, bgImagePosition, ctaText, ctaLink } = attributes;
-        // const [isEditingButton, setIsEditingButton] = useState(false);
 
         // Static preview for the Gutenberg inserter hover panel.
         if (isPreview) {
@@ -868,69 +867,24 @@ registerBlockType(metadata, {
                     />
                     */}
 
-                    {/* CTA button — styled preview on canvas.
-                        DEFAULT: a full-width/single CTA opens ActionEditor INLINE,
-                        directly below the button — the block already has the room and
-                        naturally grows to contain it, so it never overlaps whatever
-                        renders next:
-                    <span
-                        role="button"
-                        tabIndex={0}
-                        aria-label={__('Edit button', '<text-domain>')}
-                        className="btn btn-primary"
-                        onClick={() => setIsEditingButton(!isEditingButton)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                setIsEditingButton(!isEditingButton);
-                            }
-                        }}
-                    >
-                        {ctaText || __('Button', '<text-domain>')}
-                    </span>
-                    {isEditingButton && (
-                        <div className="w-full max-w-xl text-left">
-                            <ActionEditor
-                                groupLabel={__('Button editing', '<text-domain>')}
-                                label={__('Button label', '<text-domain>')}
-                                linkLabel={__('Button destination', '<text-domain>')}
-                                text={ctaText}
-                                link={ctaLink}
-                                stacked={false}
-                                onTextChange={(value) => setAttributes({ ctaText: value })}
-                                onLinkChange={(value) => setAttributes({ ctaLink: value })}
-                            />
-                        </div>
-                    )}
-                    */}
-
-                    {/* ONLY for a button/link that belongs to a REPEATER ITEM (a grid
-                        card, a list item) — SAME inline pattern as the default above,
-                        SAME component, just stacked={true} instead of stacked={false}.
-                        stacked renders ActionEditor's fields in one vertical column,
-                        which is what fits a ~280px grid column — no separate
-                        mechanism, and never the sidebar:
-                    <span
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => setEditingLink(editingLink === index ? null : index)}
-                    >
-                        {item.linkText || __('Learn more', '<text-domain>')}
-                    </span>
-                    {editingLink === index && (
-                        <div className="mt-3 text-left">
-                            <ActionEditor
-                                groupLabel={`${__('Item link editing', '<text-domain>')} ${index + 1}`}
-                                label={__('Link text', '<text-domain>')}
-                                linkLabel={__('Link destination', '<text-domain>')}
-                                text={item.linkText}
-                                link={item.link}
-                                stacked={true}
-                                onTextChange={(value) => updateItem(index, 'linkText', value)}
-                                onLinkChange={(value) => updateItem(index, 'link', value)}
-                            />
-                        </div>
-                    )}
+                    {/* CTA button — ButtonPair: the styled button on the canvas opens
+                        ActionEditor in a core Popover right below it on click. A
+                        repeater item's link uses the same component, with its own
+                        classes. Never hand-build the span + editor:
+                    <ButtonPair
+                        text={ctaText}
+                        link={ctaLink}
+                        onTextChange={(value) => setAttributes({ ctaText: value })}
+                        onLinkChange={(value) => setAttributes({ ctaLink: value })}
+                    />
+                    <ButtonPair
+                        text={item.linkText}
+                        link={item.link}
+                        className="btn btn-link"
+                        addLabel={__('+ Add link', '<text-domain>')}
+                        onTextChange={(value) => updateItem(index, 'linkText', value)}
+                        onLinkChange={(value) => updateItem(index, 'link', value)}
+                    />
                     */}
                 </section>
             </>

@@ -1,6 +1,6 @@
 # Reference block: Card grid — `card-grid`
 
-An array of cards with image, title, text and an optional link. Demonstrates the **all-visible** repeater (`selectable={false}`), per-card images on the canvas, a per-card link edited inline with `ActionEditor stacked`, a single `setAttributes` per change, and the `trigger: "item"` entrance preset.
+An array of cards with image, title, text and an optional link. Demonstrates the **all-visible** repeater (`selectable={false}`), per-card images on the canvas, a per-card link edited on the canvas with `ButtonPair` (opens in a Popover), a single `setAttributes` per change, and the `trigger: "item"` entrance preset.
 
 ## `resources/blocks/card-grid/block.json`
 
@@ -191,11 +191,10 @@ import {
   RichText,
 } from '@wordpress/block-editor';
 import { PanelBody } from '@wordpress/components';
-import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { AutoGrowingTextarea } from '../components/backend/AutoGrowingTextarea.jsx';
 import { AttachmentImageControl } from '../components/backend/AttachmentImageControl.jsx';
-import { ActionEditor } from '../components/backend/ActionEditor.jsx';
+import { ButtonPair } from '../components/backend/ButtonPair.jsx';
 import { ItemList } from '../components/backend/ItemList.jsx';
 import { moveItem } from '../components/backend/moveItem.js';
 import { useAttachmentUrls } from '../components/backend/useAttachmentUrls.js';
@@ -225,7 +224,6 @@ const emptyCard = () => ({
 registerBlockType(metadata, {
   edit({ attributes, setAttributes, clientId }) {
     // Hooks run before the preview return, so their order never changes.
-    const [editingLink, setEditingLink] = useState(null);
     const blockProps = useBlockProps();
     const cards = Array.isArray(attributes.cards) ? attributes.cards : [];
     const thumbs = useAttachmentUrls(
@@ -257,10 +255,8 @@ registerBlockType(metadata, {
           i === index ? { ...card, ...patch } : card,
         ),
       });
-    const removeCard = (index) => {
+    const removeCard = (index) =>
       setAttributes({ cards: cards.filter((_, i) => i !== index) });
-      setEditingLink(null);
-    };
 
     return (
       <>
@@ -352,41 +348,16 @@ registerBlockType(metadata, {
                     className="mt-3 text-small text-muted"
                   />
 
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    className="mt-auto inline-flex cursor-pointer pt-5 text-small font-semibold text-primary"
-                    onClick={() =>
-                      setEditingLink(editingLink === index ? null : index)
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        setEditingLink(editingLink === index ? null : index);
-                      }
-                    }}
-                  >
-                    {card.linkText || __('+ Add link', '<text-domain>')}
-                  </span>
-
-                  {editingLink === index && (
-                    <div className="w-full">
-                      <ActionEditor
-                        groupLabel={`${__('Card link', '<text-domain>')} ${index + 1}`}
-                        label={__('Link text', '<text-domain>')}
-                        linkLabel={__('Link destination', '<text-domain>')}
-                        text={card.linkText}
-                        link={card.link}
-                        stacked
-                        onTextChange={(value) =>
-                          updateCard(index, { linkText: value })
-                        }
-                        onLinkChange={(value) =>
-                          updateCard(index, { link: value })
-                        }
-                      />
-                    </div>
-                  )}
+                  <div className="mt-auto pt-5">
+                    <ButtonPair
+                      text={card.linkText}
+                      link={card.link}
+                      className="inline-flex text-small font-semibold text-primary"
+                      addLabel={__('+ Add link', '<text-domain>')}
+                      onTextChange={(value) => updateCard(index, { linkText: value })}
+                      onLinkChange={(value) => updateCard(index, { link: value })}
+                    />
+                  </div>
                 </div>
               </article>
             ))}

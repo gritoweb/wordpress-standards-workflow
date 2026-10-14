@@ -1,6 +1,6 @@
 # Reference block: Hero — `hero`
 
-The page opener: an `h1`, supporting text, one button and an image. Demonstrates the **section button components** (`ButtonPair` on the canvas opens `ActionEditor` on click, never on select; `<x-button-link>` prints the button only when it has text and a link), the image picked on the canvas with `AttachmentImageControl`, and the hero entrance preset.
+The page opener: an `h1`, supporting text, one button and an image. Demonstrates the **section button components** (`ButtonPair` on the canvas opens `ActionEditor` in a `Popover` below the button on click, never on select; `<x-button-link>` prints the button only when it has text and a link), the image picked on the canvas with `AttachmentImageControl`, and the hero entrance preset.
 
 ## `resources/blocks/hero/block.json`
 
