@@ -72,3 +72,31 @@ test("a form whose action is a missing page fails MAIL-5; no forms is N/A", () =
   assert.equal(EVALUATORS["MAIL-5"]({ pages }).result, "N/A");
   assert.equal(EVALUATORS["MAIL-4"]({ pages: page([]) }).result, "FAIL", "the form has no anti-spam");
 });
+
+test("served theme files, author enumeration and starter archives fail; switched-off archives pass", () => {
+  const exposed = http({ theme_files: { theme_path: "/wp-content/themes/acme/", checked: 9, exposed: [{ path: "/wp-content/themes/acme/launch/report.pdf", status: 200 }, { path: "/wp-content/themes/acme/.env", status: 200 }] } });
+  assert.match(EVALUATORS["SEC-18"]({ http: exposed }).evidence, /launch\/report\.pdf, \.env/);
+  assert.equal(EVALUATORS["SEC-18"]({ http: http({ theme_files: { theme_path: "/t/", checked: 9, exposed: [] } }) }).result, "PASS");
+  assert.equal(EVALUATORS["SEC-18"]({ http: http() }), null, "no theme scan: the agent must prove it");
+  const enumerable = http({ user_enum: { author_param: { status: 301, location: "https://acme.com/author/luis/", login: "luis" }, author_sitemap: { status: 404, entries: 0 } } });
+  assert.match(EVALUATORS["SEC-19"]({ http: enumerable }).evidence, /login "luis"/);
+  assert.equal(EVALUATORS["SEC-19"]({ http: http({ user_enum: { author_param: { status: 301, location: "https://acme.com/", login: null }, author_sitemap: { status: 404, entries: 0 } } }) }).result, "PASS");
+  const arch = (author, category) => http({ archives: { author: { url: "https://acme.com/?author=1", ...author }, date: { url: "https://acme.com/?m=2026", status: 404, final_url: "https://acme.com/?m=2026", starter_default: null }, category: { url: "https://acme.com/?cat=1", ...category } } });
+  const templates = (t = {}) => ({ templates: { archive: false, author: false, date: false, category: false, tag: false, ...t } });
+  const sage = arch({ status: 200, final_url: "https://acme.com/author/luis/", starter_default: "Sorry, no results were found" }, { status: 200, final_url: "https://acme.com/category/news/", starter_default: null });
+  const r = EVALUATORS["PAGE-7"]({ http: sage, repo: templates() });
+  assert.equal(r.result, "FAIL"); assert.match(r.evidence, /author archive \(\/author\/luis\/\) falls back to index\.blade\.php/); assert.match(r.evidence, /category archive/);
+  assert.equal(EVALUATORS["PAGE-7"]({ http: arch({ status: 200, final_url: "https://acme.com/", starter_default: null }, { status: 200, final_url: "https://acme.com/category/news/", starter_default: null }), repo: templates({ archive: true }) }).result, "PASS");
+  assert.equal(EVALUATORS["PAGE-7"]({ http: sage }), null, "without the theme's files the agent must prove it");
+});
+
+test("machine paths, copied repositories and untracked pending work fail", () => {
+  const repo = (o = {}) => ({ files: 10, git_root: "/t", home_paths: [], embedded_repos: [], wordpress_copies: [], debt: { file: "docs/tech-debt.md", exists: true, open_blockers: [] }, todos: [], untracked_todos: [], templates: {}, ...o });
+  assert.equal(EVALUATORS["CODE-5"]({ repo: repo({ home_paths: [{ file: "graphify-out/graph.json", line: 1, match: "/home/julio-jara/" }] }) }).result, "FAIL");
+  assert.equal(EVALUATORS["CODE-6"]({ repo: repo({ embedded_repos: ["wordpress"], wordpress_copies: ["wordpress"] }) }).result, "FAIL");
+  assert.equal(EVALUATORS["CODE-6"]({ repo: repo() }).result, "PASS");
+  assert.match(EVALUATORS["LIVE-8"]({ repo: repo({ debt: { file: "docs/tech-debt.md", exists: false, open_blockers: [] } }) }).evidence, /no docs\/tech-debt\.md/);
+  assert.equal(EVALUATORS["LIVE-8"]({ repo: repo({ debt: { file: "docs/tech-debt.md", exists: true, open_blockers: ["- [ ] [blocker] wire the contact form"] } }) }).result, "FAIL");
+  assert.equal(EVALUATORS["LIVE-8"]({ repo: repo({ untracked_todos: [{ file: "resources/views/page.blade.php", line: 9, match: "TODO: placeholder form" }] }) }).result, "FAIL");
+  assert.equal(EVALUATORS["LIVE-8"]({ repo: repo({ todos: [{ file: "app/setup.php", line: 3, match: "TODO @luis 2026-11-01: drop after migration" }] }) }).result, "PASS");
+});

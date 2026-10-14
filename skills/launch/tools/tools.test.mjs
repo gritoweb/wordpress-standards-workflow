@@ -73,3 +73,32 @@ test("brand images come out at 512×512 and 1200×630", { skip: !findBrowser() &
   assert.deepEqual([r.files["og-default-1200x630.png"].width, r.files["og-default-1200x630.png"].height], [1200, 630]);
   assert.throws(() => brandImages(logo, dir, "red;}</style><script>"), /not a CSS colour/);
 });
+
+test("repo audit finds machine paths, copied repositories, pending work and missing templates", async () => {
+  const { repoAudit } = await import("./repo-audit.mjs");
+  const { execFileSync } = await import("node:child_process");
+  const { mkdirSync } = await import("node:fs");
+  const t = mkdtempSync(join(tmpdir(), "launch-repo-"));
+  const put = (f, s) => { mkdirSync(join(t, f, ".."), { recursive: true }); writeFileSync(join(t, f), s); };
+  put("graphify-out/graph.json", '{"root":"/home/julio-jara/griddl"}');
+  put(".claude/skills/x/test.mjs", 'const fixture = "/home/u1/site";');
+  put("resources/views/404.blade.php", "x");
+  put("resources/views/page.blade.php", "{{-- TODO: placeholder form --}}\n{{-- TODO @luis 2026-11-01: drop after launch --}}");
+  put("wordpress/wp-includes/version.php", "<?php");
+  execFileSync("git", ["init", "-q", t]); execFileSync("git", ["init", "-q", join(t, "wordpress")]);
+  const r = repoAudit(t);
+  assert.deepEqual(r.home_paths.map((h) => h.file), ["graphify-out/graph.json"], "the kit's own copy is left out");
+  assert.deepEqual(r.embedded_repos, ["wordpress"]); assert.deepEqual(r.wordpress_copies, ["wordpress"]);
+  assert.equal(r.debt.exists, false);
+  assert.equal(r.todos.length, 2); assert.deepEqual(r.untracked_todos.map((x) => x.line), [1]);
+  assert.equal(r.templates["404"], true); assert.equal(r.templates.archive, false);
+});
+
+test("theme probes take a few files per risky group and skip what the site must serve", async () => {
+  const { themeCandidates } = await import("./http-audit.mjs");
+  const files = [".env", "launch/report.pdf", "launch/raw/a.json", "CLAUDE.md", "theme.json", "style.css", "public/build/manifest.json", "resources/views/x.blade.php", "graphify-out/graph.json", ...Array.from({ length: 9 }, (_, i) => `.claude/skills/s${i}.md`)];
+  const c = themeCandidates(files);
+  for (const f of [".env", "launch/report.pdf", "CLAUDE.md", "graphify-out/graph.json", "vendor/composer/installed.json"]) assert.ok(c.includes(f), f);
+  for (const f of ["theme.json", "style.css", "public/build/manifest.json", "resources/views/x.blade.php"]) assert.ok(!c.includes(f), f);
+  assert.equal(c.filter((f) => f.startsWith(".claude/")).length, 5);
+});

@@ -27,6 +27,22 @@ export const EVALUATORS = {
     : pass("no 'Index of /' on uploads, plugins or wp-includes")),
   "SEC-11": ({ http }) => http && (http.xmlrpc.open ? fail(`xmlrpc.php answers system.listMethods (${http.xmlrpc.status})`, "Disable XML-RPC (Security Optimizer › Site Security).") : pass(`xmlrpc.php → ${http.xmlrpc.status}, no method list`)),
   "SEC-12": ({ http }) => http && (http.rest_users.exposes_users ? fail(`/wp-json/wp/v2/users → ${http.rest_users.status} with user slugs`, "Activate disable-wp-rest-api (SEC-6).") : pass(`/wp-json/wp/v2/users → ${http.rest_users.status}`)),
+  "SEC-18": ({ http }) => {
+    const t = http?.theme_files;
+    if (!t) return null;
+    if (!t.exposed.length) return pass(`${t.checked} theme files probed under ${t.theme_path}, none served`);
+    const short = t.exposed.map((e) => e.path.replace(t.theme_path, ""));
+    // Every path is listed: each one is a file the dev must stop serving, and a secret may hide in any of them.
+    return fail(`the site serves ${short.length} theme file(s): ${short.join(", ")}`,
+      "Stop serving them: don't deploy dev files (.env, CLAUDE.md, .claude/, docs/, launch/, graphify-out/), or deny them (Apache: `Require all denied` in the theme; Pantheon: `protected_web_paths` in pantheon.yml). Rotate any secret that was exposed.");
+  },
+  "SEC-19": ({ http }) => {
+    const u = http?.user_enum;
+    if (!u) return null;
+    const leaks = [u.author_param.login && `/?author=1 → ${u.author_param.location} (login "${u.author_param.login}")`, u.author_sitemap.entries && `/author-sitemap.xml lists ${u.author_sitemap.entries} author(s)`].filter(Boolean);
+    return leaks.length ? fail(leaks.join("; "), "Stop author enumeration: send ?author=N and author archives to the home page (Security Optimizer or a template_redirect in the theme), and turn off Yoast's author archives and sitemap.")
+      : pass(`/?author=1 → ${u.author_param.status}${u.author_param.location ? ` ${u.author_param.location}` : ""}, no author sitemap`);
+  },
   "SEC-14": ({ http }) => {
     if (!http) return null;
     const h = http.headers, frame = h["x-frame-options"] || /frame-ancestors/i.test(h["content-security-policy"] ?? "");
@@ -131,6 +147,31 @@ export const EVALUATORS = {
     const broken = withForms.flatMap((p) => (p.form_actions ?? []).filter((a) => a.status === 0 || a.status === 404 || a.status === 410 || a.status >= 500).map((a) => `${new URL(p.url).pathname} → ${a.action} (${a.status})`));
     return broken.length ? fail(`form action is missing: ${broken.join(", ")}`, "Point each form at its real handler (form plugin or theme endpoint), then submit it once.")
       : pass(`${withForms.reduce((n, p) => n + p.forms, 0)} form(s); every action exists or posts to its own page`);
+  },
+  "PAGE-7": ({ http, repo }) => {
+    const a = http?.archives;
+    if (!a || !repo) return null;
+    const own = { author: ["author", "archive"], date: ["date", "archive"], category: ["category", "archive"] };
+    const origin = new URL(a.author.url).origin + "/";
+    const bad = Object.entries(a).flatMap(([kind, r]) => {
+      if (r.status === 404 || r.final_url === origin) return [];
+      if (r.status !== 200) return [`${kind} archive → ${r.status}`];
+      const tpl = own[kind].find((t) => repo.templates[t]);
+      return [!tpl && `${kind} archive (${new URL(r.final_url).pathname}) falls back to index.blade.php`, r.starter_default && `${kind} archive shows "${r.starter_default}"`].filter(Boolean);
+    });
+    return bad.length ? fail(bad.join("; "), "For each archive: write its template (archive.blade.php covers all of them), or switch it off (404, or a redirect to the home page) if the site doesn't use it.")
+      : pass(Object.entries(a).map(([k, r]) => `${k} → ${r.status === 404 ? "404 (off)" : r.final_url === origin ? "home (off)" : `${r.status}, own template`}`).join("; "));
+  },
+  "CODE-5": ({ repo }) => repo && (repo.home_paths.length ? fail(`machine paths: ${repo.home_paths.slice(0, 5).map((h) => `${h.file}:${h.line} ${h.match}`).join(", ")}`, "Replace them with relative paths or remove the generated files (e.g. graphify-out/) from the repository.") : pass(`${repo.files} files, no /home/<user>/ or /Users/<user>/ path`)),
+  "CODE-6": ({ repo }) => repo && (repo.embedded_repos.length || repo.wordpress_copies.length
+    ? fail([repo.embedded_repos.length && `folders with their own .git, not in .gitmodules: ${repo.embedded_repos.join(", ")}`, repo.wordpress_copies.length && `WordPress copied into the theme: ${repo.wordpress_copies.join(", ")}`].filter(Boolean).join("; "), "Remove the copy, or add it as a submodule (git submodule add <url> <path>). WordPress core never lives in the theme.")
+    : pass(`no embedded repository or WordPress copy under ${repo.git_root}`)),
+  "LIVE-8": ({ repo }) => {
+    if (!repo) return null;
+    const d = repo.debt, problems = [!d.exists && `no ${d.file}`, d.open_blockers.length && `open blockers: ${d.open_blockers.join(" | ")}`,
+      repo.untracked_todos.length && `TODO/FIXME without owner and date: ${repo.untracked_todos.slice(0, 5).map((t) => `${t.file}:${t.line}`).join(", ")}`].filter(Boolean);
+    return problems.length ? fail(problems.join("; "), `Write ${d.file} (one "- [ ]" line per pending item, "[blocker]" when it must be done before launch), finish every blocker, and give each code TODO an owner and date or move it to the file.`)
+      : pass(`${d.file}: no open blocker; ${repo.todos.length} dated TODO(s) in the theme`);
   },
   "PAGE-5": ({ http }) => (http?.apple_touch_icon === 200 ? pass("/apple-touch-icon.png → 200") : null),
 };

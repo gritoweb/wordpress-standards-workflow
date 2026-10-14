@@ -29,7 +29,8 @@ every item it can, fixes what the user approves, and writes the report.
 - `$URL` is the site URL, and `$THEME` is the active theme root.
 - `$OUT` is `~/launch-reports/<theme folder name>`, outside the web root (see the skill).
 - `$TOOLS` is `.claude/skills/launch/tools`. Its scripts return JSON:
-  - `http-audit.mjs $URL` runs the site-level HTTP checks (`H.<field>` below)
+  - `http-audit.mjs $URL --theme-dir $THEME` runs the site-level HTTP checks (`H.<field>` below)
+  - `repo-audit.mjs $THEME` reads the theme's files (`F.<field>`)
   - `page-audit.mjs <urls…> --links [--w3c]` runs the page checks (`P.<field>`)
   - `psi.mjs $PSI_URL --screenshot $OUT/pagespeed-mobile.png` runs PageSpeed (`S.<field>`)
   - `redirect-audit.mjs $URL (--old <old-site> | --list <file>)` checks a migration (`R.<field>`)
@@ -70,7 +71,7 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
   - Pass if: `last_updated` is within 2 years and there is no `closed` error. Premium or custom plugins are `N/A`.
 - [ ] **SEC-6** Required `auto` `fix`: Required plugins active
   - Check: `wp plugin list --status=active --field=name`
-  - Pass if: `disable-wp-rest-api`, `sg-security`, `sg-cachepress`, `wordpress-seo` and `safe-svg` are listed
+  - Pass if: `disable-wp-rest-api`, `sg-security`, `sg-cachepress`, `wordpress-seo`, `safe-svg` and `redirection` are listed (Redirection is where the old URLs, SEO-11, and any later broken link get their 301)
   - Fix: `wp plugin install <missing…> --activate`
 - [ ] **SEC-7** Required `auto` `public`: HTTPS enforced
   - Check: `H.https`
@@ -103,6 +104,12 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
 - [ ] **SEC-15** Required `auto`: 2FA on every administrator
   - Check: for each administrator, `wp user meta get <id> sg_security_2fa_configured`
   - Pass if: `1` for every one. Enabling 2FA needs each admin's phone, so a failure is a manual step for that admin.
+- [ ] **SEC-18** Required `auto`: The site doesn't serve the theme's dev, report or secret files
+  - Check: `H.theme_files` (each risky theme file, a few per folder, fetched by its public URL: `.env`, reports, `launch/`, `graphify-out/`, `CLAUDE.md`, `docs/`, `.claude/`, manifests)
+  - Pass if: `exposed` is empty. This counts on a local site too: what Lando serves is what the host serves once the theme is deployed.
+- [ ] **SEC-19** Required `auto`: No author enumeration
+  - Check: `H.user_enum`
+  - Pass if: `author_param.login` is null (`/?author=1` doesn't redirect to `/author/<login>/`) and `author_sitemap.entries` is 0
 - [ ] **SEC-16** Recommended `auto` `public`: HSTS
   - Check: `H.headers.strict-transport-security`
   - Pass if: set, with `max-age` of at least 15552000
@@ -208,6 +215,12 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
   - Check: `grep -rn "console\.log" $THEME/resources/ --include=*.js --include=*.ts --include=*.jsx --include=*.tsx --include=*.mjs`
   - Pass if: no matches
   - Fix: remove the lines (one `sed -i` per file), then `npm run build`. `public/build/` is never edited by hand.
+- [ ] **CODE-5** Required `auto`: No path from a developer's machine
+  - Check: `F.home_paths` (`/home/<user>/`, `/Users/<user>/`, `C:\Users\<user>\` in the theme, outside `vendor/`, `node_modules/`, `public/build/` and the kit's `.claude/`)
+  - Pass if: empty. Generated files like `graphify-out/` don't belong in the repository.
+- [ ] **CODE-6** Required `auto`: No repository or WordPress copied inside the theme
+  - Check: `F.embedded_repos` (folders with their own `.git` not listed in `.gitmodules`), `F.wordpress_copies`
+  - Pass if: both are empty
 - [ ] **CODE-2** Required `auto`: Built assets present
   - Check: `$THEME/public/build/manifest.json`, and every file it lists
   - Pass if: they all exist
@@ -304,6 +317,9 @@ Each item: **ID**, severity, tags, title, then **Check**, **Pass if** and, when 
     doesn't count, because the comments partial uses it to hide comments.
 - [ ] **PAGE-4** Recommended `auto`: Every public custom taxonomy has an archive template or `has_archive => false`
   - Check: `wp taxonomy list --public=1 --field=name` against the `$THEME/resources/views/taxonomy-*.blade.php` and `archive.blade.php` templates
+- [ ] **PAGE-7** Required `auto`: Author, date and category archives are the project's, or switched off
+  - Check: `H.archives` (`/?author=1`, `/?m=<year>`, `/?cat=1`) with `F.templates`
+  - Pass if: each one answers 404 or redirects to the home page, or answers 200 with its own template (`author`, `date`, `category` or `archive.blade.php`) and no starter text. Sage's `index.blade.php` fallback is a fail.
 - [ ] **PAGE-5** Optional `auto`: Apple touch icon
   - Check: `H.apple_touch_icon`
   - Pass if: 200, or `site_icon` is set (WordPress then outputs the touch icon)
@@ -329,6 +345,9 @@ file path (for the icon, a square symbol works better than a wide wordmark). The
   - Check: `P.contacts` (every `tel:` and `mailto:` and the footer text, across the audited pages)
   - Ask: "Are these the client's correct phone, email and address?", showing what was found. Yes, or type the right ones.
   - Pass if: the user confirms. If the user corrects a value, `FAIL`, naming the page where the wrong value appears.
+- [ ] **LIVE-8** Required `auto`: Nothing was left for "later"
+  - Check: `F.debt` (`docs/tech-debt.md`), `F.untracked_todos`
+  - Pass if: the file exists, no `- [ ]` line in it is marked `[blocker]`, and every `TODO`/`FIXME` in `app/` and `resources/` has an owner and a date (`TODO @name YYYY-MM-DD: …`, the kit's comment rule). A placeholder that must be replaced before launch is a `[blocker]` line.
 - [ ] **LIVE-4** Required `manual`: Checkout works end to end (e-commerce only)
   - Steps: buy one product with a sandbox payment, and confirm the order and the emails
 - [ ] **LIVE-5** Recommended `auto` `public`: Valid HTML

@@ -184,7 +184,8 @@ fix list offers `mv launch $OUT/previous-launch`, and SEC-18 shows whether the s
    own tools through. Leave out a flag whose value is unknown:
    ```bash
    mkdir -p $OUT/raw
-   node .claude/skills/launch/tools/http-audit.mjs $URL > $OUT/raw/http.json 2>/dev/null &
+   node .claude/skills/launch/tools/http-audit.mjs $URL --theme-dir . > $OUT/raw/http.json 2>/dev/null &
+   node .claude/skills/launch/tools/repo-audit.mjs . > $OUT/raw/repo.json 2>/dev/null &
    node .claude/skills/launch/tools/page-audit.mjs $URL <menu page URLs…> <pages with a form…> --links --privacy-url <url> --terms-url <url> > $OUT/raw/pages.json 2>/dev/null &
    node .claude/skills/launch/tools/psi.mjs $PSI_URL --screenshot $OUT/pagespeed-mobile.png > $OUT/raw/psi.json 2>/dev/null &
    node .claude/skills/launch/tools/redirect-audit.mjs $URL --old <old-site> > $OUT/raw/redirects.json 2>/dev/null &
@@ -254,7 +255,7 @@ They go in the report as actions for the dev.
 
 - Run the approved commands exactly, in order, one at a time (safety rule 5).
 - After each fix, re-run that item's check. It's `FIXED` only if the re-check passes.
-- When everything has run, run `http-audit.mjs` and `page-audit.mjs` again into `$OUT/raw/`, because
+- When everything has run, run `http-audit.mjs`, `page-audit.mjs` and `repo-audit.mjs` again into `$OUT/raw/`, because
   fixes change what they see. `psi.mjs` isn't re-run unless a fix targeted performance.
 
 ## 5. Build the report (no hand-written report)

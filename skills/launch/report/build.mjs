@@ -113,7 +113,7 @@ export function buildMarkdown(input, list, raw = {}) {
   if (notes.length) md.push("## Notes", "", ...notes.map((x) => `- ${x}`), "");
   const t = input.target ?? {};
   md.push("---", "", "After fixing, run `/launch` again and choose **re-check**: only what failed is checked. Full evidence: `results.json`.", "",
-    `Checked ${input.date ?? new Date().toISOString().slice(0, 10)} · target ${t.environment ?? "?"} (\`${t.siteurl ?? t.url ?? "?"}\`) · PageSpeed URL ${t.psi_url ?? "-"} · tools: http-audit, page-audit, psi${raw.redirects ? ", redirect-audit" : ""}`);
+    `Checked ${input.date ?? new Date().toISOString().slice(0, 10)} · target ${t.environment ?? "?"} (\`${t.siteurl ?? t.url ?? "?"}\`) · PageSpeed URL ${t.psi_url ?? "-"} · tools: http-audit, page-audit, repo-audit, psi${raw.redirects ? ", redirect-audit" : ""}`);
   const results = rows.map(({ id, severity, title, result, evidence, command, action, suggested, source }) => ({ id, severity, title, result, evidence, command: command ?? null, action: action ?? null, suggested: !!suggested, decided_by: source ?? "agent" }));
   return { markdown: md.join("\n") + "\n", verdict, counts, results };
 }
@@ -134,7 +134,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const args = process.argv.slice(2);
   const opt = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : undefined; };
   const dir = outDir(opt("--dir"));
-  const raw = { http: readJson(join(dir, "raw", "http.json")), pages: readJson(join(dir, "raw", "pages.json")), psi: readJson(join(dir, "raw", "psi.json")), redirects: readJson(join(dir, "raw", "redirects.json")) };
+  const raw = { http: readJson(join(dir, "raw", "http.json")), pages: readJson(join(dir, "raw", "pages.json")), repo: readJson(join(dir, "raw", "repo.json")), psi: readJson(join(dir, "raw", "psi.json")), redirects: readJson(join(dir, "raw", "redirects.json")) };
   const list = parseList(readFileSync(join(HERE, "..", "launch-list.md"), "utf8"));
   const local = opt("--url") ? isLocalHost(new URL(opt("--url")).hostname) : false;
   const items = todo(list, raw, { local });
@@ -148,8 +148,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   let input;
   try { input = JSON.parse(readFileSync(0, "utf8")); } catch (e) { console.error(`build: stdin is not valid JSON (${e.message})`); process.exit(2); }
   const list = parseList(readFileSync(join(HERE, "..", "launch-list.md"), "utf8"));
-  const raw = { http: readJson(join(dir, "raw", "http.json")), pages: readJson(join(dir, "raw", "pages.json")), psi: readJson(join(dir, "raw", "psi.json")), redirects: readJson(join(dir, "raw", "redirects.json")) };
-  if (!raw.http || !raw.pages) { console.error(`build: run the tools first, ${join(dir, "raw")} needs http.json and pages.json`); process.exit(1); }
+  const raw = { http: readJson(join(dir, "raw", "http.json")), pages: readJson(join(dir, "raw", "pages.json")), repo: readJson(join(dir, "raw", "repo.json")), psi: readJson(join(dir, "raw", "psi.json")), redirects: readJson(join(dir, "raw", "redirects.json")) };
+  if (!raw.http || !raw.pages || !raw.repo) { console.error(`build: run the tools first, ${join(dir, "raw")} needs http.json, pages.json and repo.json`); process.exit(1); }
   // Tool-backed items are decided from the JSON; the agent's results only fill in what the tools can't see.
   const local = input.target?.url ? isLocalHost(new URL(input.target.url).hostname) : false;
   const merged = merge(input.items ?? [], raw, { local });
