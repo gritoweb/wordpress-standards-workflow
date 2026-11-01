@@ -5,6 +5,10 @@ from this repo, never mid-build and never from inside the project.
 
 ## Steps
 
+The `kit-harvest` skill (`skills/kit-harvest/SKILL.md`) does the reading: it
+runs the conformance checks over the finished theme, sorts the log, compares
+the site to the patterns, and writes a proposal in `docs/harvest/`.
+
 1. Open the site's `wp-content/themes/<theme>/docs/kit-log.md` (older sites: `_docs/kit-log.md`) and read every
    entry. The project is read-only: don't edit, build or commit there.
 2. Sort each entry into one action:
