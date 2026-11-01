@@ -28,7 +28,7 @@ or a "better" value (a 1.5 body line height, a 2px border, a darker color).
 | --- | --- |
 | **Framework** (blocks, entrance, padding, Site Settings) | Nothing: `project-init` and `create-block` install it. |
 | **Design system** (tokens, typography, container, buttons, card, forms, the Styleguide page) | Fills it from Figma in phases 1 and 2. Same files and token names on every project; only the values change. |
-| **Design** (header, footer, 404, blocks) | Not this skill: built afterwards with `create-block` and the comp, only what the site needs. |
+| **Design** (header, footer, 404, blocks) | Plans and builds it per site from the comp in phases 3 to 5, with `docs/patterns/` as the checklist. Only what the site needs. |
 
 ## Before anything: locate the project state
 
@@ -55,9 +55,12 @@ user asks.
 | 0b `re-inventory` | The existing map; the new file link | Updated map; superseded entries in `docs/figma-map-history.md` | `references/re-inventory.md` |
 | 1 `foundation` | The map; the typography, color, spacing and forms boards | `resources/css/global/*.css` (values only, token names fixed), font loading, `components/forms.css` when the file draws forms | `references/foundation.md`, `references/derivation-rules.md` |
 | 2 `components` | The map; the buttons board and any component boards | `components/button.css` and `card.css` (Figma values), then the components the file defines | `references/components.md` |
+| 3 `shell` (design) | The map; header and footer nodes; `docs/patterns/header.md`, `footer.md` | The header and footer views, `resources/css/layout/*.css`, `resources/images/` | `references/shell.md` |
+| 4 `blocks` (design) | The map; page artboards; `docs/patterns/README.md`; `docs/block-conventions.md` | Block inventory in the map; one `create-block` handoff per block, with the pattern name | `references/blocks.md` |
+| 5 `audit` (design) | The theme; WordPress registrations; `docs/patterns/404.md` | Themed 404, template coverage report, `screenshot.png` | `references/audit.md` |
 
-Read the phase's reference file before starting it. This skill stops at the
-design system.
+Read the phase's reference file before starting it. Phases 1 and 2 are the
+design system; phases 3 to 5 are design, built per site.
 
 ## Design system boards
 
@@ -114,6 +117,18 @@ and `#components`. Never add a seventh section.
 
 Report what you saw. If you couldn't render it, say the phase is unverified.
 
+## Automated gates
+
+Rendering catches what a build can't; these catch what a screenshot won't
+re-check on the next change. Run them in each phase's verify step, next to
+the render comparison, never instead of it.
+
+| Gate | Script | Checks |
+| --- | --- | --- |
+| Foundation | `scripts/check-css-foundation.mjs` | Every token in its file, no site file off the style guide |
+| Contrast | `scripts/contrast.mjs` | Every pair in `resources/css/contrast-pairs.json` clears WCAG AA, or is `"asDrawn": true` because Figma draws it that way (reported, listed in the map, never recolored). Phase 1 fills the pairs; phases 2 and 3 add one for every new combination |
+| Editor fidelity | `scripts/editor-fidelity.mjs` | The canvas matches the front end, measured in Chrome (phase 4) |
+
 ## Conventions
 
 - Tokens live in their owner file: color/shape in `global/variables.css`, type in `global/typography.css`, the container in `global/container.css`. Every other file uses `var(--...)`.
@@ -162,6 +177,8 @@ Propose the CHANGELOG line; the dev commits.
 
 ## Handoffs
 
-- `create-block` builds each block the comp needs, after this skill.
+- `create-block` builds each block; phase 4 hands it the title, slug, pattern, source node and attributes (`references/blocks.md`).
+- `docs/patterns/` says what to build and what must not change. The comp says how it looks.
+- `html-qa-smoketest` and the `launch` skill supply the audit checks.
 - `site-settings-wizard` owns site-wide values an editor changes without a deploy.
 - `commit-rules` owns commits.
