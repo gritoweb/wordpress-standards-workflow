@@ -102,9 +102,14 @@ never silently overwrite (same "bail > guessing" principle as
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy whole folder; ask before overwriting |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy whole folder; ask before overwriting |
 | `skills/launch/` | `<theme>/.claude/skills/launch/` | Copy whole folder; ask before overwriting |
+| `skills/kit-start/` | `<theme>/.claude/skills/kit-start/` | Copy whole folder; ask before overwriting |
 | `docs/examples/` | `<theme>/docs/examples/` | Copy whole folder (one file per reference block); ask before overwriting |
+| `docs/block-conventions.md`, `docs/patterns/` | `<theme>/docs/` | The block rules and one guide per recurring structure; ask before overwriting |
 | `docs/kit-log.md` | `<theme>/docs/kit-log.md` | Only if absent — it holds the project's own entries |
 | `docs/tech-debt.md` | `<theme>/docs/tech-debt.md` | Only if absent — it holds the project's pending items; the launch skill fails on an open `[blocker]` (LIVE-8) |
+| `skills/project-init/templates/kit-setup.mjs` | `<theme>/scripts/kit-setup.mjs` | Ask before overwriting if present |
+| `skills/project-init/templates/kit.config.example.json` | `<theme>/kit.config.json` | Only if absent. Fill in the kit's path and the theme's slug; `textDomain` must match `style.css` |
+| `skills/project-init/templates/wp/*.sh`, `sample-pages-blocks.php` | `<theme>/scripts/wp/` | Local-only wp-cli helpers, not the tests or fixtures. Run from the project root |
 | `docs/site-settings-pattern.md` | `<theme>/docs/site-settings-pattern.md` | Ask before overwriting if present |
 | `docs/editor-fidelity-checklist.md` | `<theme>/docs/editor-fidelity-checklist.md` | Ask before overwriting if present |
 | `gitignore.example` | `<theme>/.gitignore` | **Only if `<theme>/.gitignore` doesn't exist yet** — never overwrite an existing one |
@@ -119,7 +124,9 @@ never silently overwrite (same "bail > guessing" principle as
 > not be tracked. Append the single line; never rewrite the file.
 
 After copying, show a summary table of what was created vs. skipped
-(already existed, dev declined).
+(already existed, dev declined). From the theme root, run
+`node scripts/kit-setup.mjs` once `style.css` carries the theme's identity,
+and again after copying more templates. The next step is `/kit-start`.
 
 ---
 
@@ -171,6 +178,13 @@ utilities, no CSS file), so the foundation must exist first.
 | `SiteChrome.php` | `app/View/Composers/SiteChrome.php` | Create; ask if it exists. Feeds the header button, the footer contact and the legal name from Site Settings; with no `SiteSettings` class every value is empty |
 | `../../create-block/templates/button-link.blade.php` | `resources/views/components/button-link.blade.php` | Only if missing — the header button uses `<x-button-link>` |
 | `front-page.blade.php` | `resources/views/front-page.blade.php` | Create; ask if it exists. Sage's `page.blade.php` prints `partials.page-header` (an unstyled `<h1>` with the page title) above the content — on a block-built home that stray "Home" line under the header reads as a broken menu, and it duplicates the hero's `<h1>` |
+| `404.blade.php` | `resources/views/404.blade.php` | Overwrite **only** if it is still Sage's stock 404 (`Sorry, but the page`); otherwise show the diff and ask. That text fails the launch (SEO-10) |
+| `not-found.blade.php` | `resources/views/partials/not-found.blade.php` | Create; ask if it exists |
+| `search.blade.php` | `resources/views/search.blade.php` | Replace Sage's stock one, whose text fails the launch (PAGE-2), or switch search off |
+| `NotFound.php` | `app/View/Composers/NotFound.php` | Create; ask if it exists. Default text, with an optional Site Settings › 404 tab (`site-settings-wizard`) |
+| `PlainContent.php` | `app/View/Composers/PlainContent.php` | Create; ask if it exists. Tells a page of plain prose from a page built from the theme's blocks |
+| `page-header.blade.php`, `content-page.blade.php`, `content-single.blade.php` | `resources/views/partials/` | Overwrite **only** if still Sage's stock partials; otherwise show the diff and ask |
+| `single.css` | `resources/css/components/single.css` | Create; ask if it exists. Import it in `resources/css/app.css` after the foundation: `@import "./components/single.css";` |
 
 Replace `__TEXT_DOMAIN__` with the theme's `Text Domain`, then wire it:
 
@@ -243,8 +257,12 @@ Phase 0 answer. Do not run any of these commands.
    ```bash
    cd wp-content/themes
    composer create-project roots/sage <theme>
-   cd <theme> && composer install
+   cd <theme>
+   composer config platform.php 8.3.0   # the PHP in .lando.yml, not the host's
+   composer update
    ```
+   Skip the pin and a newer host PHP installs dependencies Lando's PHP can't
+   run: every request is a 500 (`Composer detected issues in your platform`).
    Then set `vite.config.js` `base:` to `/wp-content/themes/<theme>/public/build/`
    (Sage's stock Bedrock path 404s every asset otherwise), and claim the theme's
    identity in `style.css` — `Theme Name`, `Author`, `Text Domain`, and **reset

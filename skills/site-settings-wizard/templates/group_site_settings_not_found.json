@@ -1,0 +1,11 @@
+{
+  "key": "group_site_settings_not_found",
+  "title": "Site Settings — 404",
+  "fields": [
+    { "key": "field_site_settings_not_found_tab", "label": "404", "name": "", "type": "tab", "placement": "top" },
+    { "key": "field_site_settings_not_found_title", "label": "Title", "name": "not_found_title", "type": "text", "instructions": "Empty uses the default." },
+    { "key": "field_site_settings_not_found_subline", "label": "Subline", "name": "not_found_subline", "type": "text", "instructions": "Empty uses the default." },
+    { "key": "field_site_settings_not_found_button", "label": "Button", "name": "not_found_button", "type": "link", "return_format": "array", "instructions": "Empty goes back to the home page." }
+  ],
+  "location": [[{ "param": "options_page", "operator": "==", "value": "site-settings" }]]
+}

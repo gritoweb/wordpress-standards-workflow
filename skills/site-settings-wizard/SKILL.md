@@ -104,6 +104,15 @@ Site Settings value:
 $label = $attributes['ctaLabel'] ?? SiteSettings::field('header_cta_label', __('Contact us', '<text-domain>'));
 ```
 
+## Optional 404 tab
+
+The 404 already has default text (`app/View/Composers/NotFound.php`). Only when
+the dev wants editors to change it, copy
+`<skill>/templates/group_site_settings_not_found.json` to
+`acf-json/group_site_settings_not_found.json`. The composer already reads its
+fields, `not_found_title`, `not_found_subline` and `not_found_button`, so nothing
+else changes.
+
 ## Handoff
 
 The files written, then tell the dev to open **Site Settings**, check the new

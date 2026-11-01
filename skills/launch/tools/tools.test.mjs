@@ -6,9 +6,17 @@ import { auditHtml } from "./page-audit.mjs";
 import { MIN_MOBILE_SCORE, fromPanel, psiLink, summarize } from "./psi.mjs";
 import { brandImages } from "./brand-images.mjs";
 import { findBrowser } from "../report/report.mjs";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { SIG } from "./signatures.mjs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
+test("the kit's 404 is not the starter's (SEO-10)", () => {
+  const dir = new URL("../../project-init/templates/", import.meta.url);
+  const page = ["not-found.blade.php", "NotFound.php"].map((f) => readFileSync(new URL(f, dir), "utf8")).join("");
+  assert.ok(SIG.starterDefault.test("Sorry, but the page you are trying to view does not exist."));
+  assert.equal(page.match(SIG.starterDefault), null);
+});
 
 test("local hosts give LOCAL results, real hosts don't", () => {
   for (const h of ["luistest1300.lndo.site", "localhost", "127.0.0.1", "acme.test", "acme.local", "acme.ddev.site"]) assert.ok(isLocalHost(h), h);

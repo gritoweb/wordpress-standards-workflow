@@ -1,0 +1,189 @@
+/*
+ * The reading column for a page or post with no theme block (see
+ * PlainContent::isPlain()): a readable measure, list markers, media that never
+ * overflow, and defaults for the core blocks an editor drops in. Scoped to
+ * `.container >` because the partials add that wrapper only for plain content.
+ */
+
+@layer components {
+  .container > .e-content {
+    max-width: 70ch;
+  }
+
+  .container > .e-content :where(p, ul, ol, figure) {
+    margin-block: 1em;
+  }
+
+  .container > .e-content :where(ul) {
+    list-style: disc;
+    padding-inline-start: 1.5em;
+  }
+
+  .container > .e-content :where(ol) {
+    list-style: decimal;
+    padding-inline-start: 1.5em;
+  }
+
+  .container > .e-content :where(img, video, iframe, svg, table) {
+    max-width: 100%;
+  }
+
+  .container > .e-content :where(img, video) {
+    height: auto;
+  }
+
+  .container > .e-content :where(h2, h3, h4, h5, h6) {
+    margin-block: 1.5em 0.5em;
+  }
+
+  /* One step down from the tag defaults: a heading in prose should not outweigh the page title. */
+  .container > .e-content :where(h2) {
+    font-size: var(--text-h3-mobile);
+    line-height: var(--text-h3-mobile--line-height);
+
+    @variant lg {
+      font-size: var(--text-h3);
+      line-height: var(--text-h3--line-height);
+    }
+  }
+
+  .container > .e-content :where(h3) {
+    font-size: var(--text-h4-mobile);
+    line-height: var(--text-h4-mobile--line-height);
+
+    @variant lg {
+      font-size: var(--text-h4);
+      line-height: var(--text-h4--line-height);
+    }
+  }
+
+  .container > .e-content :where(h4) {
+    font-size: var(--text-h5);
+    line-height: var(--text-h5--line-height);
+  }
+
+  .container > .e-content :where(h5) {
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+  }
+
+  .container > .e-content :where(h6) {
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  .container > .e-content :where(blockquote) {
+    margin-block: 1.5em;
+    padding-inline-start: 1.25em;
+    border-inline-start: 4px solid var(--color-border);
+    color: var(--color-muted);
+  }
+
+  .container > .e-content :where(blockquote p) {
+    margin-block: 0.5em;
+  }
+
+  .container > .e-content :where(cite, blockquote cite) {
+    font-size: var(--text-small);
+    font-style: normal;
+  }
+
+  .container > .e-content :where(code) {
+    padding: 0.1em 0.3em;
+    border-radius: var(--radius-button);
+    background-color: var(--color-surface);
+  }
+
+  .container > .e-content :where(pre) {
+    margin-block: 1.5em;
+    padding: 1em;
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-button);
+    background-color: var(--color-surface);
+  }
+
+  .container > .e-content :where(pre code) {
+    padding: 0;
+    background: none;
+  }
+
+  .container > .e-content :where(figcaption) {
+    margin-block-start: 0.5em;
+    font-size: var(--text-small);
+    line-height: var(--text-small--line-height);
+    color: var(--color-muted);
+  }
+}
+
+/* Outside the layer: WordPress prints the core block styles unlayered, and only an unlayered rule beats those. */
+.container > .e-content .wp-block-pullquote {
+  margin-block: 2em;
+  padding-block: 1.5em;
+  border-block: 2px solid var(--color-border);
+  font-family: var(--font-display);
+  font-size: var(--text-lead);
+  line-height: var(--text-lead--line-height);
+  text-align: center;
+}
+
+.container > .e-content .wp-block-pullquote blockquote {
+  padding-inline-start: 0;
+  border-inline-start: 0;
+  color: inherit;
+}
+
+.container > .e-content table {
+  width: 100%;
+  margin-block: 1.5em;
+  border-collapse: collapse;
+  font-size: var(--text-small);
+  line-height: var(--text-small--line-height);
+}
+
+.container > .e-content th,
+.container > .e-content td {
+  padding: 0.5em 0.75em;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.container > .e-content th {
+  border-bottom-width: 2px;
+  font-weight: 700;
+}
+
+.container > .e-content hr {
+  margin-block: 2em;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+/* A core button can't take the .btn classes from the editor, so it reads the same tokens as .btn-primary. */
+.container > .e-content .wp-block-button__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-button);
+  background-color: var(--color-primary);
+  color: var(--color-light);
+  text-decoration: none;
+}
+
+.container > .e-content .wp-block-button__link:hover {
+  background-color: var(--color-ink);
+}
+
+.container > .e-content .wp-block-button__link:focus-visible {
+  outline: 3px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+.container > .e-content .wp-block-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-block: 1.5em;
+}

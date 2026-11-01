@@ -1,0 +1,1 @@
+{ "name": "acme/testimonial-a", "category": "acme-testimonials", "example": { "attributes": { "quote": "A quote" } } }

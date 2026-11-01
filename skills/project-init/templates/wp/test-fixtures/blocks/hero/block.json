@@ -1,0 +1,5 @@
+{
+  "name": "acme/hero",
+  "category": "acme-blocks",
+  "example": { "attributes": { "heading": "Sample heading", "ground": "light" } }
+}
