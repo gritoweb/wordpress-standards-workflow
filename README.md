@@ -23,6 +23,8 @@ skills/
   fotos/SKILL.md                   # block screenshot generator — imported to <project>/.claude/skills/
   site-settings-wizard/SKILL.md    # interactive wizard for Site Settings — imported to <project>/.claude/skills/
   figma-design-system/             # design system from a Figma file (phases 0-2) — imported to <project>/.claude/skills/
+  kit-start/SKILL.md               # runs the next build step — imported to <project>/.claude/skills/
+  kit-harvest/SKILL.md             # turns a finished site into proposed kit changes — kit only, not imported
   launch/                          # pre-launch audit + HTML/PDF report — imported to <project>/.claude/skills/
 global-skills/
   commit-rules.md                  # commit convention — NOT per-project; recommend installing to ~/.claude/skills/ (user-level)
@@ -33,6 +35,7 @@ prettier.config.example.js         # Prettier + Tailwind/Blade class sorting —
 install-git-hooks.example.mjs      # pre-commit hook installer — copied to <theme>/scripts/install-git-hooks.mjs
 mu-plugins/
   acorn-pantheon-storage.php       # Pantheon blocker: relocates Acorn storage — copied to <project>/wp-content/mu-plugins/
+tests/                             # kit-only tests (npm install && composer install, then npm test)
 CHANGELOG.md                       # what changed in the standards
 ```
 
@@ -73,8 +76,12 @@ the manifest **is** the source of truth either way.
 | `skills/fotos/` | `<theme>/.claude/skills/fotos/` | Copy the whole folder — block screenshot generator (Chrome headless → webp + svg fallback) |
 | `skills/site-settings-wizard/` | `<theme>/.claude/skills/site-settings-wizard/` | Copy the whole folder — adds a tab to the Site Settings page (Secure Custom Fields), only when asked |
 | `skills/figma-design-system/` | `<theme>/.claude/skills/figma-design-system/` | Copy the whole folder — builds the css-foundation-wizard files from a Figma file (inventory, foundation, components) |
+| `skills/kit-start/` | `<theme>/.claude/skills/kit-start/` | Copy the whole folder — tracks the build in `docs/kit-start.md` and runs the next step |
 | `skills/launch/` | `<theme>/.claude/skills/launch/` | Copy the whole folder — runs its own `launch-list.md` (the pre-launch checklist) with its HTTP, page, PageSpeed, migration and logo tools, fixes what you approve with one click, and builds the launch report from the results (HTML + PDF in `~/launch-reports/<theme>/`, outside the web root; Node 22+ and Chrome, no packages, no API key) |
 | `docs/examples/` | `<theme>/docs/examples/` | Reference blocks the AI uses for grounding: `README.md` (shared rules) + one file per block |
+| `skills/project-init/templates/kit-setup.mjs`, `kit.config.example.json` | `<theme>/scripts/kit-setup.mjs`, `<theme>/kit.config.json` | Fills the kit's placeholders from one config; config only if absent |
+| `skills/project-init/templates/wp/` scripts | `<theme>/scripts/wp/` | Local-only wp-cli helpers (comments off, menus, media import, sample pages) |
+| `docs/block-conventions.md`, `docs/patterns/` | `<theme>/docs/` | The block rules (`scripts/conformance.mjs` enforces the checkable ones) and one guide per recurring structure |
 | `docs/kit-log.md` | `<theme>/docs/kit-log.md` | Only if absent — the project's log of what the kit got wrong or lacked |
 | `docs/site-settings-pattern.md` | `<theme>/docs/site-settings-pattern.md` | The Site Settings pattern (SCF page, empty by default; tabs on request) |
 | `docs/editor-fidelity-checklist.md` | `<theme>/docs/editor-fidelity-checklist.md` | Canvas fidelity checklist |
@@ -204,7 +211,7 @@ Then add to the theme's `package.json`:
 > ```bash
 > git diff --cached --name-only \
 >   | grep -E '\.(css|blade\.php|js|jsx)$' \
->   | grep -cE '/(vendor|public/build)/'
+>   | grep -cE '(^|/themes/[^/]+/)(vendor|public/build)/'
 > ```
 >
 > Must print `0`.
@@ -247,7 +254,9 @@ Composer and Node run on the **host**; Lando only serves WordPress.
    ```bash
    cd wp-content/themes
    composer create-project roots/sage <theme>
-   cd <theme> && composer install     # boots Acorn
+   cd <theme>
+   composer config platform.php 8.3.0   # the PHP in .lando.yml, not the host's
+   composer update                      # boots Acorn
    ```
    Then fix Vite's `base:` — Sage ships a Bedrock path (`/app/themes/sage/…`)
    that 404s every built asset on a standard WP layout:

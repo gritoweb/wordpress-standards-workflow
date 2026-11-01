@@ -2,6 +2,64 @@
 
 Notable changes to the GritoWeb WordPress standards.
 
+## 2026-11-01 — Harvest from sage-site-kit
+
+Brought in what `christoler/sage-site-kit` built since the fork (2026-09-17),
+adapted to this kit. Kept here: the Popover button editor, the canvas that
+matches the page, `PaddingControls`, SCF, Splide, native logo and menus.
+
+### Added
+- **`docs/block-conventions.md` and `docs/patterns/`:** the numbered block
+  rules and one guide per recurring structure.
+- **`scripts/conformance.mjs`:** fails a block that breaks a checkable rule.
+  No packages; runs in `create-block` and the pre-commit hook.
+- **`scripts/contrast.mjs`:** WCAG AA gate over `contrast-pairs.json`, in the
+  pre-commit hook.
+- **`kit-start` skill**, tracking the build in `docs/kit-start.md`, and
+  **`kit-harvest` skill**, proposing what a finished site gives back.
+- **`scripts/kit-setup.mjs` + `kit.config.json`:** fill the placeholders from
+  one config. **`scripts/wp/`:** local-only wp-cli helpers.
+- **`figma-design-system` phases 3 to 5:** shell, blocks, template audit.
+- **Collections:** `post-grid` reference block and the templates behind it,
+  copied only when a block needs them.
+- **Plain content, a themed 404 and a search template**, installed by
+  `project-init`, with an optional 404 tab in `site-settings-wizard`.
+- **Kit tests:** `npm test` renders every reference block through the real
+  Blade compiler, mounts every editor, and covers the shared components. Needs
+  `npm install` and `composer install` in the kit.
+
+### Changed
+- `CLAUDE.md` routes each task to the file that owns its rules.
+- Kit log entries carry a date and a tag.
+
+### Fixed
+- **Every scaffolded block crashed in the editor:** the `block.jsx` template
+  used `EDITOR_BLOCK_FRAME` with its import commented out.
+- The block Blade template had no `container`.
+- `<x-button-link>` and `card-grid` double-encoded URLs with `{{ esc_url() }}`.
+
+- **A new host PHP took the whole site down:** Composer resolved for the host
+  (8.5), Lando ran 8.3, every request was a 500. `project-init` and the README
+  now pin `platform.php` to the PHP in `.lando.yml`.
+- **`menus.sh` and `sample-pages.sh` stopped after the first item:** `lando`
+  read the loop's stdin.
+- `editor-fidelity.mjs` counted `.sr-only` text as visible.
+- `kit-setup.mjs` replaces Sage's own `'sage'` text domain.
+- The reference blocks' placeholders start with a verb (CANVAS-7).
+
+### Removed
+- `EDITOR_TYPE`: it shrank canvas headings, against the same-classes rule, and
+  the template read a key that didn't exist.
+
+### Verified
+- `npm test`: 201/201 pass.
+- A clean install on Lando (WordPress 7.1.4, Sage, PHP 8.3), all 11 blocks on
+  one page: Vite builds; `editor-fidelity.mjs` reports no difference; in
+  headless Chrome the button Popover, Load More, accordion, carousel, mobile
+  menu, entrance, 404 and search work at 1280 and 390 with a clean console;
+  blocks stay valid after a save; the pre-commit hook refuses a CSS, contrast
+  and conformance break; the launch audits accept the 404 and search.
+
 ## 2026-10-14 — Section buttons open their editor in a Popover
 
 From the RH Construction admin QA: the button editor opened inline inside

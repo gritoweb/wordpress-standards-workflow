@@ -19,6 +19,28 @@
 
 ---
 
+## Where the rules live
+
+Before a task, read what its row names. That file owns the detail; this one
+holds what every task shares.
+
+| Task | Read |
+|---|---|
+| Start a site or find the next build step | `kit-start` skill (`project-init` installs the kit) |
+| Set up or change the design system | `figma-design-system` skill from a Figma file, `css-foundation-wizard` skill from a style guide |
+| Create or change a block | `create-block` skill, `docs/block-conventions.md`, `docs/patterns/README.md`, `docs/examples/README.md` |
+| Make a block editable in place, or fix what the canvas shows | `docs/editor-fidelity-checklist.md` |
+| Add or change a Site Settings tab | `site-settings-wizard` skill, `docs/site-settings-pattern.md` |
+| Write or change CSS | `css-standards` skill |
+| Write or change Blade or PHP, or load a script or style | `blade-standards` skill |
+| Review, QA or smoke-test markup | `html-qa-smoketest` skill |
+| Generate block preview images | `fotos` skill |
+| Launch the site | `launch` skill |
+| Write a commit | `commit-rules` skill |
+| Review what a finished site taught the kit (kit repo only) | `kit-harvest` skill |
+
+---
+
 ## Stack
 
 | Layer | Technology |
@@ -53,10 +75,11 @@ the `launch` skill (`.claude/skills/launch/launch-list.md`).
 
 ## Kit log
 
-Whenever you work around the kit, fix a kit bug, or hit a kit instruction
-that was wrong or missing, add **one line** to `docs/kit-log.md`: what
-happened and the file. Don't fix the kit from inside the project — log it and
-move on; it goes back into the kit after the site ships.
+Whenever you work around the kit, fix a kit bug, hit a kit instruction that
+was wrong or missing, or build something generic enough for the kit, add
+**one line** to `docs/kit-log.md` in the format that file documents: date,
+tag, what happened and the file. Don't fix the kit from inside the project —
+log it and move on; it goes back into the kit after the site ships.
 
 ---
 
