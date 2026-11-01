@@ -669,6 +669,19 @@ palette, stock type scale, `text-hN` or an arbitrary size. Exit 1 lists each
 problem as `file:line`; fix and re-run. The same script is `create-block`'s
 blocking check 0.21 and runs in the pre-commit hook.
 
+Then copy `<skill>/templates/contrast.mjs` to `scripts/contrast.mjs` and
+`<skill>/templates/contrast-pairs.json` to `resources/css/contrast-pairs.json`,
+add a pair for each color combination the site adds, and run:
+
+```bash
+node scripts/contrast.mjs
+```
+
+It must exit 0: every pair clears WCAG AA (4.5:1 for `text`, 3:1 for `large`
+and `ui`). When the design draws a failing pair on purpose, mark it
+`"asDrawn": true` and tell the user: it's then reported without failing, until
+a value change makes the flag stale. It also runs in the pre-commit hook.
+
 ---
 
 ## Handoff

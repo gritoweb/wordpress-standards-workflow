@@ -1,0 +1,12 @@
+[
+  { "fg": "--color-ink", "bg": "--color-light", "kind": "text", "label": "body on light" },
+  { "fg": "--color-ink", "bg": "--color-surface", "kind": "text", "label": "body on surface" },
+  { "fg": "--color-muted", "bg": "--color-light", "kind": "text", "label": "muted text on light" },
+  { "fg": "--color-muted", "bg": "--color-surface", "kind": "text", "label": "muted text on surface" },
+  { "fg": "--color-light", "bg": "--color-primary", "kind": "text", "label": "button text on primary" },
+  { "fg": "--color-primary", "bg": "--color-light", "kind": "text", "label": "secondary button text and links on light" },
+  { "fg": "--color-primary", "bg": "--color-primary-light", "kind": "ui", "label": "primary on its light tint" },
+  { "fg": "--color-success", "bg": "--color-light", "kind": "text", "label": "success text on light" },
+  { "fg": "--color-warning", "bg": "--color-light", "kind": "text", "label": "warning text on light" },
+  { "fg": "--color-danger", "bg": "--color-light", "kind": "text", "label": "error text on light" }
+]
