@@ -348,7 +348,7 @@ registerBlockType(metadata, {
             value={attributes.title}
             onChange={(value) => setAttributes({ title: value })}
             heading
-            placeholder={__('Section title…', '<text-domain>')}
+            placeholder={__('Add section title…', '<text-domain>')}
             className="heading-2 mb-10 text-center"
           />
 
@@ -378,7 +378,7 @@ registerBlockType(metadata, {
                     tagName="blockquote"
                     value={item.quote}
                     onChange={(value) => updateItem(index, { quote: value })}
-                    placeholder={__('Quote…', '<text-domain>')}
+                    placeholder={__('Add quote…', '<text-domain>')}
                     className="text-lead flex-1"
                   />
 
@@ -407,7 +407,7 @@ registerBlockType(metadata, {
                       <AutoGrowingTextarea
                         value={item.role}
                         onChange={(value) => updateItem(index, { role: value })}
-                        placeholder={__('Role…', '<text-domain>')}
+                        placeholder={__('Add role…', '<text-domain>')}
                         className="text-small text-muted"
                       />
                     </div>

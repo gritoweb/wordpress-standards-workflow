@@ -290,7 +290,7 @@ registerBlockType(metadata, {
             value={attributes.title}
             onChange={(value) => setAttributes({ title: value })}
             heading
-            placeholder={__('Section title…', '<text-domain>')}
+            placeholder={__('Add section title…', '<text-domain>')}
             className="heading-2 mb-10 text-center"
           />
 
@@ -327,7 +327,7 @@ registerBlockType(metadata, {
                   <AutoGrowingTextarea
                     value={image.caption}
                     onChange={(value) => updateImage(index, { caption: value })}
-                    placeholder={__('Optional caption…', '<text-domain>')}
+                    placeholder={__('Add optional caption…', '<text-domain>')}
                     className="text-small text-muted mt-3"
                   />
                 </figure>

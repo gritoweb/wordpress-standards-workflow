@@ -270,7 +270,7 @@ registerBlockType(metadata, {
                 value={title}
                 onChange={(value) => setAttributes({ title: value })}
                 heading
-                placeholder={__('Section title…', '<text-domain>')}
+                placeholder={__('Add section title…', '<text-domain>')}
                 className="heading-2"
               />
               <div {...entrancePartProps(entrance, 1)}>
@@ -278,7 +278,7 @@ registerBlockType(metadata, {
                   tagName="div"
                   value={description}
                   onChange={(value) => setAttributes({ description: value })}
-                  placeholder={__('Short description…', '<text-domain>')}
+                  placeholder={__('Add short description…', '<text-domain>')}
                   className="mt-4 text-body text-muted"
                 />
               </div>
@@ -304,7 +304,7 @@ registerBlockType(metadata, {
                           updateItem(index, { title: value })
                         }
                         onFocus={() => setActiveItem(index)}
-                        placeholder={__('Question…', '<text-domain>')}
+                        placeholder={__('Add question…', '<text-domain>')}
                         className={`heading-6 ${isOpen ? 'text-primary' : ''}`}
                       />
                       <svg
@@ -326,7 +326,7 @@ registerBlockType(metadata, {
                         tagName="div"
                         value={item.body}
                         onChange={(value) => updateItem(index, { body: value })}
-                        placeholder={__('Answer…', '<text-domain>')}
+                        placeholder={__('Add answer…', '<text-domain>')}
                         className="border-t border-border px-5 pt-3 pb-5 text-small text-muted"
                       />
                     )}

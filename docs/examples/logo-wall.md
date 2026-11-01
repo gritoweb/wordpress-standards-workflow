@@ -227,7 +227,7 @@ registerBlockType(metadata, {
             {...entrancePartProps(entrance, 0)}
             value={attributes.title}
             onChange={(value) => setAttributes({ title: value })}
-            placeholder={__('Short title…', '<text-domain>')}
+            placeholder={__('Add short title…', '<text-domain>')}
             className="text-small text-muted mb-10 text-center"
           />
 

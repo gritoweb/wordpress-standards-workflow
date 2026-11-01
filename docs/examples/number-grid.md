@@ -232,7 +232,7 @@ registerBlockType(metadata, {
             value={attributes.title}
             onChange={(value) => setAttributes({ title: value })}
             heading
-            placeholder={__('Section title…', '<text-domain>')}
+            placeholder={__('Add section title…', '<text-domain>')}
             className="heading-2 mb-12 text-center"
           />
 
@@ -247,13 +247,13 @@ registerBlockType(metadata, {
                   value={item.value}
                   onChange={(value) => updateItem(index, { value })}
                   heading
-                  placeholder={__('100+', '<text-domain>')}
+                  placeholder={__('Add a number…', '<text-domain>')}
                   className="heading-1 text-primary text-center"
                 />
                 <AutoGrowingTextarea
                   value={item.label}
                   onChange={(value) => updateItem(index, { label: value })}
-                  placeholder={__('What it counts…', '<text-domain>')}
+                  placeholder={__('Add what it counts…', '<text-domain>')}
                   className="text-small text-muted mt-2 text-center"
                 />
               </div>

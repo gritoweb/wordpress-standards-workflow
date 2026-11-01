@@ -203,7 +203,7 @@ registerBlockType(metadata, {
                 value={attributes.title}
                 onChange={(value) => setAttributes({ title: value })}
                 heading
-                placeholder={__('Hero title…', '<text-domain>')}
+                placeholder={__('Add hero title…', '<text-domain>')}
                 className="heading-1"
               />
               <div {...entrancePartProps(entrance, 1)}>
@@ -211,7 +211,7 @@ registerBlockType(metadata, {
                   tagName="div"
                   value={attributes.body}
                   onChange={(value) => setAttributes({ body: value })}
-                  placeholder={__('Supporting text…', '<text-domain>')}
+                  placeholder={__('Add supporting text…', '<text-domain>')}
                   className="text-lead text-muted mt-6"
                 />
               </div>

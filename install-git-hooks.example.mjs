@@ -41,7 +41,9 @@ if [ ! -f scripts/check-css-foundation.mjs ]; then
   echo "pre-commit: scripts/check-css-foundation.mjs is missing — run the css-foundation-wizard skill." >&2
   exit 1
 fi
-node scripts/check-css-foundation.mjs
+node scripts/check-css-foundation.mjs || exit 1
+if [ -f scripts/contrast.mjs ]; then node scripts/contrast.mjs || exit 1; fi
+if [ -f scripts/conformance.mjs ]; then node scripts/conformance.mjs || exit 1; fi
 `,
   );
   chmodSync(hookPath, 0o755);
@@ -49,7 +51,7 @@ node scripts/check-css-foundation.mjs
   // core.hooksPath is resolved relative to the git root's working tree.
   execFileSync('git', ['-C', gitRoot, 'config', 'core.hooksPath', '.githooks']);
 
-  console.log(`[hooks] pre-commit installed → ${hookPath} (lint-staged + CSS foundation check in ./${cdTarget})`);
+  console.log(`[hooks] pre-commit installed → ${hookPath} (lint-staged + foundation, contrast and conformance checks in ./${cdTarget})`);
 } catch {
   // Never break `npm install` if hooks can't be set up.
   process.exit(0);

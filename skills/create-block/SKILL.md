@@ -41,7 +41,7 @@ that themselves.
 - Working directory = active Sage 11 theme root (must contain `vite.config.js`,
   `app/setup.php`, `composer.json`, `resources/`). If unsure, **ask** — don't guess.
 - Composer/Node run on the host (Lando only serves WP).
-- Standards = `CLAUDE.md` + `docs/examples/` (older projects: `_docs/`) (read its `README.md`, then only the closest block's file). If those aren't in the project,
+- Standards = `CLAUDE.md` + `docs/block-conventions.md` + `docs/patterns/` (read `README.md`, then the closest pattern) + `docs/examples/` (older projects: `_docs/`) (read its `README.md`, then only the closest block's file). If those aren't in the project,
   treat this skill as the standard.
 
 ---
@@ -91,12 +91,14 @@ wrong domain/path into every file.
 | 0.9 | `resources/css/app.css` has `@source "../blocks/**/*.{php,jsx}";` **and** scans `app/` (`@source "../../app/";` — Sage's stock line). The padding / image-position classes are literals in `app/Blocks/*.php`; without that source Tailwind never generates them and Spacing silently does nothing. |
 | 0.10 | `package.json` `devDependencies` has `react@^18` AND `react-dom@^18`. **React pinned to ^18, not ^19** — React 19 breaks Gutenberg (element-symbol mismatch with WP's React 18). |
 | 0.11 | `app/Blocks/BlockCategories.php` exists. Template at `<skill>/templates/BlockCategories.php`. **First-run only**: ask `"Vou criar uma categoria pros seus blocos. Quer chamar de 'Custom Blocks' (default) ou outro nome?"`, copy template, edit `TITLE` and `SLUG` (lowercase + hyphens) if dev picked a different name. The actual `BlockCategories::register();` call lives in `app/blocks.php` (check 0.6). Subsequent runs: grep `const SLUG = '...'` from the existing file. |
-| 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `RemoveButton.jsx`, `RemoveImageButton.jsx`, `coreIcons.jsx`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`, `ButtonPair.jsx`. And `resources/views/components/button-link.blade.php` (template `<skill>/templates/button-link.blade.php`). If missing: copy from `<skill>/templates/components/backend/*`, replacing `__TEXT_DOMAIN__` with `<text-domain>` and `__THEME_SLUG__` with `<theme-slug>` in every copied file. |
+| 0.12 | `resources/blocks/components/backend/` contains the canonical shared components: `AttachmentImageControl.jsx`, `useAttachmentUrls.js`, `ActionEditor.jsx`, `AutoGrowingTextarea.jsx`, `editorCanvas.js`, `EntranceControl.jsx`, `entranceCanvas.js`, `DividerControl.jsx`, `ItemList.jsx`, `moveItem.js`, `RemoveButton.jsx`, `RemoveImageButton.jsx`, `coreIcons.jsx`, `ParagraphsField.jsx`, `LinkPicker.jsx`, `PaddingControls.jsx`, `padding-presets.js`, `ImagePositionControl.jsx`, `IconPicker.jsx`, `ButtonPair.jsx`. And `resources/views/components/button-link.blade.php` (template `<skill>/templates/button-link.blade.php`). If missing: copy from `<skill>/templates/components/backend/*`, then run `node scripts/kit-setup.mjs`, which fills `__TEXT_DOMAIN__` and `__THEME_SLUG__` (older themes without it: replace them by hand). |
 | 0.15 | `app/Blocks/BlockPadding.php`, `app/Blocks/BlockImagePosition.php`, `app/Blocks/BlockEntrance.php` and `app/Blocks/BlockMotion.php` exist. Templates at `<skill>/templates/`. `BlockEntrance.php` must expose `fromBlock()`, `root()` and `part()` — an older copy that only has `resolve()` (it prints `data-entrance-type`) is **incompatible** with `EntranceControl`/`entranceCanvas.js`: replace it. |
 | 0.16 | `app/Providers/ThemeServiceProvider.php`'s `boot()` registers three Blade directives: `paddingClasses` → `\App\Blocks\BlockPadding::resolve(...)`, `entrance` → `\App\Blocks\BlockEntrance::root(...)` and `entrancePart` → `\App\Blocks\BlockEntrance::part(...)` (see "Infra bootstrap templates"). |
 | 0.18 | `resources/css/components/entrance.css` exists (template `<skill>/templates/entrance.css`) and is `@import`ed by **both** `resources/css/app.css` (front end) and `resources/css/editor.css` (canvas — without it the sidebar **Preview** does nothing visible). `resources/css/components/hover.css` exists (template `<skill>/templates/hover.css`) and is `@import`ed by `resources/css/app.css` — **not** inside `@layer`, it must beat Tailwind's transition utilities. |
 | 0.19 | `resources/js/modules/entrance.js` exists (template `<skill>/templates/entrance.js`) and `resources/js/app.js` has `import { initEntrance } from './modules/entrance';` plus a top-level `initEntrance();` call (module scripts are deferred). Without it the front end never adds `data-entered` and the head script's 5s safety net is the only thing that un-hides the page. |
 | 0.20 | `scripts/editor-fidelity.mjs` exists (template `<skill>/templates/editor-fidelity.mjs`). It is a report-only dev tool — see "Editor fidelity report". |
+| 0.203 | **Only when the block is a collection** (cards from a post type): `app/Content/ContentTypes.php` exists. If missing, copy `<skill>/templates/collection/` onto the theme root, leaving out its `*.test.mjs` files, run `node scripts/kit-setup.mjs`, and add the `app/blocks.php` lines from `docs/patterns/collection-grid.md` › **Install**. Start the block from `docs/examples/post-grid.md`. A site with no collection never gets these files. |
+| 0.205 | `scripts/conformance.mjs` exists (template `<skill>/templates/conformance.mjs`). Run it after every block: `node scripts/conformance.mjs` must exit 0, and the pre-commit hook runs it too. It checks the rules in `docs/block-conventions.md` › **Checkable rules**. |
 | 0.21 | **CSS foundation — blocking.** `node scripts/check-css-foundation.mjs` exits 0. If the script is missing, or `resources/css/global/` is missing, **stop and run the `css-foundation-wizard` skill first** — never create a block on a theme without the style guide foundation (every block would fall back to browser fonts and Tailwind's stock palette). Exit 1 on an existing theme: show the listed problems and fix them before Phase 1. |
 
 ### Compatibility warnings (do NOT auto-fix)
@@ -327,8 +329,8 @@ Attributes:
 
 - **Canvas (inline)** = block **content** — real data rendered with theme
   styling, bounded by `EDITOR_BLOCK_FRAME`:
-  - **Headings / subtitles:** `<AutoGrowingTextarea>` styled with
-    `EDITOR_TYPE` tokens, positioned where the text appears visually. A
+  - **Headings / subtitles:** `<AutoGrowingTextarea>` with the same
+    `heading-N` class as the Blade view, positioned where the text appears visually. A
     field that is an `h1`–`h6` on the page gets the `heading` prop, so it
     takes the theme's heading font.
   - **Body copy:** `<ParagraphsField>` or `<RichText>`, inline.
@@ -603,7 +605,7 @@ End with a summary table listing every file created/modified.
     ├── ActionEditor.jsx             ← CTA label + link editor (canvas popover)
     ├── ButtonPair.jsx               ← a section button on the canvas: click opens ActionEditor in a Popover
     ├── AutoGrowingTextarea.jsx      ← inline heading/subtitle editor
-    ├── editorCanvas.js              ← canvas constants (EDITOR_TYPE, emptyLink)
+    ├── editorCanvas.js              ← canvas constants (EDITOR_BLOCK_FRAME, emptyLink)
     ├── EntranceControl.jsx          ← entrance animation sidebar panel
     ├── entranceCanvas.js            ← entrance animation canvas helpers
     ├── DividerControl.jsx           ← section divider selector
@@ -742,7 +744,8 @@ import { resolveEntrance, entranceRootProps, entrancePartProps } from '../compon
 // import { ImagePositionControl }    from '../components/backend/ImagePositionControl.jsx';
 // import { DividerControl }          from '../components/backend/DividerControl.jsx';
 // import { LinkPicker }              from '../components/backend/LinkPicker.jsx';
-// import { EDITOR_TYPE, EDITOR_BLOCK_FRAME, emptyLink } from '../components/backend/editorCanvas.js';
+import { EDITOR_BLOCK_FRAME } from '../components/backend/editorCanvas.js';
+// import { emptyLink }               from '../components/backend/editorCanvas.js';
 import previewImage from './preview.svg';
 import metadata from './block.json';
 
@@ -841,7 +844,7 @@ registerBlockType(metadata, {
                         value={heading}
                         onChange={(value) => setAttributes({ heading: value })}
                         placeholder={__('Enter heading…', '<text-domain>')}
-                        className={EDITOR_TYPE.display}
+                        className="heading-2"
                         heading
                     />
                     `heading` marks a field that is an h1–h6 on the page, so it takes the
@@ -941,14 +944,16 @@ vendor lib's internals, scoped under the block's root class:
          instance id) goes on an INNER element so it can't collide — see
          "Anchor support". This note is guidance: keep it only if the block
          actually emits a dynamic id, else drop it. --}}
-    {{-- Scaffolding — replace with the real render. Example:
-        @if ($heading)
-            <h2 class="<slug>__heading" @entrancePart(0)>{{ $heading }}</h2>
-        @endif
-        @foreach ($items as $item)
-            <article @entrancePart($loop->index + 1)>…</article>
-        @endforeach
-    --}}
+    <div class="container">
+        {{-- Scaffolding — replace with the real render. Example:
+            @if ($heading)
+                <h2 class="<slug>__heading" @entrancePart(0)>{{ $heading }}</h2>
+            @endif
+            @foreach ($items as $item)
+                <article @entrancePart($loop->index + 1)>…</article>
+            @endforeach
+        --}}
+    </div>
 </section>
 ```
 

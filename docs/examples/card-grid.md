@@ -170,7 +170,7 @@ echo view('blocks.card-grid', [
             @endif
 
             @if ($card['linkText'] && $card['linkUrl'])
-              <a href="{{ esc_url($card['linkUrl']) }}" @if ($card['linkNew']) target="_blank" @endif
+              <a href="{!! esc_url($card['linkUrl']) !!}" @if ($card['linkNew']) target="_blank" @endif
                 class="link mt-auto inline-flex pt-5 text-small font-semibold text-primary hover:underline">{{ $card['linkText'] }}</a>
             @endif
           </div>
@@ -302,7 +302,7 @@ registerBlockType(metadata, {
               value={attributes.title}
               onChange={(value) => setAttributes({ title: value })}
               heading
-              placeholder={__('Section title…', '<text-domain>')}
+              placeholder={__('Add section title…', '<text-domain>')}
               className="text-center heading-2"
             />
             <div {...entrancePartProps(entrance, 1)}>
@@ -310,7 +310,7 @@ registerBlockType(metadata, {
                 tagName="div"
                 value={attributes.description}
                 onChange={(value) => setAttributes({ description: value })}
-                placeholder={__('Optional description…', '<text-domain>')}
+                placeholder={__('Add optional description…', '<text-domain>')}
                 className="mt-4 text-body text-muted"
               />
             </div>
@@ -337,14 +337,14 @@ registerBlockType(metadata, {
                     value={card.title}
                     onChange={(value) => updateCard(index, { title: value })}
                     heading
-                    placeholder={__('Card title…', '<text-domain>')}
+                    placeholder={__('Add card title…', '<text-domain>')}
                     className="heading-5"
                   />
                   <RichText
                     tagName="div"
                     value={card.body}
                     onChange={(value) => updateCard(index, { body: value })}
-                    placeholder={__('Card text…', '<text-domain>')}
+                    placeholder={__('Add card text…', '<text-domain>')}
                     className="mt-3 text-small text-muted"
                   />
 

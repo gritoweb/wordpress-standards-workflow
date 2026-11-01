@@ -179,7 +179,10 @@ const COLLECT = `(root, withFields) => {
     const el = node.parentElement;
     if (!el || seen.has(el) || el.closest('textarea, script, style, svg, .sr-only, [aria-hidden="true"]')) continue;
     seen.add(el);
-    add(el, el.textContent);
+    // A visually hidden hint inside a link isn't part of the text the eye compares.
+    const visible = el.cloneNode(true);
+    visible.querySelectorAll('.sr-only').forEach((hidden) => hidden.remove());
+    add(el, visible.textContent);
   }
   const cs = getComputedStyle(root);
   return { items, root: { 'background-color': rgba(cs.backgroundColor), 'padding-top': cs.paddingTop } };

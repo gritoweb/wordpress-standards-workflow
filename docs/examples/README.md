@@ -1,6 +1,6 @@
 # Code examples — read this first
 
-Ten complete Gutenberg blocks for the kit's Sage 11 + Acorn + Vite setup.
+Eleven complete Gutenberg blocks for the kit's Sage 11 + Acorn + Vite setup.
 **Copy these, not older code**: every file below was run on a live site
 (2026-09-23) — editor (no block errors, sidebar list reorders / deletes /
 adds with the canvas updating at once, Spacing and entrance Preview visible)
@@ -67,6 +67,7 @@ Every block is registered by adding its slug to `BlockManager`'s list
 | Media and text | `media-text.md` | text beside an image; the image's side is a sidebar setting |
 | CTA band | `cta-band.md` | a dark band with an optional background photo (`Background Media` panel, focal point) |
 | Card grid | `card-grid.md` | a grid of repeated cards with image, text and link |
+| Post grid | `post-grid.md` | cards from a post type, with sorting and paging |
 | Number grid | `number-grid.md` | a text-only repeater: key numbers and their labels |
 | Logo wall | `logo-wall.md` | an image-only repeater: logos, alt text from the Media Library |
 | Accordion | `accordion.md` | a repeater with one item open at a time (native `<details name>`) |
